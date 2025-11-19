@@ -119,11 +119,40 @@ def dial():
 def connect_prospect():
     response = VoiceResponse()
     prospect_number = urllib.parse.unquote_plus(request.args.get('prospect_number', ''))
+    
+    # Debug logging
+    print(f"=== CONNECT PROSPECT DEBUG ===")
+    print(f"Raw prospect_number from args: {request.args.get('prospect_number', 'MISSING')}")
+    print(f"Decoded prospect_number: {prospect_number}")
+    print(f"All request.args: {dict(request.args)}")
+    print(f"Request URL: {request.url}")
+    
     if prospect_number:
+        # Ensure number has +1 country code if it doesn't already
+        if not prospect_number.startswith('+'):
+            # Remove any non-digit characters except +
+            cleaned_number = ''.join(filter(str.isdigit, prospect_number))
+            # Add +1 if not present
+            if len(cleaned_number) == 10:
+                prospect_number = f"+1{cleaned_number}"
+            elif len(cleaned_number) == 11 and cleaned_number.startswith('1'):
+                prospect_number = f"+{cleaned_number}"
+            else:
+                prospect_number = f"+{cleaned_number}"
+        
+        print(f"Final formatted prospect_number to dial: {prospect_number}")
+        
         response.say("Connecting you to the prospect.")
-        response.dial(number=prospect_number)
+        dial = Dial()
+        dial.number(prospect_number)
+        response.append(dial)
+        
+        print(f"TwiML response: {str(response)}")
     else:
-        response.say("Sorry, I couldn't connect to the prospect.")
+        print("ERROR: No prospect_number received!")
+        response.say("Sorry, I couldn't connect to the prospect. Missing phone number.")
+    
+    print(f"=== END DEBUG ===")
     return str(response)
 
 @app.route('/call_status', methods=['POST'])
