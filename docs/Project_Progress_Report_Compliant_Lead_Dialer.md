@@ -56,7 +56,7 @@ This document **must** be updated at the start of any new development session or
 
 ## **➡️ Next Action Item**
 
-Implement Option 1: Link Field integration with Calculation field to generate clickable Vercel API URLs.
+Create requirements.txt file
 
-**Next File Generation:** (None - .env created)
+**Next File Generation:** requirements.txt
 

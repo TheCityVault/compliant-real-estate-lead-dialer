@@ -6,6 +6,7 @@ import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 import urllib.parse
+from pypodio2 import api
 
 app = Flask(__name__)
 
@@ -16,6 +17,29 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
 AGENT_PHONE_NUMBER = os.environ.get('AGENT_PHONE_NUMBER')
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+# Podio credentials
+PODIO_CLIENT_ID = os.environ.get('PODIO_CLIENT_ID')
+PODIO_CLIENT_SECRET = os.environ.get('PODIO_CLIENT_SECRET')
+PODIO_USERNAME = os.environ.get('PODIO_USERNAME')
+PODIO_PASSWORD = os.environ.get('PODIO_PASSWORD')
+
+# Initialize Podio client
+podio = None
+if PODIO_CLIENT_ID and PODIO_CLIENT_SECRET and PODIO_USERNAME and PODIO_PASSWORD:
+    try:
+        podio = api.OAuthClient(
+            client_id=PODIO_CLIENT_ID,
+            client_secret=PODIO_CLIENT_SECRET,
+            username=PODIO_USERNAME,
+            password=PODIO_PASSWORD
+        )
+        print("Podio client initialized successfully.")
+    except Exception as e:
+        print(f"Error initializing Podio client: {e}")
+        podio = None
+else:
+    print("Podio credentials not fully configured. Podio integration will be disabled.")
 
 # Initialize Firestore
 GCP_SERVICE_ACCOUNT_JSON = os.environ.get('GCP_SERVICE_ACCOUNT_JSON')
@@ -41,7 +65,132 @@ def hello_world():
 def dial():
     # Handle GET requests (Link Field approach from Podio)
     if request.method == 'GET':
-        prospect_number = urllib.parse.unquote_plus(request.args.get('phone', ''))
+        prospect_number = None
+        item_id = request.args.get('item_id')
+        
+        print(f"\n{'='*50}")
+        print(f"=== DIAL ENDPOINT CALLED ===")
+        print(f"Request Args: {dict(request.args)}")
+        
+        # Check if item_id is provided (Podio integration)
+        if item_id:
+            print(f"Item ID provided: {item_id}")
+            
+            if not podio:
+                print("ERROR: Podio client not initialized")
+                return """
+                <html>
+                <head><title>Error</title></head>
+                <body>
+                    <h2>❌ Error</h2>
+                    <p>Podio integration is not configured. Please contact your administrator.</p>
+                </body>
+                </html>
+                """, 500
+            
+            try:
+                # Fetch the item from Podio
+                print(f"Fetching Podio item {item_id}...")
+                item = podio.Item.find(item_id)
+                print(f"Podio item fetched successfully")
+                print(f"Item fields: {[f['label'] for f in item.get('fields', [])]}")
+                
+                # Extract phone number from the "Best Contact Number" field
+                phone_field = None
+                for field in item.get('fields', []):
+                    if field.get('label') == 'Best Contact Number':
+                        phone_field = field
+                        break
+                
+                if not phone_field:
+                    print("ERROR: 'Best Contact Number' field not found in item")
+                    return """
+                    <html>
+                    <head><title>Error</title></head>
+                    <body>
+                        <h2>❌ Error</h2>
+                        <p>The 'Best Contact Number' field was not found in this Podio item.</p>
+                    </body>
+                    </html>
+                    """, 400
+                
+                # Extract phone value
+                values = phone_field.get('values', [])
+                if not values or len(values) == 0:
+                    print("ERROR: 'Best Contact Number' field is empty")
+                    return """
+                    <html>
+                    <head><title>Error</title></head>
+                    <body>
+                        <h2>❌ Error</h2>
+                        <p>The 'Best Contact Number' field is empty for this lead.</p>
+                    </body>
+                    </html>
+                    """, 400
+                
+                # Get the phone value - pypodio2 structures phone values as dicts
+                phone_value = values[0]
+                if isinstance(phone_value, dict):
+                    prospect_number = phone_value.get('value', '')
+                else:
+                    prospect_number = str(phone_value)
+                
+                print(f"Phone number extracted from Podio: {prospect_number}")
+                
+            except Exception as e:
+                print(f"ERROR fetching from Podio API: {e}")
+                import traceback
+                traceback.print_exc()
+                
+                error_message = str(e)
+                if "404" in error_message or "not found" in error_message.lower():
+                    return """
+                    <html>
+                    <head><title>Error</title></head>
+                    <body>
+                        <h2>❌ Error</h2>
+                        <p>Podio item not found. Please check the item ID.</p>
+                    </body>
+                    </html>
+                    """, 404
+                elif "401" in error_message or "403" in error_message or "unauthorized" in error_message.lower():
+                    return """
+                    <html>
+                    <head><title>Error</title></head>
+                    <body>
+                        <h2>❌ Error</h2>
+                        <p>Podio authentication failed. Please contact your administrator.</p>
+                    </body>
+                    </html>
+                    """, 500
+                elif "rate limit" in error_message.lower():
+                    return """
+                    <html>
+                    <head><title>Error</title></head>
+                    <body>
+                        <h2>❌ Error</h2>
+                        <p>Podio API rate limit reached. Please try again in a few moments.</p>
+                    </body>
+                    </html>
+                    """, 429
+                else:
+                    return f"""
+                    <html>
+                    <head><title>Error</title></head>
+                    <body>
+                        <h2>❌ Error</h2>
+                        <p>An error occurred while fetching data from Podio: {error_message}</p>
+                    </body>
+                    </html>
+                    """, 500
+        else:
+            # Use phone parameter if item_id not provided
+            prospect_number = urllib.parse.unquote_plus(request.args.get('phone', ''))
+            print(f"Phone parameter provided: {prospect_number}")
+        
+        print(f"Final prospect_number to dial: {prospect_number}")
+        print(f"=== END DIAL ENDPOINT ===")
+        print(f"{'='*50}\n")
         
         if not prospect_number:
             return """
@@ -49,7 +198,7 @@ def dial():
             <head><title>Error</title></head>
             <body>
                 <h2>❌ Error</h2>
-                <p>Missing phone number parameter.</p>
+                <p>Missing phone number. Please provide either 'phone' or 'item_id' parameter.</p>
             </body>
             </html>
             """, 400

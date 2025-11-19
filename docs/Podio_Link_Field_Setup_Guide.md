@@ -103,21 +103,48 @@ This calculation field will dynamically generate the URL for each lead.
 
 #### 2.2 Configure the Formula
 
-**Formula:**
-```
-"https://compliant-real-estate-lead-dialer-90ucg6prp.vercel.app/dial?phone=" + @Best Contact Number
+⚠️ **CRITICAL: Podio Calculation Fields Use JavaScript, NOT PHP**
+
+Podio calculation fields execute **JavaScript** syntax, while GlobiFlow uses **PHP** syntax. This is a common source of confusion when implementing formulas.
+
+**Formula (JavaScript for Podio Calculation Fields):**
+```javascript
+"https://compliant-real-estate-lead-dialer-90ucg6prp.vercel.app/dial?phone=" + (@Best Contact Number + "").split(":")[1]
 ```
 
 **Important Notes:**
 - Replace `compliant-real-estate-lead-dialer-90ucg6prp.vercel.app` with your actual Vercel deployment URL
 - The `@Best Contact Number` token must match your phone field's exact name
-- Use the `.` operator for string concatenation in Podio formulas (not `+` if that doesn't work)
+- The `(@Best Contact Number + "").split(":")[1]` extracts the actual phone number value from the field:
+  - `(@Best Contact Number + "")` converts the field to a string
+  - `.split(":")` splits the string at the `:` delimiter (JavaScript method)
+  - `[1]` selects the second element (the phone number)
+- The `+` operator concatenates strings in JavaScript
 - Ensure the phone field name is wrapped with `@` symbols
 
-**Alternative Formula Syntax (if concatenation issues occur):**
+**⚠️ SYNTAX COMPARISON:**
+
+| Context | Language | Split Function | Example |
+|---------|----------|----------------|---------|
+| **Podio Calculation Fields** | JavaScript | `.split(":")` | `(@Phone + "").split(":")[1]` |
+| **GlobiFlow** | PHP | `explode(":")` | `explode(":", @Phone)[1]` |
+
+**Alternative JavaScript Formulas:**
+
+If `.split()` has issues, try these alternatives:
+
+**Method 1: Using substring and indexOf**
+```javascript
+"https://your-vercel-url.vercel.app/dial?phone=" + (@Best Contact Number + "").substring((@Best Contact Number + "").indexOf(":") + 1)
 ```
-"https://your-vercel-url.vercel.app/dial?phone=".@Best Contact Number
+
+**Method 2: With conditional logic for edge cases**
+```javascript
+"https://your-vercel-url.vercel.app/dial?phone=" + ((@Best Contact Number + "").indexOf(":") >= 0 ? (@Best Contact Number + "").split(":")[1] : @Best Contact Number)
 ```
+This formula handles both cases:
+- If the field contains `field_id:phone_number`, it extracts the phone number
+- If the field contains only the phone number, it uses it directly
 
 #### 2.3 Field Settings
 - **Output Type:** Text
@@ -256,6 +283,83 @@ Create a **Text field** in your app with usage instructions:
 
 ## Troubleshooting
 
+### Issue 0: JavaScript vs PHP Syntax Confusion (CRITICAL)
+
+**Symptom:** Formula doesn't work or produces errors like "explode is not defined"
+
+**Diagnosis:**
+This is the most common error: using PHP syntax (`explode()`) in Podio calculation fields which require JavaScript syntax (`.split()`).
+
+**⚠️ REMEMBER:**
+- **Podio Calculation Fields** → Use JavaScript: `.split(":")`
+- **GlobiFlow** → Use PHP: `explode(":", ...)`
+
+**Correct JavaScript Formula for Podio Calculation Fields:**
+```javascript
+"https://your-url.vercel.app/dial?phone=" + (@Best Contact Number + "").split(":")[1]
+```
+
+**WRONG (PHP/GlobiFlow syntax):**
+```php
+"https://your-url.vercel.app/dial?phone=" + explode(":",@Best Contact Number)[1]
+```
+
+### Issue 0b: Formula Extracting Field ID Instead of Phone Number (CRITICAL)
+
+**Symptom:** The generated URL contains a field ID (e.g., `dial?phone=123456789`) instead of the actual phone number with country code (e.g., `dial?phone=+15551234567`)
+
+**Diagnosis:**
+Podio phone fields internally store data in the format `field_id:phone_number`. When you reference a phone field directly with `@Best Contact Number`, Podio may return the entire string including the field ID prefix, rather than just the phone number value.
+
+**Example of Incorrect Output:**
+```
+https://your-url.vercel.app/dial?phone=123456789:+15551234567
+```
+or
+```
+https://your-url.vercel.app/dial?phone=123456789
+```
+
+**Solution (JavaScript for Podio):**
+Use the `.split()` method to split the field value and extract only the phone number portion:
+
+```javascript
+"https://your-url.vercel.app/dial?phone=" + (@Best Contact Number + "").split(":")[1]
+```
+
+**How it works:**
+- `(@Best Contact Number + "")` converts the field to a string
+- `.split(":")` splits the field value at the `:` delimiter, creating an array (JavaScript method)
+- `[1]` selects the second element (index 1) which contains the actual phone number
+- If the field happens to only contain the phone number without a field ID prefix, this formula will still work correctly
+
+**Alternative Solutions:**
+
+If `.split()` has issues, use these JavaScript alternatives:
+
+**Method 1: Using `substring()` and `indexOf()`**
+```javascript
+"https://your-url.vercel.app/dial?phone=" + (@Best Contact Number + "").substring((@Best Contact Number + "").indexOf(":") + 1)
+```
+
+**Method 2: Conditional logic for edge cases**
+```javascript
+"https://your-url.vercel.app/dial?phone=" + ((@Best Contact Number + "").indexOf(":") >= 0 ? (@Best Contact Number + "").split(":")[1] : @Best Contact Number)
+```
+
+**Why this is critical:**
+Without proper extraction, your dialer will attempt to call an invalid number (the field ID), causing all dial attempts to fail with "Missing phone number parameter" or "Invalid phone number" errors.
+
+**Verification:**
+After updating the formula, check that your "Dialer URL (Internal)" calculation field outputs:
+```
+https://your-url.vercel.app/dial?phone=+15551234567
+```
+NOT:
+```
+https://your-url.vercel.app/dial?phone=123456789:+15551234567
+```
+
 ### Issue 1: Link Field is Empty
 
 **Symptom:** The "📞 Click to Dial" field shows no link
@@ -323,21 +427,22 @@ Create a **Text field** in your app with usage instructions:
 **Symptom:** Calculation field displays the formula text rather than the generated URL
 
 **Diagnosis:**
-- Formula syntax error
+- Formula syntax error (likely using PHP `explode()` instead of JavaScript `.split()`)
 - Field reference invalid
 - Podio calculation engine error
 
 **Solution:**
-1. Verify formula uses correct syntax:
+1. Verify formula uses correct **JavaScript** syntax for Podio Calculation Fields:
+   ```javascript
+   "https://your-url.vercel.app/dial?phone=" + (@Best Contact Number + "").split(":")[1]
    ```
-   "https://your-url.vercel.app/dial?phone=" + @Best Contact Number
-   ```
-2. Ensure `@Best Contact Number` exactly matches field name
-3. Try alternative concatenation syntax:
-   ```
-   "https://your-url.vercel.app/dial?phone=".@Best Contact Number
+2. Ensure `@Best Contact Number` exactly matches field name (case-sensitive)
+3. Try alternative JavaScript approaches:
+   ```javascript
+   "https://your-url.vercel.app/dial?phone=" + (@Best Contact Number + "").substring((@Best Contact Number + "").indexOf(":") + 1)
    ```
 4. Check for any special characters or spaces in field names
+5. **Do NOT use** `explode()` which is PHP syntax for GlobiFlow, not JavaScript for Podio Calculation Fields
 
 ---
 
