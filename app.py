@@ -55,13 +55,32 @@ def dial():
             """, 400
         
         try:
+            # Build absolute URL for Vercel deployment
+            base_url = request.url_root.rstrip('/')
+            if not base_url.startswith('http'):
+                base_url = f"https://{request.host}"
+            
+            connect_url = f"{base_url}/connect_prospect?prospect_number={urllib.parse.quote_plus(prospect_number)}"
+            callback_url = f"{base_url}/call_status"
+            
+            print(f"=== DIAL ENDPOINT DEBUG ===")
+            print(f"Base URL: {base_url}")
+            print(f"Connect URL: {connect_url}")
+            print(f"Callback URL: {callback_url}")
+            print(f"Agent Phone: {AGENT_PHONE_NUMBER}")
+            print(f"Twilio Phone: {TWILIO_PHONE_NUMBER}")
+            print(f"Prospect Number: {prospect_number}")
+            print(f"=== END DIAL DEBUG ===")
+            
             # Initiate the call to the agent
             call = client.calls.create(
                 to=AGENT_PHONE_NUMBER,
                 from_=TWILIO_PHONE_NUMBER,
-                url=f"{request.url_root}connect_prospect?prospect_number={urllib.parse.quote_plus(prospect_number)}",
+                url=connect_url,
+                method='POST',  # Explicitly specify POST method
                 status_callback_event=['answered', 'completed'],
-                status_callback=f"{request.url_root}call_status"
+                status_callback=callback_url,
+                status_callback_method='POST'
             )
             print(f"Call initiated to agent via GET: {call.sid}")
             
@@ -98,13 +117,29 @@ def dial():
             return str(response)
 
         try:
+            # Build absolute URL for Vercel deployment
+            base_url = request.url_root.rstrip('/')
+            if not base_url.startswith('http'):
+                base_url = f"https://{request.host}"
+            
+            connect_url = f"{base_url}/connect_prospect?prospect_number={urllib.parse.quote_plus(prospect_number)}"
+            callback_url = f"{base_url}/call_status"
+            
+            print(f"=== DIAL ENDPOINT DEBUG (POST) ===")
+            print(f"Base URL: {base_url}")
+            print(f"Connect URL: {connect_url}")
+            print(f"Callback URL: {callback_url}")
+            print(f"=== END DIAL DEBUG (POST) ===")
+            
             # Initiate the call to the agent
             call = client.calls.create(
                 to=AGENT_PHONE_NUMBER,
                 from_=TWILIO_PHONE_NUMBER,
-                url=f"{request.url_root}connect_prospect?prospect_number={prospect_number}",
+                url=connect_url,
+                method='POST',  # Explicitly specify POST method
                 status_callback_event=['answered', 'completed'],
-                status_callback=f"{request.url_root}call_status"
+                status_callback=callback_url,
+                status_callback_method='POST'
             )
             response.say("Connecting you to the agent.")
             response.dial(number=AGENT_PHONE_NUMBER) # This dial is for the initial call to the agent
@@ -115,17 +150,23 @@ def dial():
 
         return str(response)
 
-@app.route('/connect_prospect', methods=['POST'])
+@app.route('/connect_prospect', methods=['GET', 'POST'])
 def connect_prospect():
     response = VoiceResponse()
+    
+    # Debug logging - START
+    print(f"\n{'='*50}")
+    print(f"=== CONNECT PROSPECT CALLED ===")
+    print(f"Request Method: {request.method}")
+    print(f"Request URL: {request.url}")
+    print(f"Request Headers: {dict(request.headers)}")
+    print(f"Request Args: {dict(request.args)}")
+    print(f"Request Form: {dict(request.form)}")
+    
     prospect_number = urllib.parse.unquote_plus(request.args.get('prospect_number', ''))
     
-    # Debug logging
-    print(f"=== CONNECT PROSPECT DEBUG ===")
     print(f"Raw prospect_number from args: {request.args.get('prospect_number', 'MISSING')}")
     print(f"Decoded prospect_number: {prospect_number}")
-    print(f"All request.args: {dict(request.args)}")
-    print(f"Request URL: {request.url}")
     
     if prospect_number:
         # Ensure number has +1 country code if it doesn't already
@@ -147,13 +188,19 @@ def connect_prospect():
         dial.number(prospect_number)
         response.append(dial)
         
-        print(f"TwiML response: {str(response)}")
+        twiml_output = str(response)
+        print(f"TwiML response generated:\n{twiml_output}")
     else:
+        print("ERROR: No prospect_number received!")
         print("ERROR: No prospect_number received!")
         response.say("Sorry, I couldn't connect to the prospect. Missing phone number.")
     
-    print(f"=== END DEBUG ===")
-    return str(response)
+    print(f"=== END CONNECT PROSPECT ===")
+    print(f"{'='*50}\n")
+    
+    final_twiml = str(response)
+    print(f"Returning TwiML ({len(final_twiml)} bytes): {final_twiml}")
+    return Response(final_twiml, mimetype='text/xml')
 
 @app.route('/call_status', methods=['POST'])
 def call_status():
