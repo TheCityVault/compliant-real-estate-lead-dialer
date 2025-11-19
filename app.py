@@ -6,7 +6,7 @@ import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 import urllib.parse
-from pypodio2 import api
+import requests
 
 app = Flask(__name__)
 
@@ -24,22 +24,84 @@ PODIO_CLIENT_SECRET = os.environ.get('PODIO_CLIENT_SECRET')
 PODIO_USERNAME = os.environ.get('PODIO_USERNAME')
 PODIO_PASSWORD = os.environ.get('PODIO_PASSWORD')
 
-# Initialize Podio client
-podio = None
-if PODIO_CLIENT_ID and PODIO_CLIENT_SECRET and PODIO_USERNAME and PODIO_PASSWORD:
+# Initialize Podio access token
+podio_access_token = None
+
+def get_podio_token():
+    """Get Podio OAuth access token"""
+    global podio_access_token
+    
+    if not all([PODIO_CLIENT_ID, PODIO_CLIENT_SECRET, PODIO_USERNAME, PODIO_PASSWORD]):
+        print("Podio credentials not fully configured. Podio integration will be disabled.")
+        return None
+    
     try:
-        podio = api.OAuthClient(
-            client_id=PODIO_CLIENT_ID,
-            client_secret=PODIO_CLIENT_SECRET,
-            username=PODIO_USERNAME,
-            password=PODIO_PASSWORD
+        # Get OAuth token from Podio
+        response = requests.post(
+            'https://podio.com/oauth/token',
+            data={
+                'grant_type': 'password',
+                'client_id': PODIO_CLIENT_ID,
+                'client_secret': PODIO_CLIENT_SECRET,
+                'username': PODIO_USERNAME,
+                'password': PODIO_PASSWORD
+            }
         )
-        print("Podio client initialized successfully.")
+        
+        if response.status_code == 200:
+            token_data = response.json()
+            podio_access_token = token_data.get('access_token')
+            print("Podio token obtained successfully.")
+            return podio_access_token
+        else:
+            print(f"Error getting Podio token: {response.status_code} - {response.text}")
+            return None
     except Exception as e:
-        print(f"Error initializing Podio client: {e}")
-        podio = None
-else:
-    print("Podio credentials not fully configured. Podio integration will be disabled.")
+        print(f"Error initializing Podio authentication: {e}")
+        return None
+
+def get_podio_item(item_id):
+    """Fetch a Podio item by ID"""
+    global podio_access_token
+    
+    # Get token if we don't have one
+    if not podio_access_token:
+        podio_access_token = get_podio_token()
+    
+    if not podio_access_token:
+        raise Exception("Failed to authenticate with Podio")
+    
+    try:
+        # Fetch item from Podio API
+        response = requests.get(
+            f'https://api.podio.com/item/{item_id}',
+            headers={
+                'Authorization': f'OAuth2 {podio_access_token}',
+                'Content-Type': 'application/json'
+            }
+        )
+        
+        if response.status_code == 401:
+            # Token might be expired, try to refresh
+            print("Podio token expired, getting new token...")
+            podio_access_token = get_podio_token()
+            if podio_access_token:
+                # Retry with new token
+                response = requests.get(
+                    f'https://api.podio.com/item/{item_id}',
+                    headers={
+                        'Authorization': f'OAuth2 {podio_access_token}',
+                        'Content-Type': 'application/json'
+                    }
+                )
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Podio API error: {response.status_code} - {response.text}")
+            
+    except Exception as e:
+        raise Exception(f"Error fetching Podio item: {e}")
 
 # Initialize Firestore
 GCP_SERVICE_ACCOUNT_JSON = os.environ.get('GCP_SERVICE_ACCOUNT_JSON')
@@ -76,24 +138,12 @@ def dial():
         if item_id:
             print(f"Item ID provided: {item_id}")
             
-            if not podio:
-                print("ERROR: Podio client not initialized")
-                return """
-                <html>
-                <head><title>Error</title></head>
-                <body>
-                    <h2>❌ Error</h2>
-                    <p>Podio integration is not configured. Please contact your administrator.</p>
-                </body>
-                </html>
-                """, 500
-            
             try:
                 # Fetch the item from Podio
                 print(f"Fetching Podio item {item_id}...")
-                item = podio.Item.find(item_id)
+                item = get_podio_item(item_id)
                 print(f"Podio item fetched successfully")
-                print(f"Item fields: {[f['label'] for f in item.get('fields', [])]}")
+                print(f"Item fields: {[f.get('label') for f in item.get('fields', [])]}")
                 
                 # Extract phone number from the "Best Contact Number" field
                 phone_field = None

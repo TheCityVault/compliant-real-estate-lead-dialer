@@ -2,4 +2,4 @@ Flask
 twilio
 google-cloud-firestore
 firebase-admin
-pypodio2
+requests
