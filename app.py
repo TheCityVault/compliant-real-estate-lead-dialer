@@ -109,14 +109,28 @@ if GCP_SERVICE_ACCOUNT_JSON:
     try:
         service_account_info = json.loads(GCP_SERVICE_ACCOUNT_JSON)
         cred = credentials.Certificate(service_account_info)
-        firebase_admin.initialize_app(cred)
+        
+        # Check if Firebase Admin app already exists (serverless caching)
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase Admin initialized successfully")
+        else:
+            print("ℹ️ Firebase Admin app already exists (using cached instance)")
+        
+        # Initialize Firestore client
         db = firestore.client()
-        print("Firestore initialized successfully.")
+        
+        # Validate Firestore is working
+        print(f"✅ Firestore client initialized: {type(db)}")
+        print(f"✅ Firestore project: {db.project}")
+        
     except Exception as e:
-        print(f"Error initializing Firestore: {e}")
+        print(f"❌ CRITICAL: Error initializing Firestore: {e}")
+        import traceback
+        traceback.print_exc()
         db = None
 else:
-    print("GCP_SERVICE_ACCOUNT_JSON environment variable not set. Firestore logging will be disabled.")
+    print("⚠️ WARNING: GCP_SERVICE_ACCOUNT_JSON not set. Firestore disabled.")
     db = None
 
 @app.route('/')
