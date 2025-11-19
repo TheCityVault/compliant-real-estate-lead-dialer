@@ -55,6 +55,7 @@ This document **must** be updated at the start of any new development session or
 | **DONE** | Test production deployment with live Podio data | **SUCCESS:** End-to-end testing completed with real Podio leads. |
 | **DONE** | Verify Firestore audit trail | **VERIFIED:** All call details logged correctly to call_logs collection. |
 | **DONE** | Document production deployment | Complete README.md created with production status. |
+| **DONE** | Fix Firestore logging issues | Two critical issues resolved: (1) Serverless caching initialization bug, (2) GCP project mismatch in service account credentials. |
 
 ### **Phase 2: Deferred Integration (Podio Data Sync)**
 
@@ -69,12 +70,49 @@ This document **must** be updated at the start of any new development session or
 All core functionality has been implemented, tested, and deployed to production. The system is fully operational with:
 - ✅ TCPA-compliant two-leg dialing
 - ✅ Seamless Podio Link field integration
-- ✅ Real-time Firestore audit logging
+- ✅ Real-time Firestore audit logging (verified working after infrastructure fixes)
 - ✅ Podio API integration for lead phone retrieval
 - ✅ Production deployment on Vercel
 - ✅ Complete documentation
 
 **Production Status:** LIVE AND OPERATIONAL
 
+**Latest Update (Nov 19, 2024):** Firestore logging issues fully resolved and verified. Test call successfully logged to `call_logs` collection. System ready for production use.
+
 **Future Enhancement (Phase 2):** Implement Make.com/Zapier automation to sync Firestore call logs back to Podio Call Activity app.
+
+## **🔧 Troubleshooting & Lessons Learned**
+
+### **Firestore Logging Investigation (Nov 19, 2024)**
+
+**Issue:** Firestore logging was not working in production despite successful code deployment.
+
+**Root Causes Identified:**
+
+1. **Serverless Module Caching Bug:**
+   - **Problem:** Firebase Admin SDK was being initialized on every serverless function invocation, causing authentication conflicts
+   - **Solution:** Added `if not firebase_admin._apps:` check in [`app.py`](app.py:106-134) to prevent re-initialization
+   - **Git Commit:** `2c0bfcb` - Enhanced serverless environment handling
+   - **Lesson:** Serverless platforms cache Python modules between invocations; always check for existing instances before re-initializing SDKs
+
+2. **GCP Project Mismatch:**
+   - **Problem:** Service account key was from a different GCP project (`roo-code-440717`) instead of the correct `compliant-dialer` project
+   - **Solution:**
+     - Created new Firestore `(default)` database in Native mode in `compliant-dialer` project
+     - Generated new service account key from correct project
+     - Updated `GCP_SERVICE_ACCOUNT_JSON` in Vercel environment variables
+     - Deleted 2 obsolete service account keys for security
+   - **Lesson:** Always verify that service account keys match the target GCP project; project ID mismatches will cause silent failures
+
+**Verification Results:**
+- ✅ Test call completed successfully
+- ✅ Call log entry created in `call_logs` collection
+- ✅ All Firestore fields populated correctly
+- ✅ Production system fully operational
+
+**Key Takeaways:**
+- Service account key rotation should be documented and tracked
+- GCP project IDs must match between service account and target resources
+- Serverless environments require special handling for stateful SDK initialization
+- Always test infrastructure changes with end-to-end verification
 
