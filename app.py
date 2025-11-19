@@ -12,6 +12,7 @@ app = Flask(__name__)
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+AGENT_PHONE_NUMBER = os.environ.get('AGENT_PHONE_NUMBER')
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
@@ -38,24 +39,23 @@ def hello_world():
 @app.route('/dial', methods=['POST'])
 def dial():
     response = VoiceResponse()
-    agent_number = request.form.get('agent_number')
     prospect_number = request.form.get('prospect_number')
 
-    if not all([agent_number, prospect_number]):
-        response.say("Sorry, I couldn't initiate the call. Missing agent or prospect number.")
+    if not prospect_number:
+        response.say("Sorry, I couldn't initiate the call. Missing prospect number.")
         return str(response)
 
     try:
         # Initiate the call to the agent
         call = client.calls.create(
-            to=agent_number,
+            to=AGENT_PHONE_NUMBER,
             from_=TWILIO_PHONE_NUMBER,
             url=f"{request.url_root}connect_prospect?prospect_number={prospect_number}",
             status_callback_event=['answered', 'completed'],
             status_callback=f"{request.url_root}call_status"
         )
         response.say("Connecting you to the agent.")
-        response.dial(number=agent_number) # This dial is for the initial call to the agent
+        response.dial(number=AGENT_PHONE_NUMBER) # This dial is for the initial call to the agent
         print(f"Call initiated to agent: {call.sid}")
     except Exception as e:
         print(f"Error initiating call: {e}")
