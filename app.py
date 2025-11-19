@@ -5,6 +5,7 @@ from twilio.rest import Client
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
+import urllib.parse
 
 app = Flask(__name__)
 
@@ -40,7 +41,7 @@ def hello_world():
 def dial():
     # Handle GET requests (Link Field approach from Podio)
     if request.method == 'GET':
-        prospect_number = request.args.get('phone')
+        prospect_number = urllib.parse.unquote_plus(request.args.get('phone', ''))
         
         if not prospect_number:
             return """
@@ -58,7 +59,7 @@ def dial():
             call = client.calls.create(
                 to=AGENT_PHONE_NUMBER,
                 from_=TWILIO_PHONE_NUMBER,
-                url=f"{request.url_root}connect_prospect?prospect_number={prospect_number}",
+                url=f"{request.url_root}connect_prospect?prospect_number={urllib.parse.quote_plus(prospect_number)}",
                 status_callback_event=['answered', 'completed'],
                 status_callback=f"{request.url_root}call_status"
             )
@@ -117,7 +118,7 @@ def dial():
 @app.route('/connect_prospect', methods=['POST'])
 def connect_prospect():
     response = VoiceResponse()
-    prospect_number = request.args.get('prospect_number')
+    prospect_number = urllib.parse.unquote_plus(request.args.get('prospect_number', ''))
     if prospect_number:
         response.say("Connecting you to the prospect.")
         response.dial(number=prospect_number)
