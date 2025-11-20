@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, request, Response, render_template
+from flask import Flask, request, Response, render_template, jsonify
 
 # Load environment variables from .env file
 load_dotenv()
@@ -190,6 +190,59 @@ def dial():
     print(f"TWILIO_PHONE_NUMBER: {TWILIO_PHONE_NUMBER}")
     print(f"TWILIO_ACCOUNT_SID: {TWILIO_ACCOUNT_SID[:8]}... (masked)")
     print(f"{'='*50}\n")
+    
+    # Handle AJAX POST requests from Agent Workspace
+    if request.method == 'POST' and request.is_json:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        prospect_number = data.get('phone')
+        
+        print(f"AJAX POST to /dial - item_id: {item_id}, phone: {prospect_number}")
+        
+        try:
+            # Build callback URLs
+            base_url = request.url_root.rstrip('/')
+            if not base_url.startswith('http'):
+                base_url = f"https://{request.host}"
+            
+            connect_url = f"{base_url}/connect_prospect?prospect_number={urllib.parse.quote_plus(prospect_number)}"
+            callback_url = f"{base_url}/call_status"
+            
+            print(f"=== AJAX DIAL DEBUG ===")
+            print(f"Base URL: {base_url}")
+            print(f"Connect URL: {connect_url}")
+            print(f"Callback URL: {callback_url}")
+            print(f"Agent Phone: {AGENT_PHONE_NUMBER}")
+            print(f"Twilio Phone: {TWILIO_PHONE_NUMBER}")
+            print(f"Prospect Number: {prospect_number}")
+            print(f"=== END AJAX DIAL DEBUG ===")
+            
+            # Initiate call
+            call = client.calls.create(
+                to=AGENT_PHONE_NUMBER,
+                from_=TWILIO_PHONE_NUMBER,
+                url=connect_url,
+                method='POST',
+                status_callback_event=['answered', 'completed'],
+                status_callback=callback_url,
+                status_callback_method='POST'
+            )
+            
+            print(f"Call initiated to agent via AJAX: {call.sid}")
+            
+            # Return JSON response for AJAX
+            return jsonify({
+                'success': True,
+                'call_sid': call.sid,
+                'message': 'Call initiated successfully'
+            }), 200
+            
+        except Exception as e:
+            print(f"Error initiating AJAX call: {e}")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
     
     # Handle GET requests (Link Field approach from Podio)
     if request.method == 'GET':
