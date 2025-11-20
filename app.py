@@ -337,7 +337,7 @@ def submit_call_data():
         podio_fields = {
             # AGENT-ENTERED FIELDS (from workspace form)
             str(DISPOSITION_CODE_FIELD_ID): data.get('disposition_code'),
-            str(RELATIONSHIP_FIELD_ID): int(item_id),  # CRITICAL: Links to Master Lead
+            str(RELATIONSHIP_FIELD_ID): [int(item_id)],  # CRITICAL: Links to Master Lead (array format)
             str(DATE_OF_CALL_FIELD_ID): datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
         
