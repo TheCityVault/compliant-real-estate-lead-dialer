@@ -8,11 +8,11 @@ The Agent Workspace UI must present the following fields. The development team n
 
 | \# | Field Name | Input Type | Required? | Productivity/Continuity Value | Podio Target (PM Must Provide ID) |
 | :---- | :---- | :---- | :---- | :---- | :---- |
-| **1** | **Disposition Code** | Dropdown / Category | **YES** | Primary reporting metric. Locks the agent into selecting the call outcome. | field\_id\_XXX (Category Field) |
-| **2** | **Agent Notes / Summary** | Multi-Line Text | NO | **Continuity:** Crucial context for follow-up. Stored as plain text. | field\_id\_XXX (Text Field) |
-| **3** | **Seller Motivation Level** | Dropdown / Category | NO | **Qualifying:** Used to prioritize leads for follow-up sprints. | field\_id\_XXX (Category Field) |
-| **4** | **Next Action Date** | Date Picker | Conditional | **Efficiency:** Schedules the next touchpoint. Only required if Disposition is positive. | field\_id\_XXX (Date Field) |
-| **5** | **Target Asking Price** | Number/Currency | NO | **Pipeline Value:** Required for forecasting future revenue potential. | field\_id\_XXX (Money Field) |
+| **1** | **Disposition Code** | Dropdown / Category | **YES** | Primary reporting metric. Locks the agent into selecting the call outcome. | **274851083** (Category Field) |
+| **2** | **Agent Notes / Summary** | Multi-Line Text | NO | **Continuity:** Crucial context for follow-up. Stored as plain text. | **274851084** (Text Field) |
+| **3** | **Seller Motivation Level** | Dropdown / Category | NO | **Qualifying:** Used to prioritize leads for follow-up sprints. | **274851085** (Category Field) |
+| **4** | **Next Action Date** | Date Picker | Conditional | **Efficiency:** Schedules the next touchpoint. Only required if Disposition is positive. | **274851086** (Date Field) |
+| **5** | **Target Asking Price** | Number/Currency | NO | **Pipeline Value:** Required for forecasting future revenue potential. | **274851087** (Money Field) |
 
 ### **Format Instructions (Agent Guidance)**
 

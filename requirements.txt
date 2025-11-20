@@ -2,5 +2,6 @@ Flask
 firebase-admin
 google-cloud-firestore
 pypodio2
+python-dotenv
 requests
 twilio
