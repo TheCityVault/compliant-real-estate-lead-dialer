@@ -139,6 +139,14 @@ def hello_world():
 
 @app.route('/dial', methods=['GET', 'POST'])
 def dial():
+    # Add environment variable verification logging
+    print(f"\n{'='*50}")
+    print(f"=== ENVIRONMENT VERIFICATION ===")
+    print(f"AGENT_PHONE_NUMBER: {AGENT_PHONE_NUMBER}")
+    print(f"TWILIO_PHONE_NUMBER: {TWILIO_PHONE_NUMBER}")
+    print(f"TWILIO_ACCOUNT_SID: {TWILIO_ACCOUNT_SID[:8]}... (masked)")
+    print(f"{'='*50}\n")
+    
     # Handle GET requests (Link Field approach from Podio)
     if request.method == 'GET':
         prospect_number = None
@@ -425,6 +433,21 @@ def call_status():
     timestamp = firestore.SERVER_TIMESTAMP # Use Firestore's server timestamp
 
     print(f"Call SID: {call_sid}, Status: {call_status}")
+    
+    # 🚨 ALERT: Check for "busy" status which indicates potential issues
+    if call_status == 'busy':
+        print(f"\n{'='*50}")
+        print(f"🚨 ALERT: BUSY STATUS DETECTED")
+        print(f"Call SID: {call_sid}")
+        print(f"From: {from_number}")
+        print(f"To: {to_number}")
+        print(f"Direction: {direction}")
+        print(f"This may indicate:")
+        print(f"  - Environment variable configuration issue")
+        print(f"  - Incorrect AGENT_PHONE_NUMBER")
+        print(f"  - Prospect phone returned busy signal")
+        print(f"ACTION REQUIRED: Verify AGENT_PHONE_NUMBER = {AGENT_PHONE_NUMBER}")
+        print(f"{'='*50}\n")
 
     if db:
         try:
@@ -444,6 +467,30 @@ def call_status():
         print("Firestore client not initialized. Skipping logging.")
 
     return Response(status=200)
+
+def validate_environment():
+    """Validate critical environment variables at startup"""
+    required_vars = {
+        'TWILIO_ACCOUNT_SID': TWILIO_ACCOUNT_SID,
+        'TWILIO_AUTH_TOKEN': TWILIO_AUTH_TOKEN,
+        'TWILIO_PHONE_NUMBER': TWILIO_PHONE_NUMBER,
+        'AGENT_PHONE_NUMBER': AGENT_PHONE_NUMBER,
+    }
+    
+    print(f"\n{'='*50}")
+    print(f"=== STARTUP ENVIRONMENT VALIDATION ===")
+    for var_name, var_value in required_vars.items():
+        if var_value:
+            if 'TOKEN' in var_name or 'SID' in var_name:
+                print(f"✅ {var_name}: {var_value[:8]}... (masked)")
+            else:
+                print(f"✅ {var_name}: {var_value}")
+        else:
+            print(f"❌ {var_name}: NOT SET")
+    print(f"{'='*50}\n")
+
+# Call validation on module load (for serverless)
+validate_environment()
 
 if __name__ == '__main__':
     app.run(debug=True)
