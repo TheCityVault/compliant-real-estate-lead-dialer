@@ -177,24 +177,25 @@ def generate_title(data, item_id):
 def get_call_duration(call_sid):
     """Fetch call duration from Twilio API"""
     if not call_sid:
-        return 0
+        return None
     try:
         call = client.calls(call_sid).fetch()
-        return call.duration or 0
+        duration = call.duration
+        return duration if duration is not None else None
     except:
-        return 0
+        return None
 
 def get_recording_url(call_sid):
     """Fetch recording URL from Twilio API"""
     if not call_sid:
-        return ''
+        return None
     try:
         recordings = client.recordings.list(call_sid=call_sid, limit=1)
         if recordings:
             return f"https://api.twilio.com{recordings[0].uri}"
-        return ''
+        return None
     except:
-        return ''
+        return None
 
 def log_to_firestore(data, item_id, call_sid):
     """Log call disposition to Firestore for audit"""
@@ -301,18 +302,46 @@ def submit_call_data():
         podio_fields = {
             # AGENT-ENTERED FIELDS (from workspace form)
             str(DISPOSITION_CODE_FIELD_ID): data.get('disposition_code'),
-            str(AGENT_NOTES_FIELD_ID): data.get('agent_notes', ''),
-            str(MOTIVATION_LEVEL_FIELD_ID): data.get('motivation_level', ''),
-            str(NEXT_ACTION_DATE_FIELD_ID): convert_to_iso_date(data.get('next_action_date')),
-            str(ASKING_PRICE_FIELD_ID): parse_currency(data.get('asking_price')),
-            
-            # SYSTEM-POPULATED FIELDS
-            str(TITLE_FIELD_ID): generate_title(data, item_id),
             str(RELATIONSHIP_FIELD_ID): int(item_id),  # CRITICAL: Links to Master Lead
             str(DATE_OF_CALL_FIELD_ID): datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            str(CALL_DURATION_FIELD_ID): get_call_duration(call_sid),
-            str(RECORDING_URL_FIELD_ID): get_recording_url(call_sid)
         }
+        
+        # Add TITLE field - ensure it's never empty
+        title = generate_title(data, item_id)
+        if title:
+            podio_fields[str(TITLE_FIELD_ID)] = title
+        else:
+            podio_fields[str(TITLE_FIELD_ID)] = f"Call Activity - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        
+        # Add optional AGENT fields - only if non-empty
+        agent_notes = data.get('agent_notes', '').strip()
+        if agent_notes:
+            podio_fields[str(AGENT_NOTES_FIELD_ID)] = agent_notes
+            
+        motivation_level = data.get('motivation_level', '').strip()
+        if motivation_level:
+            podio_fields[str(MOTIVATION_LEVEL_FIELD_ID)] = motivation_level
+        
+        # Add NEXT_ACTION_DATE if provided
+        next_action_date = convert_to_iso_date(data.get('next_action_date'))
+        if next_action_date:
+            podio_fields[str(NEXT_ACTION_DATE_FIELD_ID)] = next_action_date
+        
+        # Add ASKING_PRICE if provided
+        asking_price = parse_currency(data.get('asking_price'))
+        if asking_price is not None:
+            podio_fields[str(ASKING_PRICE_FIELD_ID)] = asking_price
+        
+        # Add CALL_DURATION if we have a call_sid
+        if call_sid:
+            duration = get_call_duration(call_sid)
+            if duration is not None and duration > 0:
+                podio_fields[str(CALL_DURATION_FIELD_ID)] = duration
+            
+            # Add RECORDING_URL if available
+            recording_url = get_recording_url(call_sid)
+            if recording_url:
+                podio_fields[str(RECORDING_URL_FIELD_ID)] = recording_url
         
         # Create Call Activity Item in Podio
         response = requests.post(
