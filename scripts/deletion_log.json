@@ -1,0 +1,41 @@
+{
+  "app_id": "30549170",
+  "timestamp": "2025-11-20T17:07:09.892963",
+  "deleted_count": 4,
+  "already_deleted_count": 0,
+  "failed_count": 0,
+  "results": [
+    {
+      "success": true,
+      "field_id": 274769802,
+      "field_name": "CALL_OUTCOME",
+      "replaced_by": "Disposition Code",
+      "new_field_id": 274851083,
+      "timestamp": "2025-11-20T17:07:05.004003"
+    },
+    {
+      "success": true,
+      "field_id": 274769804,
+      "field_name": "Disposition Notes",
+      "replaced_by": "Agent Notes / Summary",
+      "new_field_id": 274851084,
+      "timestamp": "2025-11-20T17:07:06.379812"
+    },
+    {
+      "success": true,
+      "field_id": 274769803,
+      "field_name": "MOTIVATION_SCORE",
+      "replaced_by": "Seller Motivation Level",
+      "new_field_id": 274851085,
+      "timestamp": "2025-11-20T17:07:07.697009"
+    },
+    {
+      "success": true,
+      "field_id": 274769805,
+      "field_name": "SCHEDULE CALLBACK",
+      "replaced_by": "Next Action Date",
+      "new_field_id": 274851086,
+      "timestamp": "2025-11-20T17:07:09.890957"
+    }
+  ]
+}

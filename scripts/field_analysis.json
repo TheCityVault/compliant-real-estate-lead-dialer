@@ -1,0 +1,121 @@
+{
+  "app_id": "30549170",
+  "total_fields": 14,
+  "categorized": {
+    "core_fields": [
+      {
+        "id": 274769797,
+        "label": "Title",
+        "type": "text"
+      },
+      {
+        "id": 274769798,
+        "label": "Relationship",
+        "type": "app"
+      },
+      {
+        "id": 274769799,
+        "label": "Date of Call",
+        "type": "date"
+      },
+      {
+        "id": 274769800,
+        "label": "Call Duration (seconds)",
+        "type": "number"
+      },
+      {
+        "id": 274769801,
+        "label": "Recording URL",
+        "type": "text"
+      }
+    ],
+    "v2_new_fields": [
+      {
+        "id": 274851083,
+        "label": "Disposition Code",
+        "type": "category"
+      },
+      {
+        "id": 274851085,
+        "label": "Seller Motivation Level",
+        "type": "category"
+      },
+      {
+        "id": 274851086,
+        "label": "Next Action Date",
+        "type": "date"
+      },
+      {
+        "id": 274851087,
+        "label": "Target Asking Price",
+        "type": "money"
+      },
+      {
+        "id": 274851084,
+        "label": "Agent Notes / Summary",
+        "type": "text"
+      }
+    ],
+    "legacy_fields": [
+      {
+        "id": 274769802,
+        "label": "CALL_OUTCOME",
+        "type": "category"
+      },
+      {
+        "id": 274769803,
+        "label": "MOTIVATION_SCORE",
+        "type": "category"
+      },
+      {
+        "id": 274769804,
+        "label": "Disposition Notes",
+        "type": "text"
+      },
+      {
+        "id": 274769805,
+        "label": "SCHEDULE CALLBACK",
+        "type": "date"
+      }
+    ]
+  },
+  "duplicates": [
+    {
+      "legacy": "CALL_OUTCOME",
+      "legacy_id": 274769802,
+      "v2": "Disposition Code",
+      "v2_id": 274851083,
+      "type": "category",
+      "purpose": "Call outcome/disposition"
+    },
+    {
+      "legacy": "Disposition Notes",
+      "legacy_id": 274769804,
+      "v2": "Agent Notes / Summary",
+      "v2_id": 274851084,
+      "type": "text",
+      "purpose": "Agent notes from call"
+    },
+    {
+      "legacy": "MOTIVATION_SCORE",
+      "legacy_id": 274769803,
+      "v2": "Seller Motivation Level",
+      "v2_id": 274851085,
+      "type": "category",
+      "purpose": "Seller motivation assessment"
+    },
+    {
+      "legacy": "SCHEDULE CALLBACK",
+      "legacy_id": 274769805,
+      "v2": "Next Action Date",
+      "v2_id": 274851086,
+      "type": "date",
+      "purpose": "Next follow-up date"
+    }
+  ],
+  "recommendations": [
+    "Delete legacy fields after confirming V2.0 fields are properly integrated",
+    "Update any existing data to use V2.0 field IDs",
+    "Test workspace UI with V2.0 fields before removing legacy fields"
+  ]
+}

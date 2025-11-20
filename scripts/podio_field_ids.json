@@ -1,0 +1,36 @@
+{
+  "app_id": "30549170",
+  "timestamp": "2025-11-20",
+  "results": [
+    {
+      "success": true,
+      "field_id": 274851083,
+      "field_name": "Disposition Code",
+      "field_type": "category"
+    },
+    {
+      "success": true,
+      "field_id": 274851084,
+      "field_name": "Agent Notes / Summary",
+      "field_type": "text"
+    },
+    {
+      "success": true,
+      "field_id": 274851085,
+      "field_name": "Seller Motivation Level",
+      "field_type": "category"
+    },
+    {
+      "success": true,
+      "field_id": 274851086,
+      "field_name": "Next Action Date",
+      "field_type": "date"
+    },
+    {
+      "success": true,
+      "field_id": 274851087,
+      "field_name": "Target Asking Price",
+      "field_type": "money"
+    }
+  ]
+}

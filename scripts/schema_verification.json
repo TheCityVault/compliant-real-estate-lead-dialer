@@ -1,0 +1,88 @@
+{
+  "app_id": "30549170",
+  "verification_passed": false,
+  "field_count": 14,
+  "results": {
+    "v2_fields_present": [
+      {
+        "field_id": 274851083,
+        "name": "Disposition Code",
+        "type": "category",
+        "required": true
+      },
+      {
+        "field_id": 274851084,
+        "name": "Agent Notes / Summary",
+        "type": "text",
+        "required": false
+      },
+      {
+        "field_id": 274851085,
+        "name": "Seller Motivation Level",
+        "type": "category",
+        "required": false
+      },
+      {
+        "field_id": 274851086,
+        "name": "Next Action Date",
+        "type": "date",
+        "required": false
+      },
+      {
+        "field_id": 274851087,
+        "name": "Target Asking Price",
+        "type": "money",
+        "required": false
+      }
+    ],
+    "v2_fields_missing": [],
+    "core_fields_present": [
+      "Title",
+      "Relationship",
+      "Date of Call",
+      "Call Duration (seconds)",
+      "Recording URL"
+    ],
+    "core_fields_missing": [],
+    "legacy_fields_found": [
+      {
+        "field_id": 274769802,
+        "name": "CALL_OUTCOME"
+      },
+      {
+        "field_id": 274769803,
+        "name": "MOTIVATION_SCORE"
+      },
+      {
+        "field_id": 274769804,
+        "name": "Disposition Notes"
+      },
+      {
+        "field_id": 274769805,
+        "name": "SCHEDULE CALLBACK"
+      }
+    ],
+    "unexpected_fields": [
+      {
+        "field_id": 274769802,
+        "name": "CALL_OUTCOME",
+        "type": "category"
+      },
+      {
+        "field_id": 274769803,
+        "name": "MOTIVATION_SCORE",
+        "type": "category"
+      },
+      {
+        "field_id": 274769804,
+        "name": "Disposition Notes",
+        "type": "text"
+      },
+      {
+        "field_id": 274769805,
+        "name": "SCHEDULE CALLBACK",
+        "type": "date"
+      }
+    ]
+  }
+}
