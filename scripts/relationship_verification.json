@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-11-20T18:03:54.824512",
+  "master_lead_app_id": "30549135",
+  "call_activity_app_id": "30549170",
+  "relationship_status": false,
+  "configuration_type": "NOT_CONFIGURED",
+  "master_lead_analysis": {
+    "total_fields": 21,
+    "relationship_fields": [],
+    "app_reference_count": 4
+  },
+  "call_activity_verification": {
+    "field_exists": true,
+    "field_id": 274769798,
+    "references_master_lead": false,
+    "referenced_apps": []
+  }
+}

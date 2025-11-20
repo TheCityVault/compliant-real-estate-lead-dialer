@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-11-20T17:35:53.232624",
+  "configuration_success": true,
+  "call_activity_field_update": {
+    "success": true,
+    "field_id": 274769798,
+    "referenced_app": "30549135",
+    "message": "Field configured successfully"
+  },
+  "master_lead_field_creation": {
+    "success": true,
+    "field_id": 274851784,
+    "field_label": "Call History",
+    "referenced_app": "30549170",
+    "message": "Field created successfully"
+  },
+  "field_ids": {
+    "call_activity_relationship_field_id": 274769798,
+    "master_lead_call_history_field_id": 274851784,
+    "master_lead_app_id": "30549135",
+    "call_activity_app_id": "30549170"
+  }
+}

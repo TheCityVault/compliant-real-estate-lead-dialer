@@ -1,62 +1,86 @@
 <!--
 ================================================================================
-PODIO CALCULATION FIELD SCRIPT - CLICK TO DIAL BUTTON
+PODIO LINK FIELD CALCULATION - AGENT WORKSPACE LAUNCHER (V2.0)
 ================================================================================
 
-This file contains the JavaScript expression that should be used in a Podio
-Calculation field to embed a "Click to Dial" button within Podio records.
+This file contains the calculation formula that should be used in a Podio
+Link field to launch the V2.0 Agent Workspace from Master Lead records.
 
 IMPORTANT: This is NOT a standalone HTML file. This is a reference document
-for the Podio calculation field script.
+for the Podio Link field calculation formula.
+
+================================================================================
+V2.0 AGENT WORKSPACE:
+================================================================================
+
+This link now opens the Agent Workspace interface (/workspace) instead of
+the legacy direct dial approach (/dial).
+
+The workspace provides:
+- Pre-loaded lead information (name, phone, address)
+- AJAX call initiation via Twilio
+- Mandatory disposition entry (5 required fields)
+- Real-time Podio write via /submit_call_data endpoint
+- Automatic Call Activity item creation with relationship linking
 
 ================================================================================
 HOW TO USE IN PODIO:
 ================================================================================
 
-1. Create a new Calculation field in your Podio app
-2. Set the field type to "Text" (not Number)
-3. In the calculation editor, paste the script below
-4. Use Podio's field token selector to replace the @Field Name reference:
-   - @Best Contact Number: The field containing the prospect's phone number
-5. Save the calculation field
-6. The button will now appear in your Podio records
-
-NOTE: The agent's phone number is configured in Vercel environment variables
-(AGENT_PHONE_NUMBER) and does not need to be passed from Podio.
+1. Navigate to: Podio → Master Lead app → Modify Template
+2. Locate the "📞 Click to Dial" field (or create a new Link field)
+3. Set the field type to "Link" (not Calculation or Text)
+4. In the Link calculation editor, paste the formula below
+5. Use Podio's field token selector to replace @Item Id with the actual token
+6. Save the field
+7. The link will now appear in your Podio Master Lead records
 
 ================================================================================
-PODIO CALCULATION FIELD SCRIPT:
+PODIO LINK FIELD CALCULATION FORMULA:
 ================================================================================
 -->
 
-"<p style='display:none;'>" . @Best Contact Number . "</p><form action='https://compliant-real-estate-lead-dialer-gg5817o73.vercel.app/dial' method='post'><input type='hidden' name='prospect_number' value='" . @Best Contact Number . "'><button type='submit'>📞 Dial Prospect</button></form>"
+"https://compliant-real-estate-lead-dialer.vercel.app/workspace?item_id=" + @Item Id
 
 <!--
 ================================================================================
 FIELD REFERENCE NOTES:
 ================================================================================
 
-The script uses the following Podio field reference (adjust based on your app):
-- @Best Contact Number: The prospect's phone number to dial
+The formula uses the following Podio field reference:
+- @Item Id: The unique identifier of the Master Lead record
 
 When you paste this into Podio:
-1. Podio will automatically convert @Field Name references into field tokens
-2. Use the field token selector (click on a field name) to select the correct field
-3. Make sure the field name matches your actual Podio app field name
+1. Podio will automatically convert @Item Id into a field token
+2. Use the field token selector to select "Item Id" (system field)
+3. This ensures each link includes the correct Master Lead identifier
 
-The agent's phone number is configured on the Vercel backend as an environment
-variable and does not need to be passed from Podio.
+The /workspace endpoint uses the item_id parameter to:
+- Fetch the Master Lead record from Podio via OAuth
+- Extract and pre-populate lead data (Owner Name, Best Contact Number, Full Address)
+- Display the data in the Agent Workspace for immediate use
 
 ================================================================================
 TECHNICAL NOTES:
 ================================================================================
 
-- The hidden <p> tag at the start ensures the field displays the phone number
-  in Podio's list views while keeping it visually hidden in the record view
-- The form submits to /dial endpoint with POST method
-- One hidden input passes the prospect_number
-- The agent_number is configured in Vercel environment variables (AGENT_PHONE_NUMBER)
-- The button includes a phone emoji (📞) for better visual identification
+V2.0 Architecture:
+- Link field calculation generates URL: /workspace?item_id={PODIO_ITEM_ID}
+- Flask /workspace endpoint fetches Master Lead via get_podio_item()
+- Template renders with pre-populated lead data for agent productivity
+- Agent initiates call via "Start Call" button (AJAX to Twilio)
+- Agent completes mandatory 5-field disposition form
+- AJAX POST to /submit_call_data creates Call Activity item in Podio
+- Relationship field (274769798) links Call Activity → Master Lead
+
+Key V2.0 Changes from V1.0:
+- V1.0: POST form → /dial → 3-second auto-close → manual Podio entry
+- V2.0: Link → /workspace → Agent Workspace → Mandatory disposition → Auto Podio write
+- V2.0 eliminates manual data entry and ensures complete call documentation
+
+URL Pattern:
+- Production: https://compliant-real-estate-lead-dialer.vercel.app/workspace?item_id=@Item Id
+- Development: http://localhost:5000/workspace?item_id=@Item Id
 
 ================================================================================
 -->
