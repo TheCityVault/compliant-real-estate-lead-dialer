@@ -328,19 +328,10 @@ def submit_call_data():
         if not token:
             return jsonify({'success': False, 'error': 'Podio authentication failed'}), 500
         
-        # Verify the Master Lead item exists before creating Call Activity
-        print(f"DEBUG: Verifying Master Lead item {item_id} exists...")
-        master_lead = get_podio_item(item_id)
-        if not master_lead:
-            print(f"ERROR: Master Lead item {item_id} not found!")
-            return jsonify({
-                'success': False,
-                'error': f'Master Lead item {item_id} not found'
-            }), 404
-        else:
-            print(f"✅ Master Lead item {item_id} verified")
-            print(f"Master Lead Title: {master_lead.get('title')}")
-            print(f"Master Lead item_id from response: {master_lead.get('item_id')}")
+        # Log the item_id we'll use for the relationship field
+        # Verification removed - workspace already confirmed item exists when loading lead data
+        print(f"DEBUG: Using Master Lead item_id for relationship: {item_id}")
+        print(f"DEBUG: item_id type: {type(item_id)}, value: {item_id}")
         
         # Prepare Podio item payload with all 10 fields
         podio_fields = {
