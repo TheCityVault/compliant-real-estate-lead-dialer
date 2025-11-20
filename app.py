@@ -45,6 +45,7 @@ RECORDING_URL_FIELD_ID = 274769801
 
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
+MASTER_LEAD_APP_ID = '30549135'  # Master Lead app for item filtering
 
 # Initialize Podio access token
 podio_access_token = None
@@ -83,47 +84,56 @@ def get_podio_token():
         return None
 
 def get_podio_item(item_id):
-    """Fetch a Podio item by ID"""
-    global podio_access_token
+    """Fetch a specific Podio item using app filter (workaround for direct access 404s)
     
-    # Get token if we don't have one
-    if not podio_access_token:
-        podio_access_token = get_podio_token()
-    
-    if not podio_access_token:
-        raise Exception("Failed to authenticate with Podio")
+    Args:
+        item_id: The Podio item ID to fetch
+        
+    Returns:
+        dict: Item data if found, None otherwise
+        
+    Note:
+        Uses POST /item/app/{app_id}/filter instead of GET /item/{id}
+        due to permission/access restrictions on direct item retrieval.
+    """
+    token = get_podio_token()
+    if not token:
+        print("ERROR: Could not obtain Podio OAuth token")
+        return None
     
     try:
-        # Fetch item from Podio API
-        response = requests.get(
-            f'https://api.podio.com/item/{item_id}',
+        # Use app-based filtering instead of direct item access
+        response = requests.post(
+            f'https://api.podio.com/item/app/{MASTER_LEAD_APP_ID}/filter',
             headers={
-                'Authorization': f'OAuth2 {podio_access_token}',
+                'Authorization': f'OAuth2 {token}',
                 'Content-Type': 'application/json'
+            },
+            json={
+                'filters': {
+                    'item_id': int(item_id)  # Filter by specific item_id
+                },
+                'limit': 1  # Only return the single matching item
             }
         )
         
-        if response.status_code == 401:
-            # Token might be expired, try to refresh
-            print("Podio token expired, getting new token...")
-            podio_access_token = get_podio_token()
-            if podio_access_token:
-                # Retry with new token
-                response = requests.get(
-                    f'https://api.podio.com/item/{item_id}',
-                    headers={
-                        'Authorization': f'OAuth2 {podio_access_token}',
-                        'Content-Type': 'application/json'
-                    }
-                )
-        
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            items = data.get('items', [])
+            if items:
+                print(f"SUCCESS: Retrieved item {item_id} via app filter")
+                return items[0]  # Return first (and only) match
+            else:
+                print(f"WARNING: No items found matching item_id={item_id}")
+                return None
         else:
-            raise Exception(f"Podio API error: {response.status_code} - {response.text}")
+            print(f"ERROR: Podio API returned {response.status_code}")
+            print(f"Response: {response.text}")
+            return None
             
     except Exception as e:
-        raise Exception(f"Error fetching Podio item: {e}")
+        print(f"EXCEPTION in get_podio_item(): {str(e)}")
+        return None
 
 def extract_field_value(item, field_label):
     """Extract field value from Podio item by field label"""
