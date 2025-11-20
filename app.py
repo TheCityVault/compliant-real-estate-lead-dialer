@@ -309,7 +309,7 @@ def submit_call_data():
             # SYSTEM-POPULATED FIELDS
             str(TITLE_FIELD_ID): generate_title(data, item_id),
             str(RELATIONSHIP_FIELD_ID): int(item_id),  # CRITICAL: Links to Master Lead
-            str(DATE_OF_CALL_FIELD_ID): datetime.utcnow().isoformat(),
+            str(DATE_OF_CALL_FIELD_ID): datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             str(CALL_DURATION_FIELD_ID): get_call_duration(call_sid),
             str(RECORDING_URL_FIELD_ID): get_recording_url(call_sid)
         }
@@ -665,7 +665,7 @@ def connect_prospect():
         print(f"Final formatted prospect_number to dial: {prospect_number}")
         
         response.say("Connecting you to the prospect.")
-        dial = Dial()
+        dial = Dial(callerId=TWILIO_PHONE_NUMBER)
         dial.number(prospect_number)
         response.append(dial)
         
