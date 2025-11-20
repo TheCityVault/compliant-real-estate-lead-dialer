@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask, request, Response, render_template, jsonify
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,6 +28,23 @@ PODIO_CLIENT_ID = os.environ.get('PODIO_CLIENT_ID')
 PODIO_CLIENT_SECRET = os.environ.get('PODIO_CLIENT_SECRET')
 PODIO_USERNAME = os.environ.get('PODIO_USERNAME')
 PODIO_PASSWORD = os.environ.get('PODIO_PASSWORD')
+
+# Podio Field IDs - V2.0 Agent Workspace Schema
+DISPOSITION_CODE_FIELD_ID = 274851083
+AGENT_NOTES_FIELD_ID = 274851084
+MOTIVATION_LEVEL_FIELD_ID = 274851085
+NEXT_ACTION_DATE_FIELD_ID = 274851086
+ASKING_PRICE_FIELD_ID = 274851087
+
+# Podio Field IDs - System Fields
+TITLE_FIELD_ID = 274769797
+RELATIONSHIP_FIELD_ID = 274769798
+DATE_OF_CALL_FIELD_ID = 274769799
+CALL_DURATION_FIELD_ID = 274769800
+RECORDING_URL_FIELD_ID = 274769801
+
+# Podio App IDs
+CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
 
 # Initialize Podio access token
 podio_access_token = None
@@ -120,6 +138,76 @@ def extract_field_value(item, field_label):
                 return str(value)
     return ''
 
+def convert_to_iso_date(date_string):
+    """Convert MM/DD/YYYY to ISO 8601 format for Podio"""
+    if not date_string:
+        return None
+    try:
+        dt = datetime.strptime(date_string, '%m/%d/%Y')
+        return dt.isoformat()
+    except:
+        return None
+
+def parse_currency(value):
+    """Parse currency string to float"""
+    if not value:
+        return None
+    try:
+        # Remove $ and commas
+        cleaned = str(value).replace('$', '').replace(',', '').strip()
+        return float(cleaned) if cleaned else None
+    except:
+        return None
+
+def generate_title(data, item_id):
+    """Generate Call Activity title"""
+    timestamp = datetime.now().strftime('%m/%d/%Y %I:%M %p')
+    return f"Call - Lead #{item_id} - {timestamp}"
+
+def get_call_duration(call_sid):
+    """Fetch call duration from Twilio API"""
+    if not call_sid:
+        return 0
+    try:
+        call = client.calls(call_sid).fetch()
+        return call.duration or 0
+    except:
+        return 0
+
+def get_recording_url(call_sid):
+    """Fetch recording URL from Twilio API"""
+    if not call_sid:
+        return ''
+    try:
+        recordings = client.recordings.list(call_sid=call_sid, limit=1)
+        if recordings:
+            return f"https://api.twilio.com{recordings[0].uri}"
+        return ''
+    except:
+        return ''
+
+def log_to_firestore(data, item_id, call_sid):
+    """Log call disposition to Firestore for audit"""
+    if not db:
+        print("Firestore not available, skipping audit log")
+        return
+    
+    try:
+        log_entry = {
+            'item_id': item_id,
+            'call_sid': call_sid,
+            'disposition_code': data.get('disposition_code'),
+            'agent_notes': data.get('agent_notes', ''),
+            'motivation_level': data.get('motivation_level', ''),
+            'next_action_date': data.get('next_action_date', ''),
+            'asking_price': data.get('asking_price', ''),
+            'timestamp': firestore.SERVER_TIMESTAMP
+        }
+        db.collection('disposition_logs').add(log_entry)
+        print(f"Logged disposition to Firestore for item {item_id}")
+    except Exception as e:
+        print(f"Error logging to Firestore: {e}")
+
 # Initialize Firestore
 GCP_SERVICE_ACCOUNT_JSON = os.environ.get('GCP_SERVICE_ACCOUNT_JSON')
 if GCP_SERVICE_ACCOUNT_JSON:
@@ -180,6 +268,71 @@ def workspace():
         
     except Exception as e:
         return f"Error loading workspace: {str(e)}", 500
+
+@app.route('/submit_call_data', methods=['POST'])
+def submit_call_data():
+    """Receive agent disposition and write directly to Podio Call Activity app"""
+    try:
+        # Parse JSON payload
+        data = request.get_json()
+        item_id = data.get('item_id')
+        call_sid = data.get('call_sid')
+        
+        print(f"=== SUBMIT CALL DATA ===")
+        print(f"Master Lead item_id: {item_id}")
+        print(f"Call SID: {call_sid}")
+        
+        # Get Podio access token
+        token = get_podio_token()
+        if not token:
+            return jsonify({'success': False, 'error': 'Podio authentication failed'}), 500
+        
+        # Prepare Podio item payload with all 10 fields
+        podio_fields = {
+            # AGENT-ENTERED FIELDS (from workspace form)
+            str(DISPOSITION_CODE_FIELD_ID): data.get('disposition_code'),
+            str(AGENT_NOTES_FIELD_ID): data.get('agent_notes', ''),
+            str(MOTIVATION_LEVEL_FIELD_ID): data.get('motivation_level', ''),
+            str(NEXT_ACTION_DATE_FIELD_ID): convert_to_iso_date(data.get('next_action_date')),
+            str(ASKING_PRICE_FIELD_ID): parse_currency(data.get('asking_price')),
+            
+            # SYSTEM-POPULATED FIELDS
+            str(TITLE_FIELD_ID): generate_title(data, item_id),
+            str(RELATIONSHIP_FIELD_ID): int(item_id),  # CRITICAL: Links to Master Lead
+            str(DATE_OF_CALL_FIELD_ID): datetime.utcnow().isoformat(),
+            str(CALL_DURATION_FIELD_ID): get_call_duration(call_sid),
+            str(RECORDING_URL_FIELD_ID): get_recording_url(call_sid)
+        }
+        
+        # Create Call Activity Item in Podio
+        response = requests.post(
+            f'https://api.podio.com/item/app/{CALL_ACTIVITY_APP_ID}/',
+            headers={
+                'Authorization': f'OAuth2 {token}',
+                'Content-Type': 'application/json'
+            },
+            json={'fields': podio_fields}
+        )
+        
+        if response.status_code in [200, 201]:
+            # Log to Firestore for audit
+            log_to_firestore(data, item_id, call_sid)
+            
+            return jsonify({
+                'success': True,
+                'podio_item_id': response.json().get('item_id'),
+                'message': 'Data written to Podio successfully'
+            }), 200
+        else:
+            print(f"Podio API error: {response.status_code} - {response.text}")
+            return jsonify({'success': False, 'error': f'Podio write failed: {response.text}'}), 500
+            
+    except Exception as e:
+        print(f"Error in submit_call_data: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/dial', methods=['GET', 'POST'])
 def dial():
