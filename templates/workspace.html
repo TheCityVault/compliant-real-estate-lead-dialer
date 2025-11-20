@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Workspace - Call Disposition</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#2563eb',
+                        'primary-dark': '#1d4ed8',
+                        'secondary': '#64748b',
+                        'success': '#10b981',
+                        'warning': '#f59e0b',
+                        'danger': '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">Agent Workspace</h1>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="8"/>
+                        </svg>
+                        Active Call
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Lead Information Card -->
+        <div class="bg-white rounded-lg shadow-md mb-6 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Lead Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Lead Name</label>
+                    <p class="mt-1 text-base text-gray-900" id="lead-name">{{ lead.name }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Phone Number</label>
+                    <p class="mt-1 text-base text-gray-900" id="lead-phone">{{ lead.phone }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Property Address</label>
+                    <p class="mt-1 text-base text-gray-900" id="lead-address">{{ lead.address }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Lead Source</label>
+                    <p class="mt-1 text-base text-gray-900" id="lead-source">{{ lead.source }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call Controls -->
+        <div class="bg-white rounded-lg shadow-md mb-6 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Call Controls</h2>
+            <div class="flex items-center space-x-4">
+                <button id="dial-button" 
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                    Initiate Call
+                </button>
+                <div id="call-status" class="hidden text-sm">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <svg class="animate-pulse w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="8"/>
+                        </svg>
+                        Call in progress...
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call Disposition Form -->
+        <form id="disposition-form" class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-6">Call Disposition</h2>
+            
+            <div class="space-y-6">
+                
+                <!-- Disposition Code (Required) -->
+                <div>
+                    <label for="disposition-code" class="block text-sm font-medium text-gray-700 mb-2">
+                        Disposition Code <span class="text-danger">*</span>
+                    </label>
+                    <select id="disposition-code" 
+                            name="disposition_code"
+                            required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary rounded-md">
+                        <option value="">-- Select Disposition --</option>
+                        <option value="Appointment Set">Appointment Set</option>
+                        <option value="Callback Scheduled">Callback Scheduled</option>
+                        <option value="Not Interested">Not Interested</option>
+                        <option value="Wrong Number">Wrong Number</option>
+                        <option value="No Answer">No Answer</option>
+                        <option value="Voicemail Left">Voicemail Left</option>
+                        <option value="Do Not Call">Do Not Call</option>
+                        <option value="Call Back Later">Call Back Later</option>
+                        <option value="Needs More Info">Needs More Info</option>
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">Required field - select the outcome of this call</p>
+                </div>
+
+                <!-- Agent Notes/Summary -->
+                <div>
+                    <label for="agent-notes" class="block text-sm font-medium text-gray-700 mb-2">
+                        Agent Notes / Summary
+                    </label>
+                    <textarea id="agent-notes" 
+                              name="agent_notes"
+                              rows="4"
+                              placeholder="Enter key details from the conversation, seller objections, property condition, or any follow-up context..."
+                              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"></textarea>
+                    <p class="mt-1 text-sm text-gray-500">Optional - Provide context for future follow-ups</p>
+                </div>
+
+                <!-- Seller Motivation Level -->
+                <div>
+                    <label for="motivation-level" class="block text-sm font-medium text-gray-700 mb-2">
+                        Seller Motivation Level
+                    </label>
+                    <select id="motivation-level" 
+                            name="motivation_level"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary rounded-md">
+                        <option value="">-- Select Motivation Level --</option>
+                        <option value="High - Urgent Sale">High - Urgent Sale</option>
+                        <option value="Medium - Flexible Timeline">Medium - Flexible Timeline</option>
+                        <option value="Low - Just Exploring">Low - Just Exploring</option>
+                        <option value="Unknown">Unknown</option>
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">Optional - Helps prioritize leads for follow-up</p>
+                </div>
+
+                <!-- Next Action Date (Conditional) -->
+                <div>
+                    <label for="next-action-date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Next Action Date <span id="next-action-required" class="text-danger hidden">*</span>
+                    </label>
+                    <input type="date" 
+                           id="next-action-date" 
+                           name="next_action_date"
+                           placeholder="MM/DD/YYYY"
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary">
+                    <p class="mt-1 text-sm text-gray-500">
+                        <span id="next-action-hint">Optional - Schedule the next touchpoint</span>
+                        <span id="next-action-required-hint" class="text-danger hidden">Required for positive dispositions (Appointment Set, Callback Scheduled)</span>
+                    </p>
+                </div>
+
+                <!-- Target Asking Price -->
+                <div>
+                    <label for="asking-price" class="block text-sm font-medium text-gray-700 mb-2">
+                        Target Asking Price
+                    </label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="text" 
+                               id="asking-price" 
+                               name="asking_price"
+                               placeholder="450,000 or Undisclosed"
+                               class="block w-full pl-7 pr-12 border border-gray-300 rounded-md py-2 focus:outline-none focus:ring-primary focus:border-primary">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Optional - For pipeline value forecasting</p>
+                </div>
+
+            </div>
+
+            <!-- Form Actions -->
+            <div class="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
+                <div id="form-validation-message" class="text-sm text-danger hidden">
+                    <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    Please complete all required fields before submitting
+                </div>
+                <button type="submit" 
+                        id="submit-button"
+                        disabled
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-secondary hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Submit Call Data
+                </button>
+            </div>
+        </form>
+
+        <!-- Success Message (Hidden by default) -->
+        <div id="success-message" class="hidden mt-6 bg-green-50 border-l-4 border-green-400 p-6 rounded-lg shadow-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-green-800">Success!</h3>
+                    <p class="mt-2 text-base text-green-700">Data written to Podio successfully. You may now close this window.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message (Hidden by default) -->
+        <div id="error-message" class="hidden mt-6 bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-red-800">Error</h3>
+                    <p class="mt-2 text-base text-red-700" id="error-message-text">An error occurred. Please try again.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500">Compliant Real Estate Lead Dialer &copy; 2025</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Get item_id from template
+        const itemId = "{{ lead.item_id }}";
+
+        // DOM Elements
+        const dispositionCodeSelect = document.getElementById('disposition-code');
+        const nextActionDateInput = document.getElementById('next-action-date');
+        const nextActionRequired = document.getElementById('next-action-required');
+        const nextActionHint = document.getElementById('next-action-hint');
+        const nextActionRequiredHint = document.getElementById('next-action-required-hint');
+        const submitButton = document.getElementById('submit-button');
+        const dialButton = document.getElementById('dial-button');
+        const callStatus = document.getElementById('call-status');
+        const formValidationMessage = document.getElementById('form-validation-message');
+        const dispositionForm = document.getElementById('disposition-form');
+        const successMessage = document.getElementById('success-message');
+        const errorMessage = document.getElementById('error-message');
+        const errorMessageText = document.getElementById('error-message-text');
+
+        // Dial button click handler
+        dialButton.addEventListener('click', async () => {
+            dialButton.disabled = true;
+            dialButton.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                const response = await fetch('/dial', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        phone: document.getElementById('lead-phone').textContent
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to initiate call');
+                }
+
+                // Show call status
+                callStatus.classList.remove('hidden');
+                dialButton.classList.add('hidden');
+                
+            } catch (error) {
+                console.error('Error initiating call:', error);
+                showError('Failed to initiate call: ' + error.message);
+                dialButton.disabled = false;
+                dialButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // Disposition code change handler - enable/disable submit button and conditional validation
+        dispositionCodeSelect.addEventListener('change', function() {
+            validateForm();
+            
+            // Check if disposition requires next action date
+            const disposition = this.value;
+            const requiresNextAction = ['Appointment Set', 'Callback Scheduled'].includes(disposition);
+            
+            if (requiresNextAction) {
+                nextActionRequired.classList.remove('hidden');
+                nextActionHint.classList.add('hidden');
+                nextActionRequiredHint.classList.remove('hidden');
+                nextActionDateInput.required = true;
+            } else {
+                nextActionRequired.classList.add('hidden');
+                nextActionHint.classList.remove('hidden');
+                nextActionRequiredHint.classList.add('hidden');
+                nextActionDateInput.required = false;
+            }
+        });
+
+        // Next action date change handler
+        nextActionDateInput.addEventListener('change', validateForm);
+
+        // Form validation function
+        function validateForm() {
+            const dispositionSelected = dispositionCodeSelect.value !== '';
+            const disposition = dispositionCodeSelect.value;
+            const requiresNextAction = ['Appointment Set', 'Callback Scheduled'].includes(disposition);
+            const nextActionFilled = nextActionDateInput.value !== '';
+            
+            // Enable submit button only if disposition is selected
+            // AND if next action is required, it must be filled
+            const isValid = dispositionSelected && (!requiresNextAction || nextActionFilled);
+            
+            submitButton.disabled = !isValid;
+            
+            if (isValid) {
+                submitButton.classList.remove('bg-secondary', 'hover:bg-gray-600');
+                submitButton.classList.add('bg-success', 'hover:bg-green-600');
+                formValidationMessage.classList.add('hidden');
+            } else {
+                submitButton.classList.add('bg-secondary', 'hover:bg-gray-600');
+                submitButton.classList.remove('bg-success', 'hover:bg-green-600');
+                
+                if (dispositionSelected && requiresNextAction && !nextActionFilled) {
+                    formValidationMessage.classList.remove('hidden');
+                    formValidationMessage.textContent = 'Next Action Date is required for this disposition';
+                } else if (!dispositionSelected) {
+                    formValidationMessage.classList.remove('hidden');
+                    formValidationMessage.textContent = 'Please select a Disposition Code to continue';
+                }
+            }
+        }
+
+        // Form submission handler
+        dispositionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Disable submit button during submission
+            submitButton.disabled = true;
+            submitButton.innerHTML = `
+                <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+            `;
+
+            try {
+                // Prepare form data
+                const formData = {
+                    item_id: itemId,
+                    disposition_code: dispositionCodeSelect.value,
+                    agent_notes: document.getElementById('agent-notes').value,
+                    motivation_level: document.getElementById('motivation-level').value,
+                    next_action_date: nextActionDateInput.value,
+                    asking_price: document.getElementById('asking-price').value
+                };
+
+                // Submit to backend
+                const response = await fetch('/submit_call_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to submit call data');
+                }
+
+                // Show success message
+                dispositionForm.classList.add('hidden');
+                successMessage.classList.remove('hidden');
+                
+                // Scroll to success message
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+            } catch (error) {
+                console.error('Error submitting call data:', error);
+                showError('Failed to submit call data: ' + error.message);
+                
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Submit Call Data
+                `;
+            }
+        });
+
+        // Helper function to show error messages
+        function showError(message) {
+            errorMessageText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Initialize form validation state
+        validateForm();
+    </script>
+</body>
+</html>

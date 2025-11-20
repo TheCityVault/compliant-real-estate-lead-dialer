@@ -1,5 +1,9 @@
 import os
-from flask import Flask, request, Response
+from dotenv import load_dotenv
+from flask import Flask, request, Response, render_template
+
+# Load environment variables from .env file
+load_dotenv()
 from twilio.twiml.voice_response import VoiceResponse, Dial
 from twilio.rest import Client
 import json
@@ -103,6 +107,19 @@ def get_podio_item(item_id):
     except Exception as e:
         raise Exception(f"Error fetching Podio item: {e}")
 
+def extract_field_value(item, field_label):
+    """Extract field value from Podio item by field label"""
+    for field in item.get('fields', []):
+        if field.get('label') == field_label:
+            values = field.get('values', [])
+            if values:
+                value = values[0]
+                # Handle different field types
+                if isinstance(value, dict):
+                    return value.get('value', '')
+                return str(value)
+    return ''
+
 # Initialize Firestore
 GCP_SERVICE_ACCOUNT_JSON = os.environ.get('GCP_SERVICE_ACCOUNT_JSON')
 if GCP_SERVICE_ACCOUNT_JSON:
@@ -136,6 +153,33 @@ else:
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
+
+@app.route('/workspace', methods=['GET'])
+def workspace():
+    """Serve Agent Workspace interface with lead data"""
+    item_id = request.args.get('item_id')
+    
+    if not item_id:
+        return "Error: Missing item_id parameter", 400
+    
+    try:
+        # Fetch Master Lead item from Podio
+        lead_item = get_podio_item(item_id)
+        
+        # Extract lead data for workspace
+        lead_data = {
+            'item_id': item_id,
+            'name': extract_field_value(lead_item, 'Owner Name'),
+            'phone': extract_field_value(lead_item, 'Best Contact Number'),
+            'address': extract_field_value(lead_item, 'Full Address'),
+            'source': 'Podio Master Lead'
+        }
+        
+        # Render workspace template with lead data
+        return render_template('workspace.html', lead=lead_data)
+        
+    except Exception as e:
+        return f"Error loading workspace: {str(e)}", 500
 
 @app.route('/dial', methods=['GET', 'POST'])
 def dial():
