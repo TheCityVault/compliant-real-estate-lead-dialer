@@ -257,6 +257,13 @@
     <script>
         // Get item_id from template
         const itemId = "{{ lead.item_id }}";
+        
+        // DEBUG: Log the item_id we received from the template
+        console.log("=".repeat(50));
+        console.log("WORKSPACE.HTML DEBUG");
+        console.log("Item ID from Jinja template:", itemId);
+        console.log("Item ID type:", typeof itemId);
+        console.log("=".repeat(50));
 
         // DOM Elements
         const dispositionCodeSelect = document.getElementById('disposition-code');

@@ -258,6 +258,12 @@ def workspace():
     """Serve Agent Workspace interface with lead data"""
     item_id = request.args.get('item_id')
     
+    print("="*50)
+    print("WORKSPACE ENDPOINT DEBUG")
+    print(f"item_id from URL parameter: {item_id}")
+    print(f"Type: {type(item_id)}")
+    print("="*50)
+    
     if not item_id:
         return "Error: Missing item_id parameter", 400
     
@@ -265,14 +271,29 @@ def workspace():
         # Fetch Master Lead item from Podio
         lead_item = get_podio_item(item_id)
         
+        # DEBUG: Check all fields in the item to find where 1112233 might be
+        print("DEBUG: All fields in Master Lead item:")
+        for field in lead_item.get('fields', []):
+            field_label = field.get('label')
+            field_id = field.get('field_id')
+            field_values = field.get('values', [])
+            print(f"  - {field_label} (ID: {field_id}): {field_values}")
+        
         # Extract lead data for workspace
         lead_data = {
-            'item_id': item_id,
+            'item_id': item_id,  # ← THIS SHOULD BE 3204110525 from URL
             'name': extract_field_value(lead_item, 'Owner Name'),
             'phone': extract_field_value(lead_item, 'Best Contact Number'),
             'address': extract_field_value(lead_item, 'Full Address'),
             'source': 'Podio Master Lead'
         }
+        
+        print(f"DEBUG: lead_data being passed to template:")
+        print(f"  item_id: {lead_data['item_id']}")
+        print(f"  name: {lead_data['name']}")
+        print(f"  phone: {lead_data['phone']}")
+        print(f"  address: {lead_data['address']}")
+        print("="*50)
         
         # Render workspace template with lead data
         return render_template('workspace.html', lead=lead_data)
@@ -286,6 +307,15 @@ def submit_call_data():
     try:
         # Parse JSON payload
         data = request.get_json()
+        
+        # DEBUG: Log the entire payload received
+        print("="*50)
+        print("SUBMIT_CALL_DATA DEBUG")
+        print(f"Full payload received: {json.dumps(data, indent=2)}")
+        print(f"master_lead_item_id (item_id) from payload: {data.get('item_id')}")
+        print(f"Type: {type(data.get('item_id'))}")
+        print("="*50)
+        
         item_id = data.get('item_id')
         call_sid = data.get('call_sid')
         
@@ -298,6 +328,20 @@ def submit_call_data():
         if not token:
             return jsonify({'success': False, 'error': 'Podio authentication failed'}), 500
         
+        # Verify the Master Lead item exists before creating Call Activity
+        print(f"DEBUG: Verifying Master Lead item {item_id} exists...")
+        master_lead = get_podio_item(item_id)
+        if not master_lead:
+            print(f"ERROR: Master Lead item {item_id} not found!")
+            return jsonify({
+                'success': False,
+                'error': f'Master Lead item {item_id} not found'
+            }), 404
+        else:
+            print(f"✅ Master Lead item {item_id} verified")
+            print(f"Master Lead Title: {master_lead.get('title')}")
+            print(f"Master Lead item_id from response: {master_lead.get('item_id')}")
+        
         # Prepare Podio item payload with all 10 fields
         podio_fields = {
             # AGENT-ENTERED FIELDS (from workspace form)
@@ -305,6 +349,10 @@ def submit_call_data():
             str(RELATIONSHIP_FIELD_ID): int(item_id),  # CRITICAL: Links to Master Lead
             str(DATE_OF_CALL_FIELD_ID): datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
+        
+        # DEBUG: Log what we're about to send to Podio
+        print(f"DEBUG: Relationship field ({RELATIONSHIP_FIELD_ID}) value = {int(item_id)}")
+        print(f"DEBUG: Type of relationship value = {type(int(item_id))}")
         
         # Add TITLE field - ensure it's never empty
         title = generate_title(data, item_id)
@@ -343,6 +391,15 @@ def submit_call_data():
             if recording_url:
                 podio_fields[str(RECORDING_URL_FIELD_ID)] = recording_url
         
+        # DEBUG: Log the complete payload before sending to Podio
+        print("="*50)
+        print("FINAL PODIO PAYLOAD DEBUG")
+        print(f"Full payload being sent to Podio:")
+        print(json.dumps({'fields': podio_fields}, indent=2))
+        print(f"Relationship field ({RELATIONSHIP_FIELD_ID}) value type: {type(podio_fields.get(str(RELATIONSHIP_FIELD_ID)))}")
+        print(f"Relationship field ({RELATIONSHIP_FIELD_ID}) value: {podio_fields.get(str(RELATIONSHIP_FIELD_ID))}")
+        print("="*50)
+        
         # Create Call Activity Item in Podio
         response = requests.post(
             f'https://api.podio.com/item/app/{CALL_ACTIVITY_APP_ID}/',
@@ -352,6 +409,9 @@ def submit_call_data():
             },
             json={'fields': podio_fields}
         )
+        
+        print(f"Podio API Response Status: {response.status_code}")
+        print(f"Podio API Response Body: {response.text}")
         
         if response.status_code in [200, 201]:
             # Log to Firestore for audit
@@ -363,8 +423,18 @@ def submit_call_data():
                 'message': 'Data written to Podio successfully'
             }), 200
         else:
-            print(f"Podio API error: {response.status_code} - {response.text}")
-            return jsonify({'success': False, 'error': f'Podio write failed: {response.text}'}), 500
+            print(f"❌ Podio API ERROR: {response.status_code}")
+            print(f"Error response: {response.text}")
+            # Parse and return the detailed Podio error
+            try:
+                error_data = response.json()
+                return jsonify({
+                    'success': False,
+                    'error': error_data.get('error_description', 'Podio write failed'),
+                    'error_details': error_data
+                }), 500
+            except:
+                return jsonify({'success': False, 'error': f'Podio write failed: {response.text}'}), 500
             
     except Exception as e:
         print(f"Error in submit_call_data: {e}")
