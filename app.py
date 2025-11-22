@@ -450,7 +450,16 @@ def dial():
         item_id = data.get('item_id')
         prospect_number = data.get('phone')
         
-        print(f"AJAX POST to /dial - item_id: {item_id}, phone: {prospect_number}")
+        # Accept agent_id parameter - fallback to AGENT_PHONE_NUMBER for backwards compatibility
+        agent_id = data.get('agent_id', AGENT_PHONE_NUMBER)
+        
+        if not agent_id:
+            return jsonify({
+                'success': False,
+                'error': 'Missing agent_id parameter and AGENT_PHONE_NUMBER not configured'
+            }), 400
+        
+        print(f"AJAX POST to /dial - item_id: {item_id}, phone: {prospect_number}, agent_id: {agent_id}")
         
         try:
             # Build callback URLs
@@ -465,14 +474,15 @@ def dial():
             print(f"Base URL: {base_url}")
             print(f"Connect URL: {connect_url}")
             print(f"Callback URL: {callback_url}")
-            print(f"Agent Phone: {AGENT_PHONE_NUMBER}")
+            print(f"Agent ID: {agent_id}")
+            print(f"Connection Type: {'VOIP' if agent_id.startswith('client:') else 'PSTN'}")
             print(f"Twilio Phone: {TWILIO_PHONE_NUMBER}")
             print(f"Prospect Number: {prospect_number}")
             print(f"=== END AJAX DIAL DEBUG ===")
             
-            # Initiate call
+            # Initiate call - use agent_id instead of hardcoded AGENT_PHONE_NUMBER
             call = client.calls.create(
-                to=AGENT_PHONE_NUMBER,
+                to=agent_id,
                 from_=TWILIO_PHONE_NUMBER,
                 url=connect_url,
                 method='POST',
@@ -502,9 +512,25 @@ def dial():
         prospect_number = None
         item_id = request.args.get('item_id')
         
+        # Accept agent_id parameter - fallback to AGENT_PHONE_NUMBER for backwards compatibility
+        agent_id = request.args.get('agent_id', AGENT_PHONE_NUMBER)
+        
+        if not agent_id:
+            return """
+            <html>
+            <head><title>Error</title></head>
+            <body>
+                <h2>❌ Error</h2>
+                <p>Missing agent_id parameter and AGENT_PHONE_NUMBER not configured</p>
+            </body>
+            </html>
+            """, 400
+        
         print(f"\n{'='*50}")
         print(f"=== DIAL ENDPOINT CALLED ===")
         print(f"Request Args: {dict(request.args)}")
+        print(f"Agent ID: {agent_id}")
+        print(f"Connection Type: {'VOIP' if agent_id.startswith('client:') else 'PSTN'}")
         
         # Check if item_id is provided (Podio integration)
         if item_id:
@@ -638,14 +664,15 @@ def dial():
             print(f"Base URL: {base_url}")
             print(f"Connect URL: {connect_url}")
             print(f"Callback URL: {callback_url}")
-            print(f"Agent Phone: {AGENT_PHONE_NUMBER}")
+            print(f"Agent ID: {agent_id}")
+            print(f"Connection Type: {'VOIP' if agent_id.startswith('client:') else 'PSTN'}")
             print(f"Twilio Phone: {TWILIO_PHONE_NUMBER}")
             print(f"Prospect Number: {prospect_number}")
             print(f"=== END DIAL DEBUG ===")
             
-            # Initiate the call to the agent
+            # Initiate the call to the agent - use agent_id instead of hardcoded AGENT_PHONE_NUMBER
             call = client.calls.create(
-                to=AGENT_PHONE_NUMBER,
+                to=agent_id,
                 from_=TWILIO_PHONE_NUMBER,
                 url=connect_url,
                 method='POST',  # Explicitly specify POST method
@@ -682,9 +709,16 @@ def dial():
     else:
         response = VoiceResponse()
         prospect_number = request.form.get('prospect_number')
+        
+        # Accept agent_id parameter - fallback to AGENT_PHONE_NUMBER for backwards compatibility
+        agent_id = request.form.get('agent_id', AGENT_PHONE_NUMBER)
 
         if not prospect_number:
             response.say("Sorry, I couldn't initiate the call. Missing prospect number.")
+            return str(response)
+        
+        if not agent_id:
+            response.say("Sorry, I couldn't initiate the call. Missing agent identifier.")
             return str(response)
 
         try:
@@ -700,11 +734,13 @@ def dial():
             print(f"Base URL: {base_url}")
             print(f"Connect URL: {connect_url}")
             print(f"Callback URL: {callback_url}")
+            print(f"Agent ID: {agent_id}")
+            print(f"Connection Type: {'VOIP' if agent_id.startswith('client:') else 'PSTN'}")
             print(f"=== END DIAL DEBUG (POST) ===")
             
-            # Initiate the call to the agent
+            # Initiate the call to the agent - use agent_id instead of hardcoded AGENT_PHONE_NUMBER
             call = client.calls.create(
-                to=AGENT_PHONE_NUMBER,
+                to=agent_id,
                 from_=TWILIO_PHONE_NUMBER,
                 url=connect_url,
                 method='POST',  # Explicitly specify POST method
@@ -713,7 +749,14 @@ def dial():
                 status_callback_method='POST'
             )
             response.say("Connecting you to the agent.")
-            response.dial(number=AGENT_PHONE_NUMBER) # This dial is for the initial call to the agent
+            # Note: The following dial is for the initial call to the agent (legacy TwiML flow)
+            # For VOIP, this should use <Client>, for PSTN use <Number>
+            dial = Dial()
+            if agent_id.startswith('client:'):
+                dial.client(agent_id[7:])  # Strip "client:" prefix
+            else:
+                dial.number(agent_id)
+            response.append(dial)
             print(f"Call initiated to agent: {call.sid}")
         except Exception as e:
             print(f"Error initiating call: {e}")
