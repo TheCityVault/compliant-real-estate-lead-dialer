@@ -4,4 +4,4 @@ google-cloud-firestore
 pypodio2
 python-dotenv
 requests
-twilio
+twilio==6.35.5

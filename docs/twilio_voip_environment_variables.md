@@ -1,101 +1,153 @@
-# Twilio VOIP Environment Variables
+# Twilio VOIP Environment Variables - SDK v1.14
 
-## Required Environment Variables for Twilio Voice SDK
+This document outlines the required Twilio environment variables for the VOIP functionality in the Compliant Real Estate Lead Dialer using Twilio Voice JavaScript SDK v1.14.
 
-To enable browser-based VOIP calling with the Twilio Voice JavaScript SDK, the following environment variables must be configured in your deployment environment (e.g., Vercel):
+## Required Variables
 
-### New Variables Required
+### 1. TWILIO_ACCOUNT_SID
+- **Purpose**: Your Twilio Account SID (identifier)
+- **Format**: Starts with `AC` followed by 32 hexadecimal characters
+- **Example**: `ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+- **How to obtain**: 
+  - Log into [Twilio Console](https://console.twilio.com)
+  - Copy from the Account Info section on the dashboard
 
-#### `TWILIO_API_KEY`
-- **Description**: Twilio API Key SID for generating access tokens
-- **Format**: Starts with `SK` (e.g., `SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`)
-- **Required**: Yes
-- **Purpose**: Used to sign JWT access tokens for the Voice SDK
+### 2. TWILIO_AUTH_TOKEN
+- **Purpose**: Authentication token for your Twilio account
+- **Format**: 32-character hexadecimal string
+- **Example**: `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+- **How to obtain**:
+  - Log into [Twilio Console](https://console.twilio.com)
+  - Copy from the Account Info section on the dashboard
+  - Click "Show" to reveal the token
 
-**How to obtain:**
-1. Go to https://console.twilio.com/us1/account/keys-credentials/api-keys
-2. Click "Create API Key"
-3. Name it (e.g., "VOIP Client Access")
-4. Select "Standard" key type
-5. Copy the **SID** (starts with `SK`)
+### 3. TWILIO_PHONE_NUMBER
+- **Purpose**: Your Twilio phone number used as the caller ID
+- **Format**: E.164 format (e.g., `+1XXXXXXXXXX`)
+- **Example**: `+13035551234`
+- **How to obtain**:
+  - In Twilio Console, go to Phone Numbers → Manage → Active numbers
+  - Copy your purchased number in E.164 format
 
-#### `TWILIO_API_SECRET`
-- **Description**: Secret key associated with the API Key
-- **Format**: Random alphanumeric string
-- **Required**: Yes
-- **Purpose**: Used with API Key to sign access tokens
-- **Security**: Keep this secret! Only shown once during API Key creation
+### 4. TWILIO_TWIML_APP_SID ⭐ **NEW - REQUIRED FOR SDK v1.14**
+- **Purpose**: TwiML Application SID for configuring outgoing call capabilities
+- **Format**: Starts with `AP` followed by 32 hexadecimal characters
+- **Example**: `APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+- **How to obtain**:
+  1. Go to [Twilio Console → Voice → TwiML Apps](https://console.twilio.com/us1/develop/voice/manage/twiml-apps)
+  2. Click "Create new TwiML App" or use existing one
+  3. **Configuration:**
+     - **Friendly Name**: "Lead Dialer VOIP Client"
+     - **Voice Request URL**: `https://your-app.vercel.app/dial` (use your actual deployment URL)
+     - **Voice Request Method**: POST
+     - **Voice Status Callback URL**: `https://your-app.vercel.app/call_status`
+  4. Click "Save"
+  5. Copy the **SID** (starts with `AP`)
+- **Notes**:
+  - **CRITICAL**: This is REQUIRED for SDK v1.14 compatibility
+  - Without this, you'll get "Client version not supported" error (Code 31007)
+  - The TwiML App connects the VOIP client to your backend call routing
 
-**How to obtain:**
-1. During API Key creation (see above)
-2. Copy the **Secret** value immediately (you won't see it again)
-3. Store it securely in your environment variables
+### 5. AGENT_PHONE_NUMBER (Optional)
+- **Purpose**: Default agent's phone number or VOIP client identifier
+- **Format**: 
+  - For phone: E.164 format (e.g., `+1XXXXXXXXXX`)
+  - For VOIP: `client:username` format
+- **Example**: 
+  - Phone: `+13035551234`
+  - VOIP: `client:john_doe`
+- **Notes**:
+  - Use phone format for testing with your actual phone
+  - Use VOIP format (client:username) for browser-based calling
+  - Can be overridden per-call by the "Agent Connection" field in workspace
 
-### Existing Variables (Already Configured)
+## Setting Up in Vercel
 
-These variables should already be set but are required for the complete VOIP flow:
+1. Go to your Vercel project dashboard
+2. Navigate to Settings → Environment Variables
+3. Add each variable:
+   - Name: Variable name (e.g., `TWILIO_ACCOUNT_SID`)
+   - Value: Your value
+   - Environment: Select Production, Preview, and Development as needed
+4. **IMPORTANT**: Add the new `TWILIO_TWIML_APP_SID` variable
+5. Click "Save"
+6. **Redeploy** your application for changes to take effect
 
-- `TWILIO_ACCOUNT_SID` - Your Twilio Account SID
-- `TWILIO_AUTH_TOKEN` - Your Twilio Auth Token
-- `TWILIO_PHONE_NUMBER` - Your Twilio phone number (E.164 format)
+## SDK v1.14 Compatibility Requirements
 
-## Configuration in Vercel
+The application uses Twilio Voice JavaScript SDK v1.14, which requires:
+- **Twilio Python library**: v6.35.5 (pinned in `requirements.txt`)
+- **ClientCapabilityToken**: For generating v1.x compatible tokens
+- **TwiML App SID**: For allowing outgoing call capabilities
+- **Token format**: Capability Token (not v2.x Access Token/JWT)
 
-1. Navigate to your project in Vercel Dashboard
-2. Go to **Settings** → **Environment Variables**
-3. Add the following variables:
+### Why SDK v1.14?
 
-```
-TWILIO_API_KEY=SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_API_SECRET=your_api_secret_here
-```
-
-4. Make sure these are set for all environments (Production, Preview, Development)
-5. Redeploy your application for changes to take effect
+SDK v1.14 is the last stable version of the v1.x series that:
+- Uses ClientCapabilityToken (simpler authentication)
+- Requires only Account SID + Auth Token (no API keys needed)
+- Has proven stability for browser-based VOIP
+- Compatible with older Python library versions
 
 ## Testing the Configuration
 
-After setting the environment variables:
+After setting all environment variables:
 
 1. Visit your workspace URL: `https://your-app.vercel.app/workspace?item_id=<ITEM_ID>`
 2. Check the browser console for:
+   - `✅ Twilio SDK loaded successfully`
    - `Twilio token obtained for identity: agent_XXXXX`
    - `✅ Twilio Device is ready to receive calls`
 3. Verify the VOIP status indicator shows "Ready" (green text)
-4. Test calling with `client:` identifier:
+4. Test calling:
    - Enter `client:test_user` in the Agent Connection field
    - Click "Initiate Call"
    - Browser should receive incoming call
-   - Call auto-accepts and connects
-
-## Security Best Practices
-
-1. **Never commit API secrets to git** - Use environment variables only
-2. **Rotate API keys periodically** - Create new keys and update environment variables
-3. **Use separate keys per environment** - Different keys for dev/staging/production
-4. **Monitor API key usage** - Check Twilio console for unusual activity
-5. **Restrict API key permissions** - Use Standard keys (not Main credentials) for better security
+   - Call auto-accepts and connects to prospect
 
 ## Troubleshooting
 
-### Error: "Twilio API credentials not configured"
-- **Cause**: `TWILIO_API_KEY` or `TWILIO_API_SECRET` not set
-- **Fix**: Add both variables to Vercel environment settings and redeploy
-
-### Error: "Failed to fetch Twilio token"
-- **Cause**: Backend `/token` endpoint not accessible or returning errors
-- **Fix**: Check Vercel deployment logs for backend errors
+### Error: "Client version not supported" (Code 31007)
+- **Cause**: Missing `TWILIO_TWIML_APP_SID` or incorrect token generation
+- **Fix**: 
+  1. Verify `TWILIO_TWIML_APP_SID` is set in Vercel
+  2. Verify TwiML App is configured with correct Voice URL
+  3. Check that `requirements.txt` has `twilio==6.35.5`
+  4. Redeploy after making changes
 
 ### Device shows "SDK Error"
-- **Cause**: Invalid API credentials or token generation failure
-- **Fix**: Verify API Key and Secret are correctly copied from Twilio Console
+- **Cause**: Token generation failure or network issues
+- **Fix**: 
+  1. Check Vercel deployment logs for Python errors
+  2. Verify Account SID and Auth Token are correct
+  3. Check browser console for detailed error messages
 
-### Device never shows "Ready"
-- **Cause**: JavaScript errors preventing SDK initialization
-- **Fix**: Open browser DevTools console and check for errors
+### Device shows "Initializing..." forever
+- **Cause**: Twilio SDK not loading or JavaScript errors
+- **Fix**: 
+  1. Open browser DevTools console
+  2. Check for 404 errors loading SDK from CDN
+  3. Verify `workspace.html` loads SDK from: `https://sdk.twilio.com/js/client/v1.14/twilio.js`
+
+### TwiML App Configuration Issues
+- **Symptom**: Calls initiate but don't connect
+- **Fix**:
+  1. Verify TwiML App Voice URL matches your deployment
+  2. Check it ends with `/dial` endpoint
+  3. Verify it uses HTTPS (required for production)
+  4. Test URL in browser to ensure it's accessible
+
+## Security Notes
+
+- **NEVER** commit these values to version control
+- Use `.env` file for local development (already in `.gitignore`)
+- Rotate your `TWILIO_AUTH_TOKEN` if it's ever exposed
+- Use separate credentials for production vs. development if possible
+- TwiML App SID can be public, but Auth Token must remain secret
 
 ## Additional Resources
 
-- [Twilio Access Tokens Documentation](https://www.twilio.com/docs/iam/access-tokens)
-- [Twilio Voice JavaScript SDK Quickstart](https://www.twilio.com/docs/voice/sdks/javascript/get-started)
-- [Twilio API Keys Best Practices](https://www.twilio.com/docs/iam/api-keys)
+- [Twilio Voice JavaScript SDK v1.14 Documentation](https://www.twilio.com/docs/voice/client/javascript/v1-14)
+- [ClientCapabilityToken API Reference](https://www.twilio.com/docs/voice/client/capability-tokens)
+- [TwiML Apps Documentation](https://www.twilio.com/docs/voice/twiml/apps)
+- [Python SDK v6.x Documentation](https://www.twilio.com/docs/libraries/python)

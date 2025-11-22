@@ -20,6 +20,7 @@ app = Flask(__name__)
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+TWILIO_TWIML_APP_SID = os.environ.get('TWILIO_TWIML_APP_SID')
 AGENT_PHONE_NUMBER = os.environ.get('AGENT_PHONE_NUMBER')
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -317,6 +318,12 @@ def token():
     
     # Allow incoming connections for this client
     capability.allow_client_incoming(identity)
+    
+    # Allow outgoing calls - REQUIRED for SDK v1.14 compatibility
+    if TWILIO_TWIML_APP_SID:
+        capability.allow_client_outgoing(TWILIO_TWIML_APP_SID)
+    else:
+        print("WARNING: TWILIO_TWIML_APP_SID not configured. Outgoing calls may not work.")
     
     # Generate and return the token
     token = capability.to_jwt()
@@ -890,19 +897,31 @@ def validate_environment():
         'TWILIO_ACCOUNT_SID': TWILIO_ACCOUNT_SID,
         'TWILIO_AUTH_TOKEN': TWILIO_AUTH_TOKEN,
         'TWILIO_PHONE_NUMBER': TWILIO_PHONE_NUMBER,
+        'TWILIO_TWIML_APP_SID': TWILIO_TWIML_APP_SID,
+    }
+    
+    optional_vars = {
         'AGENT_PHONE_NUMBER': AGENT_PHONE_NUMBER,
     }
     
     print(f"\n{'='*50}")
     print(f"=== STARTUP ENVIRONMENT VALIDATION ===")
+    print(f"Required Variables:")
     for var_name, var_value in required_vars.items():
         if var_value:
             if 'TOKEN' in var_name or 'SID' in var_name:
-                print(f"✅ {var_name}: {var_value[:8]}... (masked)")
+                print(f"  ✅ {var_name}: {var_value[:8]}... (masked)")
             else:
-                print(f"✅ {var_name}: {var_value}")
+                print(f"  ✅ {var_name}: {var_value}")
         else:
-            print(f"❌ {var_name}: NOT SET")
+            print(f"  ❌ {var_name}: NOT SET - VOIP WILL NOT WORK!")
+    
+    print(f"Optional Variables:")
+    for var_name, var_value in optional_vars.items():
+        if var_value:
+            print(f"  ✅ {var_name}: {var_value}")
+        else:
+            print(f"  ⚠️  {var_name}: NOT SET (can be overridden per-call)")
     print(f"{'='*50}\n")
 
 # Call validation on module load (for serverless)
