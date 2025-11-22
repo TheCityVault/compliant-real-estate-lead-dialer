@@ -8,8 +8,8 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Twilio Voice JavaScript SDK v1.14 (Latest CDN-hosted version) -->
-    <script src="https://sdk.twilio.com/js/client/v1.14/twilio.js" async defer></script>
+    <!-- Twilio Voice JavaScript SDK v2.11.1 (Current supported version) -->
+    <script src="https://sdk.twilio.com/js/voice-sdk/releases/2.11.1/twilio.min.js"></script>
     
     <!-- Custom Configuration -->
     <script>
@@ -491,46 +491,57 @@
                 const data = await response.json();
                 console.log('Twilio token obtained for identity:', data.identity);
                 
-                // Initialize Twilio Device
-                twilioDevice = new Twilio.Device(data.token, {
-                    debug: true,
-                    codecPreferences: ['opus', 'pcmu']
+                // Import Device from Twilio Voice SDK v2
+                const { Device } = Twilio.Voice;
+                
+                // Initialize Twilio Device (v2 API)
+                twilioDevice = new Device(data.token, {
+                    logLevel: 1, // 1 = debug, 0 = trace
+                    codecPreferences: [Device.Codec.Opus, Device.Codec.PCMU]
                 });
                 
-                // Device ready event
-                twilioDevice.on('ready', function (device) {
+                // Device registered event (v2: 'ready' → 'registered')
+                twilioDevice.on('registered', function () {
                     console.log('✅ Twilio Device is ready to receive calls');
                     updateDeviceStatus('Ready', 'success');
                 });
                 
-                // Incoming call event
-                twilioDevice.on('incoming', function (connection) {
-                    console.log('📞 Incoming call from:', connection.parameters.From);
-                    currentConnection = connection;
+                // Incoming call event (v2: connection → call)
+                twilioDevice.on('incoming', function (call) {
+                    console.log('📞 Incoming call from:', call.parameters.From);
+                    currentConnection = call;
+                    
+                    // Set up call event handlers BEFORE accepting
+                    call.on('accept', function () {
+                        console.log('✅ Call accepted and connected');
+                        updateDeviceStatus('Active Call', 'success');
+                    });
+                    
+                    call.on('disconnect', function () {
+                        console.log('📴 Call ended');
+                        currentConnection = null;
+                        updateDeviceStatus('Ready', 'success');
+                    });
+                    
+                    call.on('error', function (error) {
+                        console.error('❌ Call error:', error);
+                        updateDeviceStatus('Call Error', 'error');
+                    });
                     
                     // Auto-accept the incoming call (agent initiated it via "Initiate Call" button)
-                    connection.accept();
-                    updateDeviceStatus('Connected', 'success');
+                    call.accept();
+                    updateDeviceStatus('Accepting...', 'warning');
                 });
                 
-                // Connection established
-                twilioDevice.on('connect', function (connection) {
-                    console.log('✅ Call connected');
-                    updateDeviceStatus('Active Call', 'success');
-                });
-                
-                // Connection disconnected
-                twilioDevice.on('disconnect', function (connection) {
-                    console.log('📴 Call ended');
-                    currentConnection = null;
-                    updateDeviceStatus('Ready', 'success');
-                });
-                
-                // Error handling
+                // Error handling (v2: error event still exists)
                 twilioDevice.on('error', function (error) {
                     console.error('❌ Twilio Device error:', error);
                     updateDeviceStatus('Error: ' + error.message, 'error');
                 });
+                
+                // Register the device (v2: must explicitly register)
+                await twilioDevice.register();
+                console.log('Device registration initiated...');
                 
             } catch (error) {
                 console.error('Failed to initialize Twilio Client:', error);
