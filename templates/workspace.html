@@ -491,8 +491,8 @@
                 const data = await response.json();
                 console.log('Twilio token obtained for identity:', data.identity);
                 
-                // Import Device from Twilio Voice SDK v2
-                const { Device } = Twilio.Voice;
+                // Access Device from Twilio SDK v2 (Device is directly on Twilio object in v2.11.1)
+                const Device = Twilio.Device;
                 
                 // Initialize Twilio Device (v2 API)
                 twilioDevice = new Device(data.token, {
