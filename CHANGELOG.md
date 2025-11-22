@@ -7,7 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - 2025-11-20
+## [2.1.0] - 2024-11-22
+
+### 🎉 Major Release: VOIP-Only Architecture
+
+#### Added
+- ✅ **Twilio Voice SDK v2.11.1 Integration** - Self-hosted browser-based VOIP
+- ✅ **Auto-Generated Agent Identities** - System-managed client:agent_xxxxx format
+- ✅ **VOIP Status Indicator** - Real-time SDK registration status in UI
+- ✅ **Disconnect Button** - Manual call termination controls
+- ✅ **Access Token Authentication** - Modern JWT-based SDK authentication
+- ✅ **Read-Only Identity Field** - Prevents user configuration errors
+
+#### Changed
+- 🔄 **Agent Connection Method** - PSTN → Browser-based VOIP (WebRTC)
+- 🔄 **Backend Architecture** - Capability Tokens → Access Tokens + VoiceGrant
+- 🔄 **/dial Endpoint** - Now requires agent_id parameter (VOIP-only)
+- 🔄 **Environment Validation** - Updated for V2.1 VOIP-only requirements
+
+#### Fixed
+- ✅ **Eliminated "Busy" Statuses** - VOIP removes carrier blocking risk
+- ✅ **SDK Compatibility** - Resolved SDK v2.x CDN unavailability (self-hosted)
+- ✅ **Identity Mismatch** - Fixed SIP 480 errors with consistent identity management
+- ✅ **HTML Tag Display** - Stripped HTML from Podio field values in UI
+
+#### Removed
+- ❌ **PSTN Agent Fallback** - Prevents carrier blocking (VOIP-only enforcement)
+- ❌ **AGENT_PHONE_NUMBER Environment Variable** - No longer used in V2.1
+
+#### Breaking Changes
+- ⚠️ **AGENT_PHONE_NUMBER** environment variable is deprecated
+- ⚠️ All agents must use browser-based VOIP (no phone dial-in support)
+- ⚠️ Requires new environment variables: TWILIO_API_KEY, TWILIO_API_SECRET, TWILIO_TWIML_APP_SID
+
+#### Technical Details
+- **SDK Migration:** Twilio Voice SDK v1.14 → v2.11.1 (self-hosted due to CDN removal)
+- **Authentication:** ClientCapabilityToken → AccessToken with VoiceGrant
+- **Device API:** Twilio.Voice.Device → Twilio.Device (correct for self-hosted build)
+- **Codec Reference:** Device.Codec → Twilio.Call.Codec
+- **Commits:** 20+ commits across frontend, backend, and architecture refactoring
+
+---
+
+## [2.0.0] - 2024-11-20
 
 ### Added - Agent Workspace (Major Architectural Upgrade)
 - **Agent Workspace UI**: Stateful browser interface replacing auto-close window

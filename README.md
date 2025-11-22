@@ -1,13 +1,19 @@
-# Compliant Real Estate Lead Dialer
+# Compliant Real Estate Lead Dialer - V2.1 VOIP Edition
 
 [![Production Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://github.com/yourusername/compliant-real-estate-lead-dialer)
-[![Version](https://img.shields.io/badge/Version-2.0-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
+[![Version](https://img.shields.io/badge/Version-2.1-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
 [![Platform](https://img.shields.io/badge/Platform-Vercel-black)](https://vercel.com)
 [![TCPA Compliant](https://img.shields.io/badge/TCPA-Compliant-success)](https://www.fcc.gov/tcpa)
 
-**🎉 Production Ready - Version 2.0 (Agent Workspace)**
+**🎉 Production Ready - Version 2.1 (VOIP Edition)**
 
-A TCPA-compliant, two-leg click-to-dial system for real estate professionals with real-time disposition management and direct Podio API integration. Version 2.0 introduces the Agent Workspace - a stateful browser interface that enables mandatory disposition entry and eliminates external connector dependencies.
+A compliant, two-leg dialing system for real estate lead calling with **browser-based VOIP** for agent connections.
+
+## Version
+**V2.1** - VOIP-Only Architecture (November 2024)
+- Eliminates carrier blocking issues
+- Browser-based agent calling (no phone required)
+- Twilio Client SDK v2.11.1 integration
 
 **🌐 Production Deployment:** [Your Vercel URL]
 
@@ -31,11 +37,11 @@ A TCPA-compliant, two-leg click-to-dial system for real estate professionals wit
 
 ## 🎯 Overview
 
-**Version:** 2.0.0 (Agent Workspace)
+**Version:** 2.1.0 (VOIP Edition)
 **Status:** Production
-**Architecture:** Direct Podio API Integration
+**Architecture:** Browser-Based VOIP + Direct Podio API Integration
 
-The Compliant Real Estate Lead Dialer enables real estate agents to initiate phone calls directly from Podio lead records with a single click, while maintaining strict TCPA (Telephone Consumer Protection Act) compliance through a two-leg dialing architecture.
+The Compliant Real Estate Lead Dialer enables real estate agents to initiate phone calls directly from Podio lead records with a single click using browser-based VOIP, while maintaining strict TCPA (Telephone Consumer Protection Act) compliance through a two-leg dialing architecture.
 
 ## V2.0 Features
 
@@ -79,49 +85,54 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 
 ## ✨ Key Features
 
-### Core Functionality
-- **🔐 TCPA-Compliant Architecture**: Two-leg dialing ensures regulatory compliance
-- **📞 Seamless Podio Integration**: Click-to-dial directly from lead records via Link fields
-- **🔥 Real-time Firestore Logging**: Immediate audit trail for every call
-- **📊 Comprehensive Call Data**: Captures CallSid, status, duration, timestamps, and participant numbers
-- **🚀 Serverless Deployment**: Runs on Vercel for scalability and reliability
-
-### Technical Highlights
-- **Flask/Python Backend**: Robust server-side processing
-- **Twilio SDK Integration**: Professional telephony capabilities
-- **Google Cloud Firestore**: Scalable, real-time database
-- **Environment-Based Configuration**: Secure credential management
-- **Error Handling**: Comprehensive error messages and graceful degradation
+- ✅ **Browser-Based VOIP Calling** - Agents use browser instead of phone (V2.1)
+- ✅ **No Carrier Blocking** - Eliminates "Busy" statuses from PSTN congestion
+- ✅ **Auto-Generated Identities** - System manages client:agent_xxxxx format
+- ✅ **Twilio Voice SDK v2.11.1** - Self-hosted modern SDK architecture
+- ✅ Two-leg calling system (complies with TCPA regulations)
+- ✅ Podio CRM integration (Master Lead & Call Activity apps)
+- ✅ Real-time call disposition capture
+- ✅ Firestore audit logging
 
 ---
 
 ## 🏗️ Architecture
 ## 🏗️ Architecture
 
+## V2.1 Architecture (VOIP-Only)
+
+### Call Flow
+1. **Agent Workspace** - Browser-based interface with Twilio Voice SDK
+2. **Leg 1 (VOIP)** - Twilio → Agent Browser (WebRTC, client:agent_xxxxx)
+3. **Leg 2 (PSTN)** - Twilio → Prospect Phone (+1234567890)
+
+### Why VOIP-Only?
+V2.0 used PSTN for agent connections, causing carrier blocking due to high call volume from the same Twilio number. V2.1 eliminates this by using browser-based VOIP for the agent leg, preventing carrier spam detection while maintaining compliance for the prospect leg.
+
 ```
 Podio Link Field → /workspace → Load Lead Data →
-→ Agent UI (5-field form) → Initiate Call → Twilio →
+→ Agent UI (5-field form) → Initiate Call (VOIP) → Twilio →
 → Complete Call → Fill Disposition → Submit →
 → /submit_call_data → Direct Podio Write →
 → Call Activity Created → Firestore Audit →
 → Success Response to Agent
 ```
 
-### Call Sequence (V2.0)
+### Call Sequence (V2.1)
 
 1. **Agent Initiates**: Clicks link field in Podio containing item ID
 2. **Workspace Loads**: `/workspace` endpoint loads lead data and displays Agent UI
-3. **Agent Reviews**: Agent sees lead name, phone, and address pre-loaded
-4. **Call Initiation**: Agent clicks "Initiate Call" button (AJAX request)
-5. **Agent Call (Leg 1)**: Twilio calls the agent's phone
-6. **Prospect Connection (Leg 2)**: Upon agent answer, system bridges to prospect
-7. **Call Completion**: Agent completes conversation
-8. **Disposition Entry**: Agent fills mandatory 5-field disposition form
-9. **Submit to Podio**: `/submit_call_data` creates Call Activity item with all fields
-10. **Relationship Linking**: Call Activity automatically linked to Master Lead
-11. **Firestore Logging**: Complete audit trail saved
-12. **Success Feedback**: Agent receives confirmation, workspace remains open for next call
----
+3. **VOIP Registration**: Twilio Voice SDK registers browser as client:agent_xxxxx
+4. **Agent Reviews**: Agent sees lead name, phone, and address pre-loaded
+5. **Call Initiation**: Agent clicks "Initiate Call" button (AJAX request)
+6. **Agent Call (Leg 1)**: Twilio connects to agent's browser via WebRTC (VOIP)
+7. **Prospect Connection (Leg 2)**: Upon agent answer, system bridges to prospect
+8. **Call Completion**: Agent completes conversation
+9. **Disposition Entry**: Agent fills mandatory 5-field disposition form
+10. **Submit to Podio**: `/submit_call_data` creates Call Activity item with all fields
+11. **Relationship Linking**: Call Activity automatically linked to Master Lead
+12. **Firestore Logging**: Complete audit trail saved
+13. **Success Feedback**: Agent receives confirmation, workspace remains open for next call
 
 ## 🚀 Quick Start
 
@@ -157,7 +168,9 @@ See deployment documentation in `/docs` folder.
    TWILIO_ACCOUNT_SID=your_twilio_account_sid
    TWILIO_AUTH_TOKEN=your_twilio_auth_token
    TWILIO_PHONE_NUMBER=+1234567890
-   AGENT_PHONE_NUMBER=+1234567890
+   TWILIO_API_KEY=your_twilio_api_key
+   TWILIO_API_SECRET=your_twilio_api_secret
+   TWILIO_TWIML_APP_SID=your_twiml_app_sid
    GCP_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
    PODIO_CLIENT_ID=your_podio_client_id
    PODIO_CLIENT_SECRET=your_podio_client_secret
@@ -179,12 +192,25 @@ See deployment documentation in `/docs` folder.
 ## Configuration
 
 ### Environment Variables (Vercel)
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`
-- `AGENT_PHONE_NUMBER`
+
+#### Twilio Configuration
+- `TWILIO_ACCOUNT_SID` - Your Twilio account SID
+- `TWILIO_AUTH_TOKEN` - Your Twilio auth token
+- `TWILIO_PHONE_NUMBER` - Twilio phone number (E.164 format)
+- `TWILIO_API_KEY` - **New in V2.1** - API Key for Access Tokens
+- `TWILIO_API_SECRET` - **New in V2.1** - API Secret for Access Tokens
+- `TWILIO_TWIML_APP_SID` - **New in V2.1** - TwiML Application SID
+
+#### Podio Configuration
 - `PODIO_CLIENT_ID`, `PODIO_CLIENT_SECRET`, `PODIO_USERNAME`, `PODIO_PASSWORD`
 - `PODIO_MASTER_LEAD_APP_ID`, `PODIO_CALL_ACTIVITY_APP_ID`
 - `PODIO_MASTER_LEAD_APP_TOKEN`, `PODIO_CALL_ACTIVITY_APP_TOKEN`
+
+#### Google Cloud
 - `GCP_SERVICE_ACCOUNT_JSON`
+
+#### Removed in V2.1
+- ~~`AGENT_PHONE_NUMBER`~~ - No longer used (VOIP-only architecture)
 
 See [`docs/vercel_environment_variables.md`](docs/vercel_environment_variables.md) for complete setup guide.
 
@@ -196,7 +222,7 @@ See [`docs/vercel_environment_variables.md`](docs/vercel_environment_variables.m
 
 ## Known Issues
 
-- **Intermittent Busy Status**: Some calls may show "busy" due to carrier-level SIP 603 responses. This is normal telecommunications behavior. Agents should retry if a call shows busy.
+- ~~**Intermittent Busy Status**~~: Fixed in V2.1 - VOIP architecture eliminates carrier blocking
 
 ### Vercel Configuration
 
