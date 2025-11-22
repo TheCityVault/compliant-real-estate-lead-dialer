@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2025-11-20
+
+### Added - Agent Workspace (Major Architectural Upgrade)
+- **Agent Workspace UI**: Stateful browser interface replacing auto-close window
+- **5-Field Disposition Form**: Mandatory data collection (Disposition Code, Agent Notes, Seller Motivation, Next Action Date, Target Asking Price)
+- **Direct Podio Write**: Real-time Call Activity creation via Podio API (eliminates Make/Zapier dependency)
+- **Bi-Directional Relationships**: Call Activities automatically link to Master Lead items (field 274851864)
+- **Firestore Audit Logging**: Complete compliance trail for all dispositions
+- **AJAX Call Initiation**: Non-blocking call workflow from workspace
+- **/workspace Endpoint**: Pre-loads lead data from Podio for agent productivity
+- **/submit_call_data Endpoint**: Handles disposition submission with 10-field Podio mapping
+
+### Changed
+- Link field URL: `/dial?item_id=X` → `/workspace?item_id=X`
+- Call workflow: Immediate dial → Agent workspace with mandatory disposition
+- Data flow: External connector → Direct Podio API integration
+- Field mapping: Simplified schema (removed 4 duplicate legacy fields)
+
+### Fixed
+- Podio API 404 errors (implemented app-based filtering workaround)
+- Twilio call connection errors (added callerId parameter)
+- Podio datetime format errors (YYYY-MM-DD HH:MM:SS compliance)
+- Podio empty string validation errors (conditional field inclusion)
+- Podio OAuth timeout issues (removed redundant verification)
+- Relationship field format errors (array instead of integer)
+- Dropdown value mismatches (aligned with Podio field configuration)
+- Incorrect relationship field ID (corrected to 274851864)
+
+### Technical Details
+- **Relationship Field**: 274851864 (Call Activity → Master Lead)
+- **System Fields**: 274769797-274769801 (Title, Relationship, Date, Duration, Recording)
+- **Agent Fields**: 274851083-274851087 (5 disposition fields)
+- **Apps**: Master Lead (30549135), Call Activity (30549170)
+
+### Known Issues
+- Intermittent Twilio "busy status" (carrier-level SIP 603 decline - normal behavior, agents can retry)
+
+### Dependencies
+- Added: pypodio2 (Podio Python SDK)
+- Existing: Flask, Twilio SDK, Firebase Admin SDK
+
+---
+
 ## [1.0.0] - 2024-11-19 - PRODUCTION RELEASE 🎉
 
 ### 🎯 Production Status
