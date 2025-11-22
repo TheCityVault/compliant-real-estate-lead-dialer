@@ -7,7 +7,8 @@ from datetime import datetime
 load_dotenv()
 from twilio.twiml.voice_response import VoiceResponse, Dial
 from twilio.rest import Client
-from twilio.jwt.client import ClientCapabilityToken
+from twilio.jwt.access_token import AccessToken
+from twilio.jwt.access_token.grants import VoiceGrant
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -305,31 +306,32 @@ def workspace():
 
 @app.route('/token', methods=['GET'])
 def token():
-    """Generate Twilio Capability Token for Voice SDK v1.x"""
+    """Generate Twilio Access Token for Voice SDK v2.x"""
     # Get agent identifier from query params or use a default
     identity = request.args.get('identity', 'default_agent')
     
-    # Create capability token for v1.x SDK
+    # Create Access Token for v2.x SDK
     account_sid = TWILIO_ACCOUNT_SID
     auth_token = TWILIO_AUTH_TOKEN
     
-    # Create capability token
-    capability = ClientCapabilityToken(account_sid, auth_token)
+    # Create access token with identity
+    access_token = AccessToken(account_sid, TWILIO_ACCOUNT_SID, auth_token, identity=identity)
     
-    # Allow incoming connections for this client
-    capability.allow_client_incoming(identity)
-    
-    # Allow outgoing calls - REQUIRED for SDK v1.14 compatibility
-    if TWILIO_TWIML_APP_SID:
-        capability.allow_client_outgoing(TWILIO_TWIML_APP_SID)
-    else:
-        print("WARNING: TWILIO_TWIML_APP_SID not configured. Outgoing calls may not work.")
+    # Create a Voice grant and add to token
+    voice_grant = VoiceGrant(
+        outgoing_application_sid=TWILIO_TWIML_APP_SID,
+        incoming_allow=True  # Allow incoming calls
+    )
+    access_token.add_grant(voice_grant)
     
     # Generate and return the token
-    token = capability.to_jwt()
+    jwt_token = access_token.to_jwt()
     
     # Return token as JSON
-    return jsonify({'token': token.decode('utf-8') if isinstance(token, bytes) else token, 'identity': identity})
+    return jsonify({
+        'token': jwt_token if isinstance(jwt_token, str) else jwt_token.decode('utf-8'),
+        'identity': identity
+    })
 
 @app.route('/submit_call_data', methods=['POST'])
 def submit_call_data():
