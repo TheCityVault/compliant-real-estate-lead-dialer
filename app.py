@@ -25,7 +25,7 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
 TWILIO_TWIML_APP_SID = os.environ.get('TWILIO_TWIML_APP_SID')
 TWILIO_API_KEY = os.environ.get('TWILIO_API_KEY')
 TWILIO_API_SECRET = os.environ.get('TWILIO_API_SECRET')
-AGENT_PHONE_NUMBER = os.environ.get('AGENT_PHONE_NUMBER')
+# AGENT_PHONE_NUMBER removed - V2.1 VOIP-only architecture
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
@@ -477,12 +477,22 @@ def submit_call_data():
 
 @app.route('/dial', methods=['GET', 'POST'])
 def dial():
+    """
+    V2.1 VOIP-ONLY DIAL ENDPOINT
+    
+    Initiates a call using Twilio Client (browser-based VOIP).
+    Requires agent_id parameter in format: client:agent_xxxxx
+    
+    PSTN fallback removed in V2.1 to prevent carrier blocking issues.
+    All agents must use VOIP calling via the Agent Workspace.
+    """
     # Add environment variable verification logging
     print(f"\n{'='*50}")
-    print(f"=== ENVIRONMENT VERIFICATION ===")
-    print(f"AGENT_PHONE_NUMBER: {AGENT_PHONE_NUMBER}")
+    print(f"=== V2.1 VOIP-ONLY ENVIRONMENT VERIFICATION ===")
     print(f"TWILIO_PHONE_NUMBER: {TWILIO_PHONE_NUMBER}")
     print(f"TWILIO_ACCOUNT_SID: {TWILIO_ACCOUNT_SID[:8]}... (masked)")
+    print(f"TWILIO_API_KEY: {TWILIO_API_KEY[:8]}... (masked)")
+    print(f"TWILIO_API_SECRET: {TWILIO_API_SECRET[:8]}... (masked)")
     print(f"{'='*50}\n")
     
     # Handle AJAX POST requests from Agent Workspace
@@ -491,13 +501,13 @@ def dial():
         item_id = data.get('item_id')
         prospect_number = data.get('phone')
         
-        # Accept agent_id parameter - fallback to AGENT_PHONE_NUMBER for backwards compatibility
-        agent_id = data.get('agent_id', AGENT_PHONE_NUMBER)
+        # VOIP-only: Require agent_id parameter
+        agent_id = data.get('agent_id')
         
         if not agent_id:
             return jsonify({
                 'success': False,
-                'error': 'Missing agent_id parameter and AGENT_PHONE_NUMBER not configured'
+                'error': 'Agent ID is required for VOIP calling'
             }), 400
         
         print(f"AJAX POST to /dial - item_id: {item_id}, phone: {prospect_number}, agent_id: {agent_id}")
@@ -553,8 +563,8 @@ def dial():
         prospect_number = None
         item_id = request.args.get('item_id')
         
-        # Accept agent_id parameter - fallback to AGENT_PHONE_NUMBER for backwards compatibility
-        agent_id = request.args.get('agent_id', AGENT_PHONE_NUMBER)
+        # VOIP-only: Require agent_id parameter
+        agent_id = request.args.get('agent_id')
         
         if not agent_id:
             return """
@@ -562,7 +572,7 @@ def dial():
             <head><title>Error</title></head>
             <body>
                 <h2>❌ Error</h2>
-                <p>Missing agent_id parameter and AGENT_PHONE_NUMBER not configured</p>
+                <p>VOIP Agent ID is required. Please use the Agent Workspace.</p>
             </body>
             </html>
             """, 400
@@ -746,20 +756,20 @@ def dial():
             </html>
             """, 500
     
-    # Handle POST requests (backwards compatibility)
+    # Handle legacy POST requests (VOIP-only)
     else:
         response = VoiceResponse()
         prospect_number = request.form.get('prospect_number')
         
-        # Accept agent_id parameter - fallback to AGENT_PHONE_NUMBER for backwards compatibility
-        agent_id = request.form.get('agent_id', AGENT_PHONE_NUMBER)
+        # VOIP-only: Require agent_id parameter
+        agent_id = request.form.get('agent_id')
 
         if not prospect_number:
             response.say("Sorry, I couldn't initiate the call. Missing prospect number.")
             return str(response)
         
         if not agent_id:
-            response.say("Sorry, I couldn't initiate the call. Missing agent identifier.")
+            response.say("Sorry, I couldn't initiate the call. VOIP agent identifier required.")
             return str(response)
 
         try:
@@ -877,10 +887,9 @@ def call_status():
         print(f"To: {to_number}")
         print(f"Direction: {direction}")
         print(f"This may indicate:")
-        print(f"  - Environment variable configuration issue")
-        print(f"  - Incorrect AGENT_PHONE_NUMBER")
+        print(f"  - VOIP connection issue")
         print(f"  - Prospect phone returned busy signal")
-        print(f"ACTION REQUIRED: Verify AGENT_PHONE_NUMBER = {AGENT_PHONE_NUMBER}")
+        print(f"ACTION REQUIRED: Verify agent VOIP connection is active")
         print(f"{'='*50}\n")
 
     if db:
@@ -908,31 +917,22 @@ def validate_environment():
         'TWILIO_ACCOUNT_SID': TWILIO_ACCOUNT_SID,
         'TWILIO_AUTH_TOKEN': TWILIO_AUTH_TOKEN,
         'TWILIO_PHONE_NUMBER': TWILIO_PHONE_NUMBER,
+        'TWILIO_API_KEY': TWILIO_API_KEY,
+        'TWILIO_API_SECRET': TWILIO_API_SECRET,
         'TWILIO_TWIML_APP_SID': TWILIO_TWIML_APP_SID,
-    }
-    
-    optional_vars = {
-        'AGENT_PHONE_NUMBER': AGENT_PHONE_NUMBER,
+        # AGENT_PHONE_NUMBER removed - VOIP-only architecture
     }
     
     print(f"\n{'='*50}")
-    print(f"=== STARTUP ENVIRONMENT VALIDATION ===")
-    print(f"Required Variables:")
+    print(f"=== V2.1 VOIP-ONLY ENVIRONMENT VALIDATION ===")
     for var_name, var_value in required_vars.items():
         if var_value:
-            if 'TOKEN' in var_name or 'SID' in var_name:
-                print(f"  ✅ {var_name}: {var_value[:8]}... (masked)")
+            if 'TOKEN' in var_name or 'SID' in var_name or 'SECRET' in var_name:
+                print(f"✅ {var_name}: {var_value[:8]}... (masked)")
             else:
-                print(f"  ✅ {var_name}: {var_value}")
+                print(f"✅ {var_name}: {var_value}")
         else:
-            print(f"  ❌ {var_name}: NOT SET - VOIP WILL NOT WORK!")
-    
-    print(f"Optional Variables:")
-    for var_name, var_value in optional_vars.items():
-        if var_value:
-            print(f"  ✅ {var_name}: {var_value}")
-        else:
-            print(f"  ⚠️  {var_name}: NOT SET (can be overridden per-call)")
+            print(f"❌ {var_name}: NOT SET")
     print(f"{'='*50}\n")
 
 # Call validation on module load (for serverless)

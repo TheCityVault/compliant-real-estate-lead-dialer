@@ -87,15 +87,16 @@
             <!-- Agent Connection Input -->
             <div class="mb-4">
                 <label for="agent-id" class="block text-sm font-medium text-gray-700 mb-2">
-                    Agent Connection <span class="text-gray-500">(Optional)</span>
+                    Agent Connection
                 </label>
                 <input type="text"
                        id="agent-id"
                        name="agent_id"
-                       placeholder="client:john_doe or +13035551234"
-                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary">
+                       readonly
+                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
+                       placeholder="System will auto-generate...">
                 <p class="mt-1 text-sm text-gray-500">
-                    Enter <code class="bg-gray-100 px-1 rounded">client:username</code> for VOIP or <code class="bg-gray-100 px-1 rounded">+1234567890</code> for phone. Leave empty to use default.
+                    🔒 Auto-generated VOIP identity (browser-based calling only)
                 </p>
             </div>
             
