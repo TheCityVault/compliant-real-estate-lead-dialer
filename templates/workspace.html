@@ -497,7 +497,7 @@
                 // Initialize Twilio Device (v2 API)
                 twilioDevice = new Device(data.token, {
                     logLevel: 1, // 1 = debug, 0 = trace
-                    codecPreferences: [Device.Codec.Opus, Device.Codec.PCMU]
+                    codecPreferences: [Twilio.Call.Codec.Opus, Twilio.Call.Codec.PCMU]
                 });
                 
                 // Device registered event (v2: 'ready' → 'registered')
