@@ -100,13 +100,23 @@
             </div>
             
             <div class="flex items-center space-x-4">
-                <button id="dial-button" 
+                <button id="dial-button"
                         class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                     </svg>
                     Initiate Call
                 </button>
+                
+                <!-- Disconnect button (hidden by default) -->
+                <button id="disconnect-button"
+                        class="hidden inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z"/>
+                    </svg>
+                    Disconnect Call
+                </button>
+                
                 <div id="call-status" class="hidden text-sm">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                         <svg class="animate-pulse w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -290,6 +300,7 @@
         const nextActionRequiredHint = document.getElementById('next-action-required-hint');
         const submitButton = document.getElementById('submit-button');
         const dialButton = document.getElementById('dial-button');
+        const disconnectButton = document.getElementById('disconnect-button');
         const callStatus = document.getElementById('call-status');
         const formValidationMessage = document.getElementById('form-validation-message');
         const dispositionForm = document.getElementById('disposition-form');
@@ -297,7 +308,6 @@
         const errorMessage = document.getElementById('error-message');
         const errorMessageText = document.getElementById('error-message-text');
 
-        // Dial button click handler
         // Dial button click handler
         dialButton.addEventListener('click', async () => {
             dialButton.disabled = true;
@@ -336,6 +346,21 @@
                 showError('Failed to initiate call: ' + error.message);
                 dialButton.disabled = false;
                 dialButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+        
+        // Disconnect button click handler
+        disconnectButton.addEventListener('click', () => {
+            if (currentConnection) {
+                currentConnection.disconnect();
+                console.log('📴 User manually disconnected call');
+                
+                // Update UI
+                disconnectButton.classList.add('hidden');
+                dialButton.classList.remove('hidden');
+                dialButton.disabled = false;
+                dialButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                callStatus.classList.add('hidden');
             }
         });
         // Disposition code change handler - enable/disable submit button and conditional validation
@@ -517,6 +542,10 @@
                     console.log('📞 Incoming call from:', call.parameters.From);
                     currentConnection = call;
                     
+                    // Show disconnect button, hide dial button
+                    dialButton.classList.add('hidden');
+                    disconnectButton.classList.remove('hidden');
+                    
                     // Set up call event handlers BEFORE accepting
                     call.on('accept', function () {
                         console.log('✅ Call accepted and connected');
@@ -527,6 +556,13 @@
                         console.log('📴 Call ended');
                         currentConnection = null;
                         updateDeviceStatus('Ready', 'success');
+                        
+                        // Hide disconnect button, show dial button
+                        disconnectButton.classList.add('hidden');
+                        dialButton.classList.remove('hidden');
+                        dialButton.disabled = false;
+                        dialButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                        callStatus.classList.add('hidden');
                     });
                     
                     call.on('error', function (error) {

@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 from flask import Flask, request, Response, render_template, jsonify
 from datetime import datetime
@@ -139,7 +140,6 @@ def get_podio_item(item_id):
     except Exception as e:
         print(f"EXCEPTION in get_podio_item(): {str(e)}")
         return None
-
 def extract_field_value(item, field_label):
     """Extract field value from Podio item by field label"""
     for field in item.get('fields', []):
@@ -149,8 +149,14 @@ def extract_field_value(item, field_label):
                 value = values[0]
                 # Handle different field types
                 if isinstance(value, dict):
-                    return value.get('value', '')
-                return str(value)
+                    text = value.get('value', '')
+                else:
+                    text = str(value)
+                
+                # Strip HTML tags (e.g., <p>Name</p> -> Name)
+                text = re.sub(r'<[^>]+>', '', text)
+                return text.strip()
+    return ''
     return ''
 
 def convert_to_iso_date(date_string):
