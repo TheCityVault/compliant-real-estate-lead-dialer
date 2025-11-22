@@ -1,13 +1,13 @@
 # Compliant Real Estate Lead Dialer
 
 [![Production Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://github.com/yourusername/compliant-real-estate-lead-dialer)
-[![Version](https://img.shields.io/badge/Version-1.0-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
+[![Version](https://img.shields.io/badge/Version-2.0-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
 [![Platform](https://img.shields.io/badge/Platform-Vercel-black)](https://vercel.com)
 [![TCPA Compliant](https://img.shields.io/badge/TCPA-Compliant-success)](https://www.fcc.gov/tcpa)
 
-**🎉 Production Ready - Version 1.0**
+**🎉 Production Ready - Version 2.0 (Agent Workspace)**
 
-A TCPA-compliant, two-leg click-to-dial system for real estate professionals that seamlessly integrates Podio CRM, Twilio telephony, and Google Cloud Firestore for comprehensive call logging and audit trails.
+A TCPA-compliant, two-leg click-to-dial system for real estate professionals with real-time disposition management and direct Podio API integration. Version 2.0 introduces the Agent Workspace - a stateful browser interface that enables mandatory disposition entry and eliminates external connector dependencies.
 
 **🌐 Production Deployment:** [Your Vercel URL]
 
@@ -31,7 +31,41 @@ A TCPA-compliant, two-leg click-to-dial system for real estate professionals tha
 
 ## 🎯 Overview
 
+**Version:** 2.0.0 (Agent Workspace)
+**Status:** Production
+**Architecture:** Direct Podio API Integration
+
 The Compliant Real Estate Lead Dialer enables real estate agents to initiate phone calls directly from Podio lead records with a single click, while maintaining strict TCPA (Telephone Consumer Protection Act) compliance through a two-leg dialing architecture.
+
+## V2.0 Features
+
+### **Agent Workspace**
+- Single, persistent browser window (no auto-close)
+- Pre-loaded lead information (Name, Phone, Address)
+- AJAX-based call initiation
+- Mandatory 5-field disposition entry
+- Real-time feedback and validation
+
+### **Direct Podio Integration**
+- Real-time Call Activity item creation
+- 10-field data mapping (5 agent + 5 system fields)
+- Automatic relationship linking to Master Lead items
+- Eliminates Make/Zapier dependency
+- Immediate data availability in Podio
+
+### **Disposition Fields**
+1. **Disposition Code** (required): Call outcome selection
+2. **Agent Notes/Summary** (required): Call details and follow-up context
+3. **Seller Motivation Level**: Prioritization indicator
+4. **Next Action Date**: Callback scheduling
+5. **Target Asking Price**: Pipeline value tracking
+
+### **System Fields** (Auto-populated)
+- Title: Auto-generated call reference
+- Relationship: Links to Master Lead (field 274851864)
+- Date of Call: Timestamp
+- Call Duration: From Twilio API
+- Recording URL: From Twilio API
 
 ### What Makes This System Compliant?
 
@@ -39,6 +73,7 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 2. **Two-Leg Architecture**: The system calls the agent first, then connects to the prospect
 3. **No Auto-Dialing**: Avoids ATDS (Automated Telephone Dialing System) classification
 4. **Complete Audit Trail**: Every call is logged to Firestore with full details
+5. **Mandatory Dispositions**: All calls require documented outcomes
 
 ---
 
@@ -61,74 +96,46 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 ---
 
 ## 🏗️ Architecture
+## 🏗️ Architecture
 
 ```
-┌─────────────────┐
-│  Podio CRM      │
-│  (Link Field)   │
-└────────┬────────┘
-         │ 1. Agent clicks link
-         │    with item_id parameter
-         ▼
-┌─────────────────────────────────┐
-│  Vercel (Flask/Python)          │
-│  ┌───────────────────────────┐  │
-│  │ GET /dial?item_id=xxx     │  │
-│  │ - Fetches Podio item      │  │
-│  │ - Extracts phone number   │  │
-│  │ - Initiates Twilio call   │  │
-│  └───────────┬───────────────┘  │
-│              │                  │
-│  ┌───────────▼───────────────┐  │
-│  │ POST /connect_prospect    │  │
-│  │ - Connects agent to       │  │
-│  │   prospect (Leg 2)        │  │
-│  └───────────┬───────────────┘  │
-│              │                  │
-│  ┌───────────▼───────────────┐  │
-│  │ POST /call_status         │  │
-│  │ - Logs call details to    │  │
-│  │   Firestore               │  │
-│  └───────────────────────────┘  │
-└─────────────────────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Twilio         │
-│  - Calls agent  │ (Leg 1)
-│  - Connects to  │ (Leg 2)
-│    prospect     │
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Google Cloud   │
-│  Firestore      │
-│  (Audit Trail)  │
-└─────────────────┘
+Podio Link Field → /workspace → Load Lead Data →
+→ Agent UI (5-field form) → Initiate Call → Twilio →
+→ Complete Call → Fill Disposition → Submit →
+→ /submit_call_data → Direct Podio Write →
+→ Call Activity Created → Firestore Audit →
+→ Success Response to Agent
 ```
 
-### Call Sequence
+### Call Sequence (V2.0)
 
 1. **Agent Initiates**: Clicks link field in Podio containing item ID
-2. **Item Retrieval**: System fetches lead details from Podio API
-3. **Phone Extraction**: Retrieves "Best Contact Number" from Podio item
-4. **Agent Call (Leg 1)**: Twilio calls the agent's phone
-5. **Prospect Connection (Leg 2)**: Upon agent answer, system bridges to prospect
-6. **Call Logging**: All call details logged to Firestore in real-time
-7. **Future Sync**: Firestore data can be synced back to Podio via Make/Zapier (Phase 2)
-
+2. **Workspace Loads**: `/workspace` endpoint loads lead data and displays Agent UI
+3. **Agent Reviews**: Agent sees lead name, phone, and address pre-loaded
+4. **Call Initiation**: Agent clicks "Initiate Call" button (AJAX request)
+5. **Agent Call (Leg 1)**: Twilio calls the agent's phone
+6. **Prospect Connection (Leg 2)**: Upon agent answer, system bridges to prospect
+7. **Call Completion**: Agent completes conversation
+8. **Disposition Entry**: Agent fills mandatory 5-field disposition form
+9. **Submit to Podio**: `/submit_call_data` creates Call Activity item with all fields
+10. **Relationship Linking**: Call Activity automatically linked to Master Lead
+11. **Firestore Logging**: Complete audit trail saved
+12. **Success Feedback**: Agent receives confirmation, workspace remains open for next call
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
+## Requirements
 
 - Python 3.9+
-- Twilio account with phone number
-- Google Cloud project with Firestore enabled
-- Podio workspace and app
-- Vercel account (for deployment)
+- Twilio Account (Voice API)
+- Podio Account with OAuth credentials
+- Google Cloud Firestore (for audit logging)
+- Vercel (for hosting)
+
+## Installation
+
+See deployment documentation in `/docs` folder.
 
 ### Local Development
 
@@ -169,19 +176,27 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 
 ## ⚙️ Configuration
 
-### Required Environment Variables
+## Configuration
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `TWILIO_ACCOUNT_SID` | Twilio account identifier | `ACxxxxxxxxxxxxx` |
-| `TWILIO_AUTH_TOKEN` | Twilio authentication token | `your_auth_token` |
-| `TWILIO_PHONE_NUMBER` | Twilio phone number (E.164 format) | `+15551234567` |
-| `AGENT_PHONE_NUMBER` | Agent's phone number (E.164 format) | `+15559876543` |
-| `GCP_SERVICE_ACCOUNT_JSON` | Google Cloud service account JSON (stringified) | `{"type":"service_account",...}` |
-| `PODIO_CLIENT_ID` | Podio OAuth client ID | `your_client_id` |
-| `PODIO_CLIENT_SECRET` | Podio OAuth client secret | `your_client_secret` |
-| `PODIO_USERNAME` | Podio account username/email | `agent@example.com` |
-| `PODIO_PASSWORD` | Podio account password | `your_password` |
+### Environment Variables (Vercel)
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`
+- `AGENT_PHONE_NUMBER`
+- `PODIO_CLIENT_ID`, `PODIO_CLIENT_SECRET`, `PODIO_USERNAME`, `PODIO_PASSWORD`
+- `PODIO_MASTER_LEAD_APP_ID`, `PODIO_CALL_ACTIVITY_APP_ID`
+- `PODIO_MASTER_LEAD_APP_TOKEN`, `PODIO_CALL_ACTIVITY_APP_TOKEN`
+- `GCP_SERVICE_ACCOUNT_JSON`
+
+See [`docs/vercel_environment_variables.md`](docs/vercel_environment_variables.md) for complete setup guide.
+
+## V1.0 → V2.0 Migration
+
+- **Breaking Change**: Podio link field URL must be updated from `/dial` to `/workspace`
+- **Data Impact**: None (V1.0 and V2.0 can coexist during transition)
+- **Rollback**: Revert link field URL to restore V1.0 behavior
+
+## Known Issues
+
+- **Intermittent Busy Status**: Some calls may show "busy" due to carrier-level SIP 603 responses. This is normal telecommunications behavior. Agents should retry if a call shows busy.
 
 ### Vercel Configuration
 
@@ -346,20 +361,30 @@ vercel --prod
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-### v1.0 - Production Ready (November 19, 2024)
+### v2.0 - Agent Workspace (November 20, 2025)
 
 **Status**: Production Release 🎉
 
-This is the first production-ready release with full TCPA compliance, Podio integration, and Firestore audit logging.
+**Major Architectural Upgrade:**
+- ✅ Agent Workspace UI with pre-loaded lead data
+- ✅ Mandatory 5-field disposition system
+- ✅ Direct Podio API integration (eliminates Make/Zapier)
+- ✅ Bi-directional Call Activity relationships
+- ✅ Real-time Podio writes with 10-field mapping
+- ✅ Complete Firestore audit logging
+- ✅ AJAX call initiation
+- ✅ 8 critical bug fixes
+
+### v1.0 - Initial Release (November 19, 2024)
+
+**Status**: Superseded by V2.0
 
 **Features:**
 - ✅ TCPA-compliant two-leg dialing
-- ✅ Seamless Podio Link field integration
+- ✅ Basic Podio Link field integration
 - ✅ Real-time Firestore call logging
-- ✅ Podio API integration for retrieving lead phone numbers
-- ✅ Comprehensive error handling
-- ✅ Production deployment on Vercel
-- ✅ Full documentation suite
+- ✅ Auto-close window workflow
+- ✅ External connector integration (Make/Zapier)
 
 ---
 
@@ -385,14 +410,13 @@ For technical support or questions:
 
 ---
 
-## 🎯 Roadmap
+## License
 
-### Phase 2 (Future Enhancement)
-- [ ] Implement Make.com/Zapier automation for Podio call log sync
-- [ ] Add call recording capabilities
-- [ ] Implement call analytics dashboard
-- [ ] Add multi-agent support
-- [ ] Enhanced error notifications
+Proprietary - LeadGenAlchemy
+
+## Support
+
+For issues or questions, contact: c1tyv4ult@gmail.com
 
 ---
 
