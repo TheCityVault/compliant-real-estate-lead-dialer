@@ -22,6 +22,8 @@ TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
 TWILIO_TWIML_APP_SID = os.environ.get('TWILIO_TWIML_APP_SID')
+TWILIO_API_KEY = os.environ.get('TWILIO_API_KEY')
+TWILIO_API_SECRET = os.environ.get('TWILIO_API_SECRET')
 AGENT_PHONE_NUMBER = os.environ.get('AGENT_PHONE_NUMBER')
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -310,12 +312,13 @@ def token():
     # Get agent identifier from query params or use a default
     identity = request.args.get('identity', 'default_agent')
     
-    # Create Access Token for v2.x SDK
-    account_sid = TWILIO_ACCOUNT_SID
-    auth_token = TWILIO_AUTH_TOKEN
-    
-    # Create access token with identity
-    access_token = AccessToken(account_sid, TWILIO_ACCOUNT_SID, auth_token, identity=identity)
+    # Create Access Token for v2.x SDK using API Key credentials
+    access_token = AccessToken(
+        TWILIO_ACCOUNT_SID,
+        TWILIO_API_KEY,
+        TWILIO_API_SECRET,
+        identity=identity
+    )
     
     # Create a Voice grant and add to token
     voice_grant = VoiceGrant(
