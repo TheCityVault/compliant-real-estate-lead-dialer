@@ -470,6 +470,8 @@
 
         let twilioDevice = null;
         let currentConnection = null;
+        // Store the random identity globally for reuse
+        let agentIdentity = 'agent_' + Math.random().toString(36).substr(2, 9);
 
         async function initializeTwilioClient() {
             try {
@@ -482,14 +484,18 @@
                 
                 console.log('✅ Twilio SDK loaded successfully');
                 
-                // Fetch access token from backend
-                const response = await fetch('/token?identity=agent_' + Math.random().toString(36).substr(2, 9));
+                // Fetch access token from backend using the stored identity
+                const response = await fetch('/token?identity=' + agentIdentity);
                 if (!response.ok) {
                     throw new Error('Failed to fetch Twilio token');
                 }
                 
                 const data = await response.json();
                 console.log('Twilio token obtained for identity:', data.identity);
+                
+                // Pre-fill the Agent Connection field with the identity used for registration
+                document.getElementById('agent-id').value = 'client:' + agentIdentity;
+                console.log('✅ Agent Connection field pre-populated with:', 'client:' + agentIdentity);
                 
                 // Access Device from Twilio SDK v2 (Device is directly on Twilio object in v2.11.1)
                 const Device = Twilio.Device;
