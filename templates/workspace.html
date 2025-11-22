@@ -8,6 +8,9 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Twilio Voice JavaScript SDK -->
+    <script src="https://sdk.twilio.com/js/client/v2.12.2/twilio.min.js"></script>
+    
     <!-- Custom Configuration -->
     <script>
         tailwind.config = {
@@ -40,11 +43,11 @@
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-900">Agent Workspace</h1>
                 <div class="flex items-center space-x-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <circle cx="10" cy="10" r="8"/>
                         </svg>
-                        Active Call
+                        VOIP: <span id="twilio-device-status" class="ml-1 text-gray-600">Initializing...</span>
                     </span>
                 </div>
             </div>
@@ -460,6 +463,82 @@
 
         // Initialize form validation state
         validateForm();
+
+        // ==========================================
+        // TWILIO VOICE SDK INITIALIZATION
+        // ==========================================
+
+        let twilioDevice = null;
+        let currentConnection = null;
+
+        async function initializeTwilioClient() {
+            try {
+                // Fetch access token from backend
+                const response = await fetch('/token?identity=agent_' + Math.random().toString(36).substr(2, 9));
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Twilio token');
+                }
+                
+                const data = await response.json();
+                console.log('Twilio token obtained for identity:', data.identity);
+                
+                // Initialize Twilio Device
+                twilioDevice = new Twilio.Device(data.token, {
+                    debug: true,
+                    codecPreferences: ['opus', 'pcmu']
+                });
+                
+                // Device ready event
+                twilioDevice.on('ready', function (device) {
+                    console.log('✅ Twilio Device is ready to receive calls');
+                    updateDeviceStatus('Ready', 'success');
+                });
+                
+                // Incoming call event
+                twilioDevice.on('incoming', function (connection) {
+                    console.log('📞 Incoming call from:', connection.parameters.From);
+                    currentConnection = connection;
+                    
+                    // Auto-accept the incoming call (agent initiated it via "Initiate Call" button)
+                    connection.accept();
+                    updateDeviceStatus('Connected', 'success');
+                });
+                
+                // Connection established
+                twilioDevice.on('connect', function (connection) {
+                    console.log('✅ Call connected');
+                    updateDeviceStatus('Active Call', 'success');
+                });
+                
+                // Connection disconnected
+                twilioDevice.on('disconnect', function (connection) {
+                    console.log('📴 Call ended');
+                    currentConnection = null;
+                    updateDeviceStatus('Ready', 'success');
+                });
+                
+                // Error handling
+                twilioDevice.on('error', function (error) {
+                    console.error('❌ Twilio Device error:', error);
+                    updateDeviceStatus('Error: ' + error.message, 'error');
+                });
+                
+            } catch (error) {
+                console.error('Failed to initialize Twilio Client:', error);
+                updateDeviceStatus('SDK Error', 'error');
+            }
+        }
+
+        function updateDeviceStatus(message, type) {
+            const statusEl = document.getElementById('twilio-device-status');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.className = type === 'success' ? 'text-green-600' : 'text-red-600';
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeTwilioClient);
     </script>
 </body>
 </html>

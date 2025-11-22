@@ -7,6 +7,8 @@ from datetime import datetime
 load_dotenv()
 from twilio.twiml.voice_response import VoiceResponse, Dial
 from twilio.rest import Client
+from twilio.jwt.access_token import AccessToken
+from twilio.jwt.access_token.grants import VoiceGrant
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -300,6 +302,36 @@ def workspace():
         
     except Exception as e:
         return f"Error loading workspace: {str(e)}", 500
+
+@app.route('/token', methods=['GET'])
+def token():
+    """Generate Twilio Access Token for Voice SDK"""
+    # Get agent identifier from query params or use a default
+    identity = request.args.get('identity', 'default_agent')
+    
+    # Create access token with credentials
+    account_sid = TWILIO_ACCOUNT_SID
+    api_key = os.environ.get('TWILIO_API_KEY')  # New env var needed
+    api_secret = os.environ.get('TWILIO_API_SECRET')  # New env var needed
+    
+    if not api_key or not api_secret:
+        return jsonify({
+            'error': 'Twilio API credentials not configured',
+            'message': 'Set TWILIO_API_KEY and TWILIO_API_SECRET environment variables'
+        }), 500
+    
+    # Create access token
+    token = AccessToken(account_sid, api_key, api_secret, identity=identity)
+    
+    # Create a Voice grant and add to token
+    voice_grant = VoiceGrant(
+        outgoing_application_sid=None,  # Not needed for incoming-only
+        incoming_allow=True  # Allow incoming calls
+    )
+    token.add_grant(voice_grant)
+    
+    # Return token as JSON
+    return jsonify({'token': token.to_jwt(), 'identity': identity})
 
 @app.route('/submit_call_data', methods=['POST'])
 def submit_call_data():
