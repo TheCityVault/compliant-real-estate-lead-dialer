@@ -85,3 +85,53 @@ def log_call_status_to_firestore(call_sid, call_status, direction, from_number, 
     except Exception as e:
         print(f"Error logging to Firestore: {e}")
         return False
+
+# ============================================================================
+# RECORDING METADATA UPDATE
+# ============================================================================
+
+def update_call_recording_metadata(call_sid, recording_sid, recording_url, recording_duration):
+    """
+    Update existing call log with recording metadata
+    
+    Args:
+        call_sid: Twilio Call SID (used to locate existing log)
+        recording_sid: Unique recording identifier
+        recording_url: URL to access/download the recording
+        recording_duration: Length of recording in seconds
+        
+    Returns:
+        bool: True if updated successfully, False otherwise
+    """
+    if not db:
+        print("Firestore not available, skipping recording metadata update")
+        return False
+    
+    try:
+        # Query for call log entry with matching CallSid
+        call_logs_ref = db.collection('call_logs')
+        query = call_logs_ref.where('CallSid', '==', call_sid).limit(1)
+        docs = query.stream()
+        
+        # Update the first matching document
+        updated = False
+        for doc in docs:
+            doc.reference.update({
+                'RecordingSid': recording_sid,
+                'RecordingUrl': recording_url,
+                'RecordingDuration': recording_duration,
+                'RecordingTimestamp': firestore.SERVER_TIMESTAMP
+            })
+            print(f"Updated call log {doc.id} with recording metadata for CallSid {call_sid}")
+            updated = True
+            break
+        
+        if not updated:
+            print(f"WARNING: No call log found for CallSid {call_sid}")
+            return False
+            
+        return True
+        
+    except Exception as e:
+        print(f"Error updating call log with recording metadata: {e}")
+        return False
