@@ -6,6 +6,63 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [V3.2] - 2025-11-23 - Automated Call Recording Linkage
+
+### 🎯 Major Feature: CallSid-to-PodioItemId Mapping Infrastructure
+
+**Problem Solved:** V3.1 recordings couldn't be automatically linked to Podio items because the asynchronous webhook had no way to identify which Call Activity item to update.
+
+**Solution:** Implemented persistent state mapping using Firestore to bridge synchronous client actions with asynchronous server webhooks.
+
+### ✨ New Features
+
+**V3.2.1 - Frontend CallSid Capture**
+- Modified Agent Workspace to capture Twilio CallSid from dial response
+- CallSid automatically included in form submission payload
+- Enables server-side mapping storage
+
+**V3.2.2 - Backend Mapping Storage**
+- New Firestore collection `call_sid_mappings` for persistent state
+- `store_call_sid_mapping()` function stores CallSid→PodioItemId pairs
+- Mapping created immediately after Podio Call Activity item is written
+- Uses CallSid as document ID for efficient direct lookup
+
+**V3.2.3 - Webhook Integration**
+- `get_podio_item_id_from_call_sid()` retrieves PodioItemId using CallSid
+- `/recording_status` webhook automatically updates Podio with recording URL
+- Authentication-free proxy URL format (`/play_recording/{RecordingSid}`)
+- Complete end-to-end automated recording linkage
+
+### 🐛 Bug Fixes
+
+- Fixed type conversion error in `call_duration` comparison
+- Removed Twilio API metadata URL (401 authentication error)
+- Added type-safe conversion for call duration parameter
+- Enhanced Podio OAuth diagnostics for troubleshooting
+
+### 🔄 Complete V3.2 Flow
+
+1. Agent initiates call → CallSid captured in frontend
+2. Agent submits disposition → CallSid sent to backend
+3. Podio Call Activity created → CallSid→PodioItemId mapping stored in Firestore
+4. Recording completes → Twilio webhook fires with CallSid
+5. Webhook retrieves PodioItemId via mapping → Podio updated with proxy URL
+6. Recording playable without authentication
+
+### 🎉 Impact
+
+**Before V3.2:** Manual recording URL entry required  
+**After V3.2:** Fully automated recording URL linkage with authentication-free playback
+
+### 📦 Technical Changes
+
+- **Modified Files:** `templates/workspace.html`, `app.py`, `db_service.py`, `podio_service.py`, `twilio_service.py`
+- **New Database Collection:** `call_sid_mappings` in Firestore
+- **New Functions:** `store_call_sid_mapping()`, `get_podio_item_id_from_call_sid()`
+- **Updated Endpoints:** `/submit_call_data`, `/recording_status`
+
+---
+
 
 ## [3.1.0] - 2024-11-23
 

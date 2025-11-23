@@ -1,23 +1,33 @@
-# Compliant Real Estate Lead Dialer - V3.1 Call Recording Edition
+# Compliant Real Estate Lead Dialer - V3.2 Automated Recording Linkage
 
 [![Production Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://github.com/yourusername/compliant-real-estate-lead-dialer)
-[![Version](https://img.shields.io/badge/Version-3.1-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
+[![Version](https://img.shields.io/badge/Version-3.2-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
 [![Platform](https://img.shields.io/badge/Platform-Vercel-black)](https://vercel.com)
 [![TCPA Compliant](https://img.shields.io/badge/TCPA-Compliant-success)](https://www.fcc.gov/tcpa)
 
-**🎉 Production Ready - Version 3.1 (Call Recording Edition)**
+**🎉 Production Ready - Version 3.2 (Automated Recording Linkage Edition)**
 
-A compliant, two-leg dialing system for real estate lead calling with **browser-based VOIP** for agent connections and **automatic call recording**.
+A compliant, two-leg dialing system for real estate lead calling with **browser-based VOIP** for agent connections and **fully automated call recording linkage to Podio**.
 
-## Version
-**V3.1** - Call Recording & Playback (November 2024)
-- Automatic call recording when prospect answers
-- Secure proxy playback without credential exposure
-- Firestore audit trail with recording metadata
-- Browser-based agent calling (no phone required)
-- Twilio Client SDK v2.11.1 integration
+## Current Version: V3.2 - Automated Call Recording Linkage ✅
 
-**🌐 Production Deployment:** [Your Vercel URL]
+### Latest Feature: CallSid-to-PodioItemId Mapping
+
+V3.2 completes the automated call recording workflow by implementing persistent state mapping infrastructure. Recording URLs are now automatically written to Podio Call Activity items without manual intervention.
+
+**Key Capabilities:**
+- ✅ Real-time CallSid capture during call initiation
+- ✅ Persistent CallSid→PodioItemId mapping in Firestore
+- ✅ Automatic Podio updates via webhook integration
+- ✅ Authentication-free recording playback through proxy endpoint
+- ✅ Complete end-to-end automated recording linkage
+
+**Previous Versions:**
+- **V3.1:** Call Recording Infrastructure (TwiML, webhooks, proxy endpoint)
+- **V3.0:** Agent Workspace UI with call disposition form
+- **V2.1:** VOIP-only architecture with Twilio Client SDK
+
+**🌐 Production Deployment:** https://compliant-real-estate-lead-dialer.vercel.app/
 
 ---
 
