@@ -10,6 +10,7 @@ All business logic is delegated to service modules.
 """
 
 import urllib.parse
+import requests
 from flask import Flask, request, Response, render_template, jsonify
 
 # Import configuration and validation
@@ -597,7 +598,6 @@ def call_status():
 # ============================================================================
 # RECORDING STATUS ROUTE
 # ============================================================================
-
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
     """Handle recording status callbacks from Twilio"""
@@ -615,11 +615,17 @@ def recording_status():
     
     # Update Firestore with recording metadata
     if call_sid and recording_sid and recording_url:
+        # Build base URL for proxy endpoint
+        base_url = request.url_root.rstrip('/')
+        if not base_url.startswith('http'):
+            base_url = f"https://{request.host}"
+        
         update_call_recording_metadata(
             call_sid=call_sid,
             recording_sid=recording_sid,
             recording_url=recording_url,
-            recording_duration=int(recording_duration) if recording_duration else 0
+            recording_duration=int(recording_duration) if recording_duration else 0,
+            base_url=base_url
         )
     else:
         print("WARNING: Missing required recording parameters")
@@ -628,6 +634,50 @@ def recording_status():
     # TODO V3.2: Add CallSid→CallActivityItemId mapping to enable Podio updates
     # See podio_service.update_call_activity_recording() documentation
     
+    return Response(status=200)
+# ============================================================================
+# RECORDING PROXY ROUTE
+# ============================================================================
+
+@app.route('/play_recording/<recording_sid>', methods=['GET'])
+def play_recording(recording_sid):
+    """
+    Proxy endpoint to stream Twilio recordings without client authentication
+    
+    Args:
+        recording_sid: Twilio Recording SID (e.g., RE1234567890)
+        
+    Returns:
+        Audio stream or error message
+    """
+    try:
+        # Construct authenticated Twilio API URL
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Recordings/{recording_sid}.mp3"
+        
+        # Fetch recording with server-side authentication
+        response = requests.get(
+            url,
+            auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
+            stream=True
+        )
+        
+        if response.status_code == 200:
+            # Stream audio to client
+            return Response(
+                response.iter_content(chunk_size=1024),
+                mimetype='audio/mpeg',
+                headers={
+                    'Content-Disposition': f'inline; filename="{recording_sid}.mp3"',
+                    'Accept-Ranges': 'bytes'
+                }
+            )
+        else:
+            return f"Recording not found: {response.status_code}", 404
+            
+    except Exception as e:
+        print(f"Error streaming recording: {e}")
+        return f"Error: {str(e)}", 500
+
     return Response(status=200)
 
 

@@ -90,15 +90,16 @@ def log_call_status_to_firestore(call_sid, call_status, direction, from_number, 
 # RECORDING METADATA UPDATE
 # ============================================================================
 
-def update_call_recording_metadata(call_sid, recording_sid, recording_url, recording_duration):
+def update_call_recording_metadata(call_sid, recording_sid, recording_url, recording_duration, base_url=None):
     """
     Update existing call log with recording metadata
     
     Args:
         call_sid: Twilio Call SID (used to locate existing log)
         recording_sid: Unique recording identifier
-        recording_url: URL to access/download the recording
+        recording_url: URL to access/download the recording (from Twilio)
         recording_duration: Length of recording in seconds
+        base_url: Base URL of the Flask app (optional, for proxy URL generation)
         
     Returns:
         bool: True if updated successfully, False otherwise
@@ -113,22 +114,25 @@ def update_call_recording_metadata(call_sid, recording_sid, recording_url, recor
         query = call_logs_ref.where('CallSid', '==', call_sid).limit(1)
         docs = query.stream()
         
-        # Convert API URL to browser-playable media URL
-        media_url = recording_url
-        if recording_url and not recording_url.endswith('.mp3'):
-            media_url = f"{recording_url}.mp3"
+        # Create proxy URL that points to OUR endpoint (authentication-free playback)
+        # Instead of storing Twilio's URL, store our proxy endpoint URL
+        if base_url:
+            media_url = f"{base_url}/play_recording/{recording_sid}"
+        else:
+            # Fallback to localhost if base_url not provided
+            media_url = f"http://localhost:5000/play_recording/{recording_sid}"
         
         # Update the first matching document
         updated = False
         for doc in docs:
             doc.reference.update({
                 'RecordingSid': recording_sid,
-                'RecordingUrl': media_url,
+                'RecordingUrl': media_url,  # Now points to OUR proxy endpoint
                 'RecordingDuration': recording_duration,
                 'RecordingTimestamp': firestore.SERVER_TIMESTAMP
             })
             print(f"Updated call log {doc.id} with recording metadata for CallSid {call_sid}")
-            print(f"Media URL: {media_url}")
+            print(f"Proxy URL: {media_url}")
             updated = True
             break
         
