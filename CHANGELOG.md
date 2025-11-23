@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2024-11-23
+
+### 🎙️ **Major Release: Call Recording & Playback**
+
+#### Added
+- **Automatic Call Recording**
+  - TwiML `<Dial>` verb configured with `record='record-from-answer'`
+  - Recording starts automatically when prospect answers call
+  - No agent action required
+  
+- **Recording Status Webhook**
+  - New route: `POST /recording_status`
+  - Receives RecordingSid, RecordingUrl, CallSid, RecordingDuration from Twilio
+  - Triggered automatically when recording completes
+
+- **Firestore Recording Metadata Storage**
+  - New function: `update_call_recording_metadata()` in `db_service.py`
+  - Queries `call_logs` collection by CallSid
+  - Updates existing call log with recording data
+  - Fields added: RecordingSid, RecordingUrl, RecordingDuration, RecordingTimestamp
+
+- **Secure Recording Proxy Endpoint**
+  - New route: `GET /play_recording/<recording_sid>`
+  - Server-side Twilio authentication
+  - Streams MP3 audio to browser without exposing credentials
+  - Returns 404 if recording not found
+
+- **Podio Recording Integration (Partial)**
+  - New function: `update_call_activity_recording()` in `podio_service.py`
+  - Infrastructure ready for V3.2 automatic Podio updates
+  - Placeholder implementation documented for future enhancement
+
+#### Changed
+- **twilio_service.py**: Modified `generate_connect_prospect_twiml()` to enable recording
+- **db_service.py**: Added `base_url` parameter to `update_call_recording_metadata()`
+- **app.py**: Added `requests` import for HTTP streaming
+- **app.py**: Updated `/recording_status` webhook to construct base URLs dynamically
+
+#### Security
+- ✅ No Twilio credentials exposed to browser clients
+- ✅ Server-side authentication for all recording access
+- ✅ Clean, shareable proxy URLs
+- ✅ HTTP Basic Auth eliminated from client-side requests
+
+#### Known Limitations (V3.1)
+- Podio Call Activity items NOT automatically updated with recording URLs
+- Manual Firestore query required to access recordings
+- CallSid→CallActivityItemId mapping not implemented (planned for V3.2)
+
+#### Technical Details
+- Proxy endpoint uses `requests` library for Twilio API streaming
+- Recording URLs stored as `https://your-app.vercel.app/play_recording/RExxx`
+- Firestore `call_logs` collection schema extended with recording fields
+- Compatible with all browsers (Chrome, Firefox, Safari, Edge)
+
+---
+
 ## [2.1.0] - 2024-11-22
 
 ### 🎉 Major Release: VOIP-Only Architecture

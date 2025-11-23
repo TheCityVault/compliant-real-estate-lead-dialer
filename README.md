@@ -1,17 +1,19 @@
-# Compliant Real Estate Lead Dialer - V2.1 VOIP Edition
+# Compliant Real Estate Lead Dialer - V3.1 Call Recording Edition
 
 [![Production Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://github.com/yourusername/compliant-real-estate-lead-dialer)
-[![Version](https://img.shields.io/badge/Version-2.1-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
+[![Version](https://img.shields.io/badge/Version-3.1-blue)](https://github.com/yourusername/compliant-real-estate-lead-dialer/releases)
 [![Platform](https://img.shields.io/badge/Platform-Vercel-black)](https://vercel.com)
 [![TCPA Compliant](https://img.shields.io/badge/TCPA-Compliant-success)](https://www.fcc.gov/tcpa)
 
-**🎉 Production Ready - Version 2.1 (VOIP Edition)**
+**🎉 Production Ready - Version 3.1 (Call Recording Edition)**
 
-A compliant, two-leg dialing system for real estate lead calling with **browser-based VOIP** for agent connections.
+A compliant, two-leg dialing system for real estate lead calling with **browser-based VOIP** for agent connections and **automatic call recording**.
 
 ## Version
-**V2.1** - VOIP-Only Architecture (November 2024)
-- Eliminates carrier blocking issues
+**V3.1** - Call Recording & Playback (November 2024)
+- Automatic call recording when prospect answers
+- Secure proxy playback without credential exposure
+- Firestore audit trail with recording metadata
 - Browser-based agent calling (no phone required)
 - Twilio Client SDK v2.11.1 integration
 
@@ -37,9 +39,9 @@ A compliant, two-leg dialing system for real estate lead calling with **browser-
 
 ## 🎯 Overview
 
-**Version:** 2.1.0 (VOIP Edition)
+**Version:** 3.1.0 (Call Recording Edition)
 **Status:** Production
-**Architecture:** Browser-Based VOIP + Direct Podio API Integration
+**Architecture:** Browser-Based VOIP + Direct Podio API Integration + Automatic Call Recording
 
 The Compliant Real Estate Lead Dialer enables real estate agents to initiate phone calls directly from Podio lead records with a single click using browser-based VOIP, while maintaining strict TCPA (Telephone Consumer Protection Act) compliance through a two-leg dialing architecture.
 
@@ -81,6 +83,19 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 4. **Complete Audit Trail**: Every call is logged to Firestore with full details
 5. **Mandatory Dispositions**: All calls require documented outcomes
 
+### V2.1 Feature Highlights (VOIP Architecture)
+- 🌐 **Browser-Based VOIP Calling** - Agents use browser instead of phone
+- 🚫 **No Carrier Blocking** - Eliminates "Busy" statuses from PSTN congestion
+- 🔑 **Auto-Generated Identities** - System manages client:agent_xxxxx format
+- 📞 **Twilio Voice SDK v2.11.1** - Self-hosted modern SDK architecture
+
+### V3.1 Feature Highlights (Call Recording & Playback)
+- 🎙️ **Automatic Call Recording** - All conversations recorded when prospect answers
+- 📊 **Firestore Audit Trail** - Recording metadata (SID, URL, duration) linked to call logs
+- 🔒 **Secure Proxy Playback** - Authentication-free recording access via `/play_recording/<sid>` endpoint
+- 🎵 **Browser-Compatible** - Direct MP3 streaming without credential exposure
+- 🔗 **Ready for Podio** - Infrastructure prepared for V3.2 automatic Podio updates
+
 ---
 
 ## ✨ Key Features
@@ -97,9 +112,8 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 ---
 
 ## 🏗️ Architecture
-## 🏗️ Architecture
 
-## V2.1 Architecture (VOIP-Only)
+## V3.1 Architecture (VOIP + Call Recording)
 
 ### Call Flow
 1. **Agent Workspace** - Browser-based interface with Twilio Voice SDK
@@ -271,6 +285,22 @@ https://your-app.vercel.app/dial?item_id=123456789
 
 ## 🔌 API Endpoints
 
+### `GET /workspace`
+
+Loads the agent workspace with pre-populated lead data.
+
+**Parameters:**
+- `item_id` (required): Podio Master Lead item ID
+
+**Example:**
+```
+GET /workspace?item_id=123456789
+```
+
+**Response:** HTML workspace interface with lead information
+
+---
+
 ### `GET /dial`
 
 Initiates a TCPA-compliant two-leg call.
@@ -309,6 +339,43 @@ Webhook endpoint for Twilio call status callbacks.
 - Direction
 - From/To numbers
 - Server timestamp
+
+---
+
+### `POST /recording_status`
+
+Twilio webhook for recording completion callbacks.
+
+**Receives from Twilio:**
+- RecordingSid
+- RecordingUrl
+- CallSid
+- RecordingDuration
+
+**Actions:**
+- Updates Firestore call log with recording metadata
+- Stores proxy URL for authentication-free playback
+
+---
+
+### `GET /play_recording/<recording_sid>`
+
+Proxy endpoint for authentication-free call recording playback.
+
+**Parameters:**
+- `recording_sid` (required): Twilio Recording SID from URL path
+
+**Example:**
+```
+GET /play_recording/RExxx
+```
+
+**Response:** MP3 audio stream with proper headers
+
+**Security:**
+- Server-side Twilio authentication
+- No credentials exposed to browser
+- Returns 404 if recording not found
 
 ---
 
