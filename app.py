@@ -41,7 +41,8 @@ from podio_service import (
 
 from db_service import (
     log_call_to_firestore,
-    log_call_status_to_firestore
+    log_call_status_to_firestore,
+    update_call_recording_metadata  # Step 3.3c: Add recording metadata update
 )
 
 # Import Twilio client for call initiation
@@ -612,8 +613,20 @@ def recording_status():
     print(f"Duration: {recording_duration} seconds")
     print(f"=================================")
     
-    # TODO: Update Firestore with recording metadata (Step 3.3a)
-    # TODO: Update Podio Call Activity with recording URL (Step 3.3b)
+    # Update Firestore with recording metadata
+    if call_sid and recording_sid and recording_url:
+        update_call_recording_metadata(
+            call_sid=call_sid,
+            recording_sid=recording_sid,
+            recording_url=recording_url,
+            recording_duration=int(recording_duration) if recording_duration else 0
+        )
+    else:
+        print("WARNING: Missing required recording parameters")
+    
+    # NOTE: Podio Call Activity update not implemented in V3.1
+    # TODO V3.2: Add CallSid→CallActivityItemId mapping to enable Podio updates
+    # See podio_service.update_call_activity_recording() documentation
     
     return Response(status=200)
 
