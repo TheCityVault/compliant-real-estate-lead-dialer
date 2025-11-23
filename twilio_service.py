@@ -95,7 +95,12 @@ def generate_connect_prospect_twiml(prospect_number):
         print(f"Final formatted prospect_number: {prospect_number}")
         
         response.say("Connecting you to the prospect.")
-        dial = Dial(callerId=TWILIO_PHONE_NUMBER)
+        dial = Dial(
+            callerId=TWILIO_PHONE_NUMBER,
+            record='record-from-answer',
+            recording_status_callback='/recording_status',
+            recording_status_callback_method='POST'
+        )
         dial.number(prospect_number)
         response.append(dial)
     else:
