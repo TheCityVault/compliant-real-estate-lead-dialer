@@ -37,14 +37,16 @@ from twilio_service import (
 from podio_service import (
     get_podio_item,
     extract_field_value,
-    create_call_activity_item
+    create_call_activity_item,
+    update_call_activity_recording  # NEW: V3.2.3
 )
 
 from db_service import (
     log_call_to_firestore,
     log_call_status_to_firestore,
     update_call_recording_metadata,  # Step 3.3c: Add recording metadata update
-    store_call_sid_mapping  # V3.2.2: Store CallSid to PodioItemId mapping
+    store_call_sid_mapping,  # V3.2.2: Store CallSid to PodioItemId mapping
+    get_podio_item_id_from_call_sid  # NEW: V3.2.3
 )
 
 # Import Twilio client for call initiation
@@ -606,18 +608,18 @@ def call_status():
 # ============================================================================
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
-    """Handle recording status callbacks from Twilio"""
+    """Handle recording status callbacks from Twilio - V3.2.3 Complete"""
     recording_sid = request.form.get('RecordingSid')
     recording_url = request.form.get('RecordingUrl')
     call_sid = request.form.get('CallSid')
     recording_duration = request.form.get('RecordingDuration')
     
-    print(f"=== RECORDING STATUS CALLBACK ===")
+    print(f"=== RECORDING STATUS CALLBACK (V3.2.3) ===")
     print(f"Recording SID: {recording_sid}")
     print(f"Recording URL: {recording_url}")
     print(f"Call SID: {call_sid}")
     print(f"Duration: {recording_duration} seconds")
-    print(f"=================================")
+    print(f"==========================================")
     
     # Update Firestore with recording metadata
     if call_sid and recording_sid and recording_url:
@@ -626,6 +628,10 @@ def recording_status():
         if not base_url.startswith('http'):
             base_url = f"https://{request.host}"
         
+        # Build proxy URL for authentication-free playback
+        proxy_url = f"{base_url}/play_recording/{recording_sid}"
+        
+        # Update call log in Firestore
         update_call_recording_metadata(
             call_sid=call_sid,
             recording_sid=recording_sid,
@@ -633,12 +639,27 @@ def recording_status():
             recording_duration=int(recording_duration) if recording_duration else 0,
             base_url=base_url
         )
+        
+        # V3.2.3: Retrieve Podio Call Activity Item ID from mapping
+        podio_item_id = get_podio_item_id_from_call_sid(call_sid)
+        
+        if podio_item_id:
+            print(f"V3.2.3: Found Podio mapping - Updating item {podio_item_id}")
+            
+            # Update Podio Call Activity with recording URL
+            success, result = update_call_activity_recording(
+                call_activity_item_id=podio_item_id,
+                recording_url=proxy_url
+            )
+            
+            if success:
+                print(f"✅ V3.2.3 SUCCESS: Updated Podio Call Activity {podio_item_id} with recording URL")
+            else:
+                print(f"❌ V3.2.3 ERROR: Failed to update Podio: {result}")
+        else:
+            print("⚠️ V3.2.3 WARNING: No Podio mapping found for this CallSid - skipping Podio update")
     else:
         print("WARNING: Missing required recording parameters")
-    
-    # NOTE: Podio Call Activity update not implemented in V3.1
-    # TODO V3.2: Add CallSid→CallActivityItemId mapping to enable Podio updates
-    # See podio_service.update_call_activity_recording() documentation
     
     return Response(status=200)
 # ============================================================================
