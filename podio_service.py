@@ -438,7 +438,7 @@ def update_call_activity_recording(call_activity_item_id, recording_url):
 # TASK CREATION (V3.3)
 # ============================================================================
 
-def create_follow_up_task(master_lead_item_id, task_properties):
+def create_follow_up_task(master_lead_item_id, task_properties, agent_specified_date=None):
     """
     Create a follow-up task in Podio linked to Master Lead
     
@@ -448,6 +448,7 @@ def create_follow_up_task(master_lead_item_id, task_properties):
             - task_type: Type of task
             - due_date_offset_days: Days from now for due date
             - task_title: Title of the task
+        agent_specified_date: (optional) Agent-specified date in YYYY-MM-DD format
             
     Returns:
         tuple: (success: bool, result: dict or error message)
@@ -457,10 +458,27 @@ def create_follow_up_task(master_lead_item_id, task_properties):
         print("❌ V3.3: Podio token refresh failed for task creation")
         return False, 'Podio authentication failed'
     
-    # Calculate due date
-    due_date_offset = task_properties.get('due_date_offset_days', 1)
-    due_date = datetime.now() + timedelta(days=due_date_offset)
-    due_date_iso = due_date.strftime("%Y-%m-%d %H:%M:%S")
+    # V3.3 Enhancement: Prioritize agent-specified date over default offset
+    if agent_specified_date:
+        # Agent specified a date - use it (it's already in YYYY-MM-DD format from the HTML date input)
+        try:
+            # Convert YYYY-MM-DD to ISO datetime format for Podio
+            due_date = datetime.strptime(agent_specified_date, '%Y-%m-%d')
+            due_date_iso = due_date.strftime("%Y-%m-%d %H:%M:%S")
+            print(f"V3.3: Using agent-specified due date: {agent_specified_date}")
+        except ValueError:
+            # Fallback to default if date parsing fails
+            print(f"V3.3: Invalid agent date format, using default offset")
+            due_date_offset = task_properties.get('due_date_offset_days', 1)
+            due_date = datetime.now() + timedelta(days=due_date_offset)
+            due_date_iso = due_date.strftime("%Y-%m-%d %H:%M:%S")
+            agent_specified_date = None  # Mark as not used due to parse error
+    else:
+        # No agent date - use default offset from config
+        due_date_offset = task_properties.get('due_date_offset_days', 1)
+        due_date = datetime.now() + timedelta(days=due_date_offset)
+        due_date_iso = due_date.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"V3.3: Using default offset: {due_date_offset} days")
     
     # Prepare task fields
     task_fields = {
@@ -474,7 +492,7 @@ def create_follow_up_task(master_lead_item_id, task_properties):
     print(f"Master Lead ID: {master_lead_item_id}")
     print(f"Task Title: {task_properties.get('task_title')}")
     print(f"Task Type: {task_properties.get('task_type')}")
-    print(f"Due Date: {due_date_iso} (offset: {due_date_offset} days)")
+    print(f"Due Date: {due_date_iso} ({'agent-specified' if agent_specified_date else f'offset: {due_date_offset} days'})")
     print(f"======================================")
     
     try:

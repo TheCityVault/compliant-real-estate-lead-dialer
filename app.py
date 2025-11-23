@@ -189,10 +189,11 @@ def submit_call_data():
                 if task_config.get('create_task'):
                     print(f"V3.3: Disposition '{disposition_code}' triggers task creation")
                     
-                    # Create follow-up task
+                    # V3.3 Enhancement: Allow agent to override default due date
                     task_success, task_result = create_follow_up_task(
                         master_lead_item_id=item_id,
-                        task_properties=task_config
+                        task_properties=task_config,
+                        agent_specified_date=data.get('next_action_date')  # From form field
                     )
                     
                     if task_success:
