@@ -1,0 +1,45 @@
+{
+  "app_id": 30559290,
+  "app_name": "Tasks",
+  "workspace_id": 10485937,
+  "fields": [
+    {
+      "success": true,
+      "field_id": 274877609,
+      "field_name": "Title",
+      "field_type": "text"
+    },
+    {
+      "success": true,
+      "field_id": 274877610,
+      "field_name": "Task Type",
+      "field_type": "category"
+    },
+    {
+      "success": true,
+      "field_id": 274877611,
+      "field_name": "Due Date",
+      "field_type": "date"
+    },
+    {
+      "success": true,
+      "field_id": 274877612,
+      "field_name": "Related Lead",
+      "field_type": "app"
+    },
+    {
+      "success": true,
+      "field_id": 274877613,
+      "field_name": "Status",
+      "field_type": "category"
+    }
+  ],
+  "field_map": {
+    "Title": 274877609,
+    "Task Type": 274877610,
+    "Due Date": 274877611,
+    "Related Lead": 274877612,
+    "Status": 274877613
+  },
+  "timestamp": "2025-11-23"
+}

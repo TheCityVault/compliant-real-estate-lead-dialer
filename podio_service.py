@@ -8,10 +8,9 @@ This module handles:
 - Field value extraction and parsing
 - Data transformation utilities
 """
-
 import re
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from config import (
     PODIO_CLIENT_ID,
     PODIO_CLIENT_SECRET,
@@ -19,6 +18,7 @@ from config import (
     PODIO_PASSWORD,
     MASTER_LEAD_APP_ID,
     CALL_ACTIVITY_APP_ID,
+    TASK_APP_ID,
     DISPOSITION_CODE_FIELD_ID,
     AGENT_NOTES_FIELD_ID,
     MOTIVATION_LEVEL_FIELD_ID,
@@ -29,6 +29,10 @@ from config import (
     DATE_OF_CALL_FIELD_ID,
     CALL_DURATION_FIELD_ID,
     RECORDING_URL_FIELD_ID,
+    TASK_TITLE_FIELD_ID,
+    TASK_TYPE_FIELD_ID,
+    TASK_DUE_DATE_FIELD_ID,
+    TASK_MASTER_LEAD_RELATIONSHIP_FIELD_ID,
     podio_access_token
 )
 
@@ -428,4 +432,78 @@ def update_call_activity_recording(call_activity_item_id, recording_url):
             
     except Exception as e:
         print(f"Error updating Call Activity with recording URL: {e}")
+        return False, str(e)
+
+# ============================================================================
+# TASK CREATION (V3.3)
+# ============================================================================
+
+def create_follow_up_task(master_lead_item_id, task_properties):
+    """
+    Create a follow-up task in Podio linked to Master Lead
+    
+    Args:
+        master_lead_item_id: Master Lead item ID to link task to
+        task_properties: Dict containing task configuration
+            - task_type: Type of task
+            - due_date_offset_days: Days from now for due date
+            - task_title: Title of the task
+            
+    Returns:
+        tuple: (success: bool, result: dict or error message)
+    """
+    token = refresh_podio_token()
+    if not token:
+        print("❌ V3.3: Podio token refresh failed for task creation")
+        return False, 'Podio authentication failed'
+    
+    # Calculate due date
+    due_date_offset = task_properties.get('due_date_offset_days', 1)
+    due_date = datetime.now() + timedelta(days=due_date_offset)
+    due_date_iso = due_date.strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Prepare task fields
+    task_fields = {
+        str(TASK_TITLE_FIELD_ID): task_properties.get('task_title', 'Follow-up Task'),
+        str(TASK_TYPE_FIELD_ID): task_properties.get('task_type', 'Follow-up Call'),
+        str(TASK_DUE_DATE_FIELD_ID): due_date_iso,
+        str(TASK_MASTER_LEAD_RELATIONSHIP_FIELD_ID): [int(master_lead_item_id)]  # Link to Master Lead
+    }
+    
+    print(f"=== V3.3: CREATE FOLLOW-UP TASK ===")
+    print(f"Master Lead ID: {master_lead_item_id}")
+    print(f"Task Title: {task_properties.get('task_title')}")
+    print(f"Task Type: {task_properties.get('task_type')}")
+    print(f"Due Date: {due_date_iso} (offset: {due_date_offset} days)")
+    print(f"======================================")
+    
+    try:
+        # Create Task item in Podio
+        response = requests.post(
+            f'https://api.podio.com/item/app/{TASK_APP_ID}/',
+            headers={
+                'Authorization': f'OAuth2 {token}',
+                'Content-Type': 'application/json'
+            },
+            json={'fields': task_fields}
+        )
+        
+        if response.status_code in [200, 201]:
+            task_data = response.json()
+            task_item_id = task_data.get('item_id')
+            print(f"✅ V3.3: Task created successfully - Item ID: {task_item_id}")
+            return True, task_data
+        else:
+            print(f"❌ V3.3: Task creation failed - Status: {response.status_code}")
+            print(f"Response: {response.text}")
+            try:
+                error_data = response.json()
+                return False, error_data.get('error_description', 'Task creation failed')
+            except:
+                return False, f'Task creation failed: {response.text}'
+                
+    except Exception as e:
+        print(f"❌ V3.3: Exception creating task: {e}")
+        import traceback
+        traceback.print_exc()
         return False, str(e)

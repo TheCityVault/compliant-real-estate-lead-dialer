@@ -59,9 +59,61 @@ RECORDING_URL_FIELD_ID = 274769801
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
 MASTER_LEAD_APP_ID = '30549135'  # Master Lead app for item filtering
+TASK_APP_ID = os.environ.get('PODIO_TASK_APP_ID', 'TASK_APP_ID_HERE')  # V3.3: Task app for automated task creation
 
 # Initialize Podio access token (will be obtained on first use)
 podio_access_token = None
+
+# ============================================================================
+# TASK AUTOMATION CONFIGURATION (V3.3)
+# ============================================================================
+
+# Map disposition codes to task creation rules
+# IMPORTANT: Keys must EXACTLY match the disposition values in workspace.html
+DISPOSITION_TASK_MAPPING = {
+    'Voicemail': {  # Changed from 'Left Voicemail' to match form
+        'create_task': True,
+        'task_type': 'Follow-up Call',
+        'due_date_offset_days': 2,  # Task due 2 days from now
+        'task_title': 'Follow up on voicemail'
+    },
+    'No Answer': {
+        'create_task': True,
+        'task_type': 'Follow-up Call',
+        'due_date_offset_days': 1,  # Task due 1 day from now
+        'task_title': 'Retry call - no answer'
+    },
+    'Appointment Set': {  # Changed from 'Interested - Schedule Appointment' to match form
+        'create_task': True,
+        'task_type': 'Appointment',
+        'due_date_offset_days': 0,  # Due today
+        'task_title': 'Schedule appointment'
+    },
+    'Callback Scheduled': {  # Changed from 'Callback Requested' to match form
+        'create_task': True,
+        'task_type': 'Follow-up Call',
+        'due_date_offset_days': 1,
+        'task_title': 'Callback requested by prospect'
+    },
+    # Dispositions that DON'T create tasks
+    'Not Interested': {
+        'create_task': False
+    },
+    'Wrong Number': {
+        'create_task': False
+    },
+    'Do Not Call': {
+        'create_task': False
+    }
+}
+
+# Podio Task Field IDs (V3.3)
+# NOTE: These will need to be configured based on your Task app schema
+# Use the Podio API or browser inspector to obtain actual field IDs
+TASK_TITLE_FIELD_ID = os.environ.get('TASK_TITLE_FIELD_ID', 'TASK_TITLE_FIELD_ID_HERE')
+TASK_TYPE_FIELD_ID = os.environ.get('TASK_TYPE_FIELD_ID', 'TASK_TYPE_FIELD_ID_HERE')
+TASK_DUE_DATE_FIELD_ID = os.environ.get('TASK_DUE_DATE_FIELD_ID', 'TASK_DUE_DATE_FIELD_ID_HERE')
+TASK_MASTER_LEAD_RELATIONSHIP_FIELD_ID = os.environ.get('TASK_MASTER_LEAD_RELATIONSHIP_FIELD_ID', 'TASK_MASTER_LEAD_RELATIONSHIP_FIELD_ID_HERE')
 
 # ============================================================================
 # FIREBASE/FIRESTORE CONFIGURATION

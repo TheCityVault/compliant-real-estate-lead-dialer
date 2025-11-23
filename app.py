@@ -21,6 +21,7 @@ from config import (
     TWILIO_API_KEY,
     TWILIO_API_SECRET,
     TWILIO_TWIML_APP_SID,
+    DISPOSITION_TASK_MAPPING,  # V3.3: Task automation mapping
     validate_environment
 )
 
@@ -38,7 +39,8 @@ from podio_service import (
     get_podio_item,
     extract_field_value,
     create_call_activity_item,
-    update_call_activity_recording  # NEW: V3.2.3
+    update_call_activity_recording,  # V3.2.3
+    create_follow_up_task  # V3.3: Automated task creation
 )
 
 from db_service import (
@@ -179,6 +181,30 @@ def submit_call_data():
             # V3.2.2: Store CallSid mapping if call_sid is provided
             if call_sid and podio_item_id:
                 store_call_sid_mapping(call_sid, podio_item_id)
+            
+            # V3.3: Check if disposition requires automated task creation
+            disposition_code = data.get('disposition_code')
+            if disposition_code and disposition_code in DISPOSITION_TASK_MAPPING:
+                task_config = DISPOSITION_TASK_MAPPING[disposition_code]
+                if task_config.get('create_task'):
+                    print(f"V3.3: Disposition '{disposition_code}' triggers task creation")
+                    
+                    # Create follow-up task
+                    task_success, task_result = create_follow_up_task(
+                        master_lead_item_id=item_id,
+                        task_properties=task_config
+                    )
+                    
+                    if task_success:
+                        task_item_id = task_result.get('item_id')
+                        print(f"✅ V3.3: Created follow-up task {task_item_id} for disposition '{disposition_code}'")
+                    else:
+                        print(f"⚠️ V3.3: Task creation failed: {task_result}")
+                        # Don't fail the entire request if task creation fails
+                else:
+                    print(f"V3.3: Disposition '{disposition_code}' does not require task creation")
+            else:
+                print(f"V3.3: Disposition '{disposition_code}' not found in task mapping or no disposition provided")
             
             # Log to Firestore for audit
             log_call_to_firestore(data, item_id, call_sid)

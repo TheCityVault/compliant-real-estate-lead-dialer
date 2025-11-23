@@ -1,56 +1,36 @@
-# **Project Status Report: Compliant Lead Dialer (V2.1 - Twilio Client Integration)**
+# **Project Status Report: Compliant Lead Dialer (V3.3 \- Task Automation Kickoff)**
 
 ## **📜 Report Overview**
 
-Due to intermittent "Busy" statuses caused by agent carrier congestion (Leg 1 failure), the project is immediately prioritizing the integration of the **Twilio Client (Voice SDK)**. This moves the agent connection from the unreliable PSTN (public phone network) to a stable, internet-based VOIP connection.
+**V3.2 (Automated Call Recording Linkage)** is complete. The system now automatically links the recording URL to the correct Podio Call Activity item, achieving full automation for Priority 1 (Call Recording).
 
-This change requires modifying the Vercel backend to intelligently handle both classic phone numbers and client: identifiers.
+**Current State:** The system is stable, compliant, and highly efficient. We are now shifting focus to automating agent workflow.
 
 ## **🎯 Current Status & Goal**
 
-* **Project Name:** Compliant Real Estate Lead Dialer
-* **Current Version:** **V2.0** (Operational, but with carrier stability issues)
-* **Target Version:** **V2.1 - Twilio Client Support**
-* **Architecture:** **Synchronous Direct Podio Write + VOIP Agent Connection**
-* **Primary Goal:** Modify the /dial endpoint to support Twilio Client IDs, eliminating carrier-related connection failures for the agent.
-* **Feature Branch:** `fix/twilio-client-voip` ✅ **PUSHED TO GITHUB**
-* **Recent Commits:** 
-  - `b0044d7` - Backend agent_id parameter support
-  - `1a8a083` - Frontend agent identifier input field
+* **Project Name:** Compliant Real Estate Lead Dialer  
+* **Current Version:** **V3.3 \- Automated Task Creation (In Progress)**  
+* **Target Version:** **V3.3 \- Automated Task Creation (Complete)**  
+* **Architecture:** Stable Service-Oriented Architecture (SOA) with high automation.  
+* **Primary Goal (P2):** Implement automated task creation to streamline the agent workflow, ensuring consistent and timely follow-ups based on the call's disposition.
 
-## **✅ Sequential Task List: V2.1 Twilio Client Integration**
+## **✅ Phase Checklist: Call Recording (P1 \- COMPLETE)**
 
-The team must now execute the following tasks.
-
-| # | Task Description | Architectural Focus | Status |
+| Step | Task Description | Status | Rationale |
 | :---- | :---- | :---- | :---- |
-| **1** | **Modify Agent Workspace UI (Front-End):** Update the UI to accept the agent's input as either a classic E.164 phone number OR a **Twilio Client ID** (e.g., client:john_doe). | Front-End | ✅ **COMPLETE** (commit 1a8a083) |
-| **2** | **Update /dial Endpoint Logic (Backend - CRITICAL):** Modify the Vercel /dial endpoint to dynamically check the agent ID type. If it starts with client:, the endpoint must generate TwiML using the \<Dial\>\<Client\> verb instead of the \<Dial\>\<Number\> verb. | Backend | ✅ **COMPLETE** (commit b0044d7) |
-| **3** | **Implement Twilio Client Capability in UI:** Integrate the necessary Twilio Voice SDK JavaScript into the Agent Workspace to enable the browser to act as a softphone, ready to receive the VOIP call. | Front-End (SDK Integration) | PENDING |
-| **4** | **Testing: VOIP Agent Connection:** Thoroughly test the new VOIP connection: Dial a prospect, confirm the agent's browser rings, and ensure the call connects reliably every time. | QA / Testing | PENDING |
-| **5** | **Testing: PSTN Fallback:** Ensure legacy E.164 phone numbers still function correctly via the \<Dial\>\<Number\> verb for agents who are not using the VOIP client. | QA / Testing | PENDING |
+| **3.1 \- 3.3** | Call Recording Implementation (TwiML, Webhook, Firestore URL storage). | **DONE ✅** | Core recording functionality achieved (V3.1). |
+| **V3.2** | **Build Call Mapping Infrastructure** | **DONE ✅** | Critical Fix: Achieved reliable mapping between CallSid and PodioItemId to enable automated Podio updates. |
 
-## **➡️ Next Action Item**
+## **➡️ Phase 3: Workflow Automation (P2: Automated Task Creation)**
 
-**CURRENT_PHASE:** V2.1 Development - Ready for Testing
+We are now kicking off the implementation of the second priority, focusing on agent productivity.
 
-**REQUIRED_NEXT_STEP:** Task #3 (Twilio Client SDK Integration) OR Tasks #4-5 (Testing)
+| Step | Task Description | Status | Rationale |
+| :---- | :---- | :---- | :---- |
+| **V3.3.1** | Define Disposition-to-Task Mapping in Configuration. | **IN PROGRESS** | Critical to define which agent disposition codes (e.g., "Left Voicemail") require an automatic follow-up task. |
+| **V3.3.2** | Implement Podio API Task Creation Utility. | PENDING | Build the core function to write a new Task item back into Podio. |
+| **V3.3.3** | Integrate Task Creation into /submit\_call\_data. | PENDING | Modify the main endpoint to trigger the task utility based on the disposition mapping. |
 
-**Two-Path Decision:**
+## **➡️ Next Action Item (Development Focus)**
 
-**Path A: Complete SDK Integration (Task #3)**
-- Integrate Twilio Voice JavaScript SDK into `templates/workspace.html`
-- Create server-side endpoint to generate Twilio Capability Tokens
-- Enable browser to act as VOIP softphone
-- Handle incoming call events
-
-**Path B: Validate Core Functionality First (Tasks #4-5)**
-- Test backend routing with manual agent_id inputs
-- Verify VOIP path works (even without browser SDK)
-- Verify PSTN path works (regression test)
-- Confirm TwiML generation is correct
-- Then implement SDK based on test results
-
-**Recommendation:** Path B (test first) allows faster validation of the critical backend changes before adding SDK complexity.
-
-**Next File:** Testing preparation OR `templates/workspace.html` (for SDK integration)
+The development team must now define the exact business rules for task creation and implement the Podio API call.
