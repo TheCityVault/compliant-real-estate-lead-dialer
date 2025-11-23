@@ -49,6 +49,42 @@ def log_call_to_firestore(data, item_id, call_sid):
         return False
 
 # ============================================================================
+# CALL SID MAPPING STORAGE (V3.2.2)
+# ============================================================================
+
+def store_call_sid_mapping(call_sid, podio_item_id):
+    """
+    Store CallSid to PodioItemId mapping for webhook lookups
+    
+    This temporary mapping enables the /recording_status webhook to link
+    the asynchronous Twilio callback to the correct Podio Call Activity item.
+    
+    Args:
+        call_sid: Twilio Call SID (the key for lookup)
+        podio_item_id: Podio Call Activity Item ID (the value to retrieve)
+        
+    Returns:
+        bool: True if stored successfully, False otherwise
+    """
+    if not db:
+        print("Firestore not available, skipping CallSid mapping")
+        return False
+    
+    try:
+        mapping_entry = {
+            'call_sid': call_sid,
+            'podio_item_id': podio_item_id,
+            'timestamp': firestore.SERVER_TIMESTAMP
+        }
+        # Use call_sid as document ID for direct lookup
+        db.collection('call_sid_mappings').document(call_sid).set(mapping_entry)
+        print(f"Stored CallSid mapping: {call_sid} → Podio Item {podio_item_id}")
+        return True
+    except Exception as e:
+        print(f"Error storing CallSid mapping: {e}")
+        return False
+
+# ============================================================================
 # CALL STATUS LOGGING
 # ============================================================================
 

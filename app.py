@@ -43,7 +43,8 @@ from podio_service import (
 from db_service import (
     log_call_to_firestore,
     log_call_status_to_firestore,
-    update_call_recording_metadata  # Step 3.3c: Add recording metadata update
+    update_call_recording_metadata,  # Step 3.3c: Add recording metadata update
+    store_call_sid_mapping  # V3.2.2: Store CallSid to PodioItemId mapping
 )
 
 # Import Twilio client for call initiation
@@ -170,14 +171,19 @@ def submit_call_data():
             call_duration, 
             recording_url
         )
-        
         if success:
+            podio_item_id = result.get('item_id')
+            
+            # V3.2.2: Store CallSid mapping if call_sid is provided
+            if call_sid and podio_item_id:
+                store_call_sid_mapping(call_sid, podio_item_id)
+            
             # Log to Firestore for audit
             log_call_to_firestore(data, item_id, call_sid)
             
             return jsonify({
                 'success': True,
-                'podio_item_id': result.get('item_id'),
+                'podio_item_id': podio_item_id,
                 'message': 'Data written to Podio successfully'
             }), 200
         else:
