@@ -113,16 +113,22 @@ def update_call_recording_metadata(call_sid, recording_sid, recording_url, recor
         query = call_logs_ref.where('CallSid', '==', call_sid).limit(1)
         docs = query.stream()
         
+        # Convert API URL to browser-playable media URL
+        media_url = recording_url
+        if recording_url and not recording_url.endswith('.mp3'):
+            media_url = f"{recording_url}.mp3"
+        
         # Update the first matching document
         updated = False
         for doc in docs:
             doc.reference.update({
                 'RecordingSid': recording_sid,
-                'RecordingUrl': recording_url,
+                'RecordingUrl': media_url,
                 'RecordingDuration': recording_duration,
                 'RecordingTimestamp': firestore.SERVER_TIMESTAMP
             })
             print(f"Updated call log {doc.id} with recording metadata for CallSid {call_sid}")
+            print(f"Media URL: {media_url}")
             updated = True
             break
         
