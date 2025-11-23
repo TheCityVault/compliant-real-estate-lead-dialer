@@ -48,8 +48,26 @@ def refresh_podio_token():
     """
     global _podio_token
     
+    # Enhanced credential diagnostics
+    print("="*50)
+    print("PODIO TOKEN REFRESH ATTEMPT")
+    print(f"CLIENT_ID present: {bool(PODIO_CLIENT_ID)} (length: {len(PODIO_CLIENT_ID) if PODIO_CLIENT_ID else 0})")
+    print(f"CLIENT_SECRET present: {bool(PODIO_CLIENT_SECRET)} (length: {len(PODIO_CLIENT_SECRET) if PODIO_CLIENT_SECRET else 0})")
+    print(f"USERNAME present: {bool(PODIO_USERNAME)} (value: {PODIO_USERNAME[:3] + '***' if PODIO_USERNAME and len(PODIO_USERNAME) > 3 else 'None'})")
+    print(f"PASSWORD present: {bool(PODIO_PASSWORD)} (length: {len(PODIO_PASSWORD) if PODIO_PASSWORD else 0})")
+    print("="*50)
+    
     if not all([PODIO_CLIENT_ID, PODIO_CLIENT_SECRET, PODIO_USERNAME, PODIO_PASSWORD]):
-        print("Podio credentials not fully configured. Podio integration will be disabled.")
+        print("❌ CRITICAL: Podio credentials not fully configured. Podio integration will be disabled.")
+        print(f"Missing credentials:")
+        if not PODIO_CLIENT_ID:
+            print("  - PODIO_CLIENT_ID")
+        if not PODIO_CLIENT_SECRET:
+            print("  - PODIO_CLIENT_SECRET")
+        if not PODIO_USERNAME:
+            print("  - PODIO_USERNAME")
+        if not PODIO_PASSWORD:
+            print("  - PODIO_PASSWORD")
         return None
     
     try:
@@ -71,7 +89,11 @@ def refresh_podio_token():
             print("Podio token obtained successfully.")
             return _podio_token
         else:
-            print(f"Error getting Podio token: {response.status_code} - {response.text}")
+            print(f"="*50)
+            print(f"ERROR getting Podio token: {response.status_code}")
+            print(f"Response headers: {dict(response.headers)}")
+            print(f"Response text: {response.text}")
+            print(f"="*50)
             return None
     except Exception as e:
         print(f"Error initializing Podio authentication: {e}")
@@ -240,6 +262,13 @@ def create_call_activity_item(data, item_id, call_sid, call_duration=None, recor
     """
     token = refresh_podio_token()
     if not token:
+        print("="*50)
+        print("CRITICAL: Podio token refresh failed")
+        print(f"PODIO_CLIENT_ID present: {bool(PODIO_CLIENT_ID)}")
+        print(f"PODIO_CLIENT_SECRET present: {bool(PODIO_CLIENT_SECRET)}")
+        print(f"PODIO_USERNAME present: {bool(PODIO_USERNAME)}")
+        print(f"PODIO_PASSWORD present: {bool(PODIO_PASSWORD)}")
+        print("="*50)
         return False, 'Podio authentication failed'
     
     # DEBUG logging
