@@ -288,8 +288,13 @@ def create_call_activity_item(data, item_id, call_sid, call_duration=None, recor
         podio_fields[str(ASKING_PRICE_FIELD_ID)] = asking_price
     
     # Add CALL_DURATION if available
-    if call_duration is not None and call_duration > 0:
-        podio_fields[str(CALL_DURATION_FIELD_ID)] = call_duration
+    if call_duration is not None:
+        try:
+            duration_int = int(call_duration) if isinstance(call_duration, str) else call_duration
+            if duration_int > 0:
+                podio_fields[str(CALL_DURATION_FIELD_ID)] = duration_int
+        except (ValueError, TypeError):
+            print(f"WARNING: Invalid call_duration value: {call_duration}")
     
     # Add RECORDING_URL if available
     if recording_url:
