@@ -338,6 +338,11 @@
                     throw new Error('Failed to initiate call');
                 }
 
+                // Extract and store CallSid from response
+                const responseData = await response.json();
+                currentCallSid = responseData.call_sid;
+                console.log('CallSid captured:', currentCallSid);
+
                 // Show call status
                 callStatus.classList.remove('hidden');
                 dialButton.classList.add('hidden');
@@ -437,12 +442,15 @@
                 // Prepare form data
                 const formData = {
                     item_id: itemId,
+                    call_sid: currentCallSid,
                     disposition_code: dispositionCodeSelect.value,
                     agent_notes: document.getElementById('agent-notes').value,
                     motivation_level: document.getElementById('motivation-level').value,
                     next_action_date: nextActionDateInput.value,
                     asking_price: document.getElementById('asking-price').value
                 };
+                
+                console.log('Submitting form data with CallSid:', currentCallSid);
 
                 // Submit to backend
                 const response = await fetch('/submit_call_data', {
@@ -496,6 +504,7 @@
 
         let twilioDevice = null;
         let currentConnection = null;
+        let currentCallSid = null; // Store CallSid for mapping
         // Store the random identity globally for reuse
         let agentIdentity = 'agent_' + Math.random().toString(36).substr(2, 9);
 
