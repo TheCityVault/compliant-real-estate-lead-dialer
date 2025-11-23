@@ -593,6 +593,30 @@ def call_status():
     )
 
     return Response(status=200)
+# ============================================================================
+# RECORDING STATUS ROUTE
+# ============================================================================
+
+@app.route('/recording_status', methods=['POST'])
+def recording_status():
+    """Handle recording status callbacks from Twilio"""
+    recording_sid = request.form.get('RecordingSid')
+    recording_url = request.form.get('RecordingUrl')
+    call_sid = request.form.get('CallSid')
+    recording_duration = request.form.get('RecordingDuration')
+    
+    print(f"=== RECORDING STATUS CALLBACK ===")
+    print(f"Recording SID: {recording_sid}")
+    print(f"Recording URL: {recording_url}")
+    print(f"Call SID: {call_sid}")
+    print(f"Duration: {recording_duration} seconds")
+    print(f"=================================")
+    
+    # TODO: Update Firestore with recording metadata (Step 3.3a)
+    # TODO: Update Podio Call Activity with recording URL (Step 3.3b)
+    
+    return Response(status=200)
+
 
 # ============================================================================
 # APPLICATION STARTUP
