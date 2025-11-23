@@ -335,3 +335,63 @@ def create_call_activity_item(data, item_id, call_sid, call_duration=None, recor
         import traceback
         traceback.print_exc()
         return False, str(e)
+
+# ============================================================================
+# CALL ACTIVITY RECORDING UPDATE (V3.1 PLACEHOLDER)
+# ============================================================================
+
+def update_call_activity_recording(call_activity_item_id, recording_url):
+    """
+    Update existing Call Activity item with recording URL
+    
+    Args:
+        call_activity_item_id: Podio Call Activity item ID (if known)
+        recording_url: URL to access/download the recording
+        
+    Returns:
+        tuple: (success: bool, result: dict or error message)
+        
+    Note:
+        For V3.1, this function is a placeholder. Full integration requires
+        storing CallSid→CallActivityItemId mapping in Firestore or passing
+        the Call Activity Item ID through the call flow.
+        
+    TODO V3.2 Enhancement:
+        - Store CallSid→CallActivityItemId mapping in Firestore when creating Call Activity
+        - Pass Call Activity Item ID through Twilio call flow using custom parameters
+        - Update recording webhook to retrieve Call Activity Item ID from mapping
+        - Enable automatic recording URL updates without manual ID tracking
+    """
+    token = refresh_podio_token()
+    if not token:
+        return False, 'Podio authentication failed'
+    
+    if not call_activity_item_id:
+        print("WARNING: No Call Activity Item ID provided for recording URL update")
+        return False, 'No Call Activity Item ID provided'
+    
+    try:
+        # Update the Call Activity item with recording URL
+        response = requests.put(
+            f'https://api.podio.com/item/{call_activity_item_id}',
+            headers={
+                'Authorization': f'OAuth2 {token}',
+                'Content-Type': 'application/json'
+            },
+            json={
+                'fields': {
+                    str(RECORDING_URL_FIELD_ID): recording_url
+                }
+            }
+        )
+        
+        if response.status_code == 200:
+            print(f"Updated Call Activity {call_activity_item_id} with recording URL")
+            return True, response.json()
+        else:
+            print(f"Failed to update Call Activity {call_activity_item_id}: {response.text}")
+            return False, f'Podio update failed: {response.text}'
+            
+    except Exception as e:
+        print(f"Error updating Call Activity with recording URL: {e}")
+        return False, str(e)
