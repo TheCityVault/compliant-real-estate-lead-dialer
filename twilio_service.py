@@ -178,22 +178,22 @@ def get_call_duration(call_sid):
 
 def get_recording_url(call_sid):
     """
-    Fetch recording URL from Twilio API
+    Don't fetch recording URL during form submission - recordings aren't available yet.
+    
+    The /recording_status webhook will automatically update Podio with the proxy URL
+    when the recording is ready (through the V3.2.3 mapping infrastructure).
     
     Args:
         call_sid: Twilio Call SID
         
     Returns:
-        str: Recording URL, or None if unavailable
+        None: Recording URL will be added via webhook when ready
+        
+    Note:
+        V3.2.3 Flow:
+        1. submit_call_data stores CallSid → PodioItemId mapping
+        2. Twilio finishes recording and sends webhook
+        3. /recording_status retrieves PodioItemId via mapping
+        4. Webhook updates Podio with proxy URL automatically
     """
-    if not call_sid:
-        return None
-    
-    try:
-        recordings = client.recordings.list(call_sid=call_sid, limit=1)
-        if recordings:
-            return f"https://api.twilio.com{recordings[0].uri}"
-        return None
-    except Exception as e:
-        print(f"Error fetching recording URL: {e}")
-        return None
+    return None  # Let V3.2.3 webhook handle recording URL
