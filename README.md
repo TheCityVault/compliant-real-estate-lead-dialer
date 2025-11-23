@@ -119,6 +119,12 @@ The Compliant Real Estate Lead Dialer enables real estate agents to initiate pho
 - ✅ Real-time call disposition capture
 - ✅ Firestore audit logging
 
+### V3.3: Automated Task Creation (November 2024)
+- **Smart Task Automation**: Automatically creates follow-up tasks based on call dispositions
+- **Flexible Due Dates**: Agents can override default due dates with custom dates
+- **Task Management**: Integrated Podio Tasks app with automated field configuration
+- **Non-Blocking**: Task creation failures never prevent Call Activity from being saved
+
 ---
 
 ## 🏗️ Architecture
@@ -386,6 +392,24 @@ GET /play_recording/RExxx
 - Server-side Twilio authentication
 - No credentials exposed to browser
 - Returns 404 if recording not found
+
+---
+
+## 📋 Task Automation (V3.3)
+
+The system automatically creates follow-up tasks in Podio based on the agent's disposition selection:
+
+### Default Task Rules
+- **Voicemail** → Follow-up Call (2 days)
+- **No Answer** → Follow-up Call (1 day)
+- **Appointment Set** → Appointment (today)
+- **Callback Scheduled** → Follow-up Call (1 day)
+
+### Agent Override
+Agents can override default due dates by filling in the "Next Action Date" field in the workspace. When specified, the agent's date takes priority over the default.
+
+### Configuration
+Task automation is configured in [`config.py`](config.py) via the `DISPOSITION_TASK_MAPPING` dictionary. Environment variables for the Task app are configured in Vercel.
 
 ---
 

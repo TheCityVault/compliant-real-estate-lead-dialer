@@ -6,6 +6,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [V3.3] - 2024-11-23
+
+### Added
+- **Automated Task Creation**: Tasks automatically created based on call dispositions
+- **Smart Due Dates**: Configurable default due dates (0-2 days) based on disposition type
+- **Agent Override**: Agents can override default due dates with custom dates from "Next Action Date" field
+- **Task App**: Created Podio Tasks app (ID: 30559290) with automated field configuration
+- **Priority Logic**: Agent-specified dates take precedence over defaults with graceful fallback
+
+### Fixed
+- Disposition mapping keys corrected to match workspace form values
+  - `'Left Voicemail'` → `'Voicemail'`
+  - `'Callback Requested'` → `'Callback Scheduled'`
+  - `'Interested - Schedule Appointment'` → `'Appointment Set'`
+
+### Configuration
+- 7 disposition types mapped to task automation rules
+- Non-blocking error handling ensures Call Activity creation always succeeds
+- Comprehensive V3.3 logging for debugging
+
+### Task Automation Rules
+| Disposition | Creates Task? | Default Due Date | Agent Override |
+|-------------|---------------|------------------|----------------|
+| Voicemail | Yes | 2 days | Yes |
+| No Answer | Yes | 1 day | Yes |
+| Appointment Set | Yes | Today | Yes |
+| Callback Scheduled | Yes | 1 day | Yes |
+| Not Interested | No | - | - |
+| Wrong Number | No | - | - |
+| Do Not Call | No | - | - |
+
+### Documentation
+- Added `docs/vercel_v3.3_environment_variables.md` - Vercel configuration guide
+- Added `docs/v3.3_bug_fix_report.md` - Bug analysis and testing guide
+- Added `scripts/create_task_app.py` - Automated Task app creation script
+
+### Files Modified
+- `config.py` - Task automation configuration
+- `podio_service.py` - Task creation function with agent override
+- `app.py` - Task automation integration
+- `.env` - Task app field IDs (local only)
+
+---
+
 ## [V3.2] - 2025-11-23 - Automated Call Recording Linkage
 
 ### 🎯 Major Feature: CallSid-to-PodioItemId Mapping Infrastructure
