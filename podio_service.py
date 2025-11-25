@@ -203,6 +203,102 @@ def extract_field_value(item, field_label):
                 return text.strip()
     return ''
 
+def extract_field_value_by_id(item, field_id):
+    """
+    Extract field value from Podio item by field ID (V4.0 Data Pipeline Integration)
+    
+    Args:
+        item: Podio item dictionary
+        field_id: Numeric field ID to extract
+        
+    Returns:
+        Extracted value (type varies: int, float, str), or None if not found
+        
+    Note:
+        Handles all Podio field types: number, category, money, text, date.
+        Returns None for graceful degradation in UI.
+    """
+    if not item:
+        return None
+    
+    for field in item.get('fields', []):
+        if field.get('field_id') == int(field_id):
+            values = field.get('values', [])
+            if not values:
+                return None
+            
+            value = values[0]
+            field_type = field.get('type')
+            
+            # Handle different Podio field types
+            if field_type == 'category':
+                # Category fields return dict with 'text' key
+                return value.get('text') if isinstance(value, dict) else str(value)
+            elif field_type == 'money':
+                # Money fields return dict with 'value' key (string)
+                return float(value.get('value')) if isinstance(value, dict) else None
+            elif field_type == 'number':
+                # Number fields return string
+                try:
+                    return float(value) if value else None
+                except (ValueError, TypeError):
+                    return None
+            elif field_type == 'date':
+                # Date fields return dict with 'start' key (YYYY-MM-DD format)
+                return value.get('start') if isinstance(value, dict) else str(value)
+            elif field_type == 'text':
+                # Text fields return string (strip HTML like extract_field_value does)
+                text = str(value) if value else None
+                if text:
+                    text = re.sub(r'<[^>]+>', '', text)
+                    return text.strip()
+                return None
+            else:
+                # Default: return raw value
+                return value
+    return None
+
+def get_lead_intelligence(item):
+    """
+    Extract all V4.0 enriched intelligence fields from Podio Master Lead item
+    
+    Args:
+        item: Podio Master Lead item dictionary
+        
+    Returns:
+        dict: Intelligence data with all enriched fields, or empty dict if item is None
+        
+    Note:
+        All fields return None if not populated (graceful degradation).
+        UI layer must handle None values appropriately (display "Unknown" or "N/A").
+    """
+    if not item:
+        return {}
+    
+    intelligence = {
+        # Priority Metrics (ui_priority 1-2) - MOST IMPORTANT
+        'lead_score': extract_field_value_by_id(item, LEAD_SCORE_FIELD_ID),
+        'lead_tier': extract_field_value_by_id(item, LEAD_TIER_FIELD_ID),
+        
+        # Deal Qualification (ui_priority 3-5) - FINANCIAL INTELLIGENCE
+        'estimated_property_value': extract_field_value_by_id(item, ESTIMATED_PROPERTY_VALUE_FIELD_ID),
+        'equity_percentage': extract_field_value_by_id(item, EQUITY_PERCENTAGE_FIELD_ID),
+        'estimated_equity': extract_field_value_by_id(item, ESTIMATED_EQUITY_FIELD_ID),
+        
+        # Property Details (ui_priority 6-7) - CONTEXT
+        'year_built': extract_field_value_by_id(item, YEAR_BUILT_FIELD_ID),
+        'property_type': extract_field_value_by_id(item, PROPERTY_TYPE_FIELD_ID),
+        
+        # Contact & Context (ui_priority 9) - APN hidden, address displayed
+        'validated_mailing_address': extract_field_value_by_id(item, VALIDATED_MAILING_ADDRESS_FIELD_ID),
+        
+        # Timeline & Compliance (ui_priority 10-11) - REGULATORY
+        'first_publication_date': extract_field_value_by_id(item, FIRST_PUBLICATION_DATE_FIELD_ID),
+        'law_firm_name': extract_field_value_by_id(item, LAW_FIRM_NAME_FIELD_ID),
+    }
+    
+    return intelligence
+
 # ============================================================================
 # DATA TRANSFORMATION UTILITIES
 # ============================================================================

@@ -40,7 +40,8 @@ from podio_service import (
     extract_field_value,
     create_call_activity_item,
     update_call_activity_recording,  # V3.2.3
-    create_follow_up_task  # V3.3: Automated task creation
+    create_follow_up_task,  # V3.3: Automated task creation
+    get_lead_intelligence  # V4.0: Add intelligence extraction
 )
 
 from db_service import (
@@ -105,6 +106,13 @@ def workspace():
             'source': 'Podio Master Lead'
         }
         
+        # V4.0: Extract enriched intelligence data from Data Pipeline
+        intelligence = get_lead_intelligence(lead_item)
+        
+        print(f"DEBUG: intelligence data extracted:")
+        import json
+        print(json.dumps(intelligence, indent=2, default=str))
+        
         print(f"DEBUG: lead_data being passed to template:")
         print(f"  item_id: {lead_data['item_id']}")
         print(f"  name: {lead_data['name']}")
@@ -113,7 +121,7 @@ def workspace():
         print("="*50)
         
         # Render workspace template with lead data
-        return render_template('workspace.html', lead=lead_data)
+        return render_template('workspace.html', lead=lead_data, intelligence=intelligence)
         
     except Exception as e:
         return f"Error loading workspace: {str(e)}", 500
