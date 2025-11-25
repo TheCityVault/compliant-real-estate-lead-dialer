@@ -1,0 +1,11 @@
+# Archive Directory
+
+This directory stores historical contract versions for audit trail purposes.
+
+When a contract is superseded by a new version, move the old contract here with its original filename.
+
+Example:
+- `podio-schema-v1.0.json` (moved here when v1.1 becomes active)
+- `podio-schema-v1.1.json` (moved here when v2.0 becomes active)
+
+Keep all archived contracts indefinitely for compliance and historical reference.
