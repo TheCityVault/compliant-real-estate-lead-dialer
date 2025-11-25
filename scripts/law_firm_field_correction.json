@@ -1,0 +1,15 @@
+{
+  "old_field_id": 274896124,
+  "old_field_type": "text",
+  "new_field_id": 274896414,
+  "new_field_type": "category",
+  "law_firm_options": [
+    "McCarthy & Holthus, LLP",
+    "Janeway Law Firm PC",
+    "The Sayer Law Group, P.C.",
+    "Altitude Community Law",
+    "Castle Stawiarski, LLC",
+    "Other"
+  ],
+  "timestamp": "2025-11-25T03:16:00Z"
+}

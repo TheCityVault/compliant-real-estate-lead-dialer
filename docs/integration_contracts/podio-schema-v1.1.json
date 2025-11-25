@@ -275,8 +275,16 @@
       "supabase_table": "raw_leads",
       "supabase_column": "raw_data_json->>'law_firm_name'",
       "podio_field_name": "Law Firm Name",
-      "podio_field_id": 274896124,
-      "field_type": "text",
+      "podio_field_id": 274896414,
+      "field_type": "category",
+      "allowed_values": [
+        "McCarthy & Holthus, LLP",
+        "Janeway Law Firm PC",
+        "The Sayer Law Group, P.C.",
+        "Altitude Community Law",
+        "Castle Stawiarski, LLC",
+        "Other"
+      ],
       "business_rationale": "Pillar #1 Compliance: Identifies attorney-represented foreclosures requiring TCPA special handling. Prevents costly violations by flagging leads that need attorney consent before dialing.",
       "dialer_usage": {
         "display_in_ui": true,
