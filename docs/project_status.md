@@ -60,7 +60,7 @@
 
 | Step | Task Description | Status | Owner | Rationale |
 | :---- | :---- | :---- | :---- | :---- |
-| **4.0.1** | **Create Contract Management Infrastructure** | PENDING | 💻 Code Mode | Establish folders and protocols for contract governance |
+| **4.0.1** | **Create Contract Management Infrastructure** | ✅ DONE | 💻 Code Mode | Establish folders and protocols for contract governance |
 | **4.0.2** | **Review & Approve Bilateral Contract** | PENDING | 🧠 High-Level Advisor | Validate business value and field priorities with Data Team's proposed schema |
 | **4.0.3** | **Update Podio Master Lead App Schema** | PENDING | 💻 Code Mode | Create 10 new enriched fields in Podio using API/script |
 | **4.0.4** | **Update Configuration Management** | PENDING | 💻 Code Mode | Add enriched field IDs to config.py |
@@ -99,9 +99,9 @@ Establish the folder structure and governance protocols for managing schema cont
    - Mark as "Production Baseline" before enrichment integration
 
 ### **Deliverables**
-- [ ] `docs/integration_contracts/README.md`
-- [ ] `docs/integration_contracts/podio-schema-v1.0.json`
-- [ ] Contract governance protocol documented
+- [x] `docs/integration_contracts/README.md`
+- [x] `docs/integration_contracts/podio-schema-v1.0.json`
+- [x] Contract governance protocol documented
 
 ### **Success Criteria**
 - Data Team acknowledges contract repository
@@ -499,26 +499,37 @@ Once V4.0 integration is complete, the following improvements are expected:
 
 ## **➡️ Next Action Item (Immediate Priority)**
 
-**Delegate to 💻 Code Mode:**
+**Status:** Phase 4.0.1 COMPLETE. Infrastructure ready for Data Team's contract delivery.
+
+**Awaiting:** Data Team to deliver bilateral contract JSON with 10 enriched field specifications (Phase 4.0.2).
+
+**When Contract Received - Delegate to 🧠 High-Level Advisor Mode:**
 
 ```
-Task: Phase 4.0.1 - Create Contract Management Infrastructure
+Task: Phase 4.0.2 - Review & Approve Bilateral Contract
 
-Objective: Establish the folder structure and governance protocols for managing schema contracts with the Data Pipeline team.
+Objective: Review the Data Team's proposed 10-field enrichment schema and validate alignment with Core Pillars.
 
-Procedure:
-1. Create directory structure: docs/integration_contracts/ (with README.md and archive/ folder)
-2. Create comprehensive contract governance document explaining:
-   - Versioning strategy (semantic versioning)
-   - Approval workflow (48hr review SLA)
-   - Deprecation policy (30-day grace period)
-   - Communication protocols
-3. Initialize current schema as v1.0 baseline (document existing fields from config.py)
+Critical Fields to Validate:
+- Lead Score (0-100 numeric) - Pillar #2: Agent routing priority
+- Lead Tier (HOT/WARM/COLD category) - Pillar #2: Triage classification
+- Estimated Property Value (money) - Pillar #4: Deal qualification
+- Equity Percentage (number) - Pillar #4: Instant qualification metric
+- Law Firm Name (text) - Pillar #1: Compliance/foreclosure handling
+- First Publication Date (date) - Pillar #3: Urgency indicator
+- Days on Market (number) - Pillar #3: Staleness metric
+- Owner Phone Validation Status (category) - Pillar #1: Contact compliance
+- Property Type (category) - Pillar #4: Deal filtering
+- Lien Count (number) - Pillar #4: Complexity indicator
 
-Completion: Use attempt_completion when infrastructure is created and ready for Data Team's contract delivery.
+Approval Criteria:
+- All MUST HAVE fields included (first 5 fields)
+- All dialer_usage specifications complete
+- Field types match business requirements
+- No security/compliance concerns
+
+Completion: Use attempt_completion when contract is approved and saved to docs/integration_contracts/podio-schema-v1.1.json
 ```
-
-**Status:** Ready for execution. This is the first step in the V4.0 integration roadmap.
 
 ---
 
@@ -570,4 +581,4 @@ V4.0 will be considered **COMPLETE** when:
 
 **Document prepared by:** 🧠 High-Level Advisor Mode  
 **Last updated:** 2025-11-25  
-**Next review:** Upon completion of Phase 4.0.1
+**Next review:** Upon completion of Phase 4.0.2
