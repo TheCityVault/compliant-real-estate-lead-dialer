@@ -55,6 +55,28 @@ RELATIONSHIP_FIELD_ID = 274851864  # "Relationship" field in Call Activity app
 DATE_OF_CALL_FIELD_ID = 274769799
 CALL_DURATION_FIELD_ID = 274769800
 RECORDING_URL_FIELD_ID = 274769801
+# Podio Field IDs - V4.0 Enriched Data (Data Pipeline Integration)
+# Priority Metrics (Agent Routing)
+LEAD_SCORE_FIELD_ID = 274896114
+LEAD_TIER_FIELD_ID = 274896115
+
+# Deal Qualification (Financial Intelligence)
+ESTIMATED_PROPERTY_VALUE_FIELD_ID = 274896116
+EQUITY_PERCENTAGE_FIELD_ID = 274896117
+ESTIMATED_EQUITY_FIELD_ID = 274896118
+
+# Property Details
+YEAR_BUILT_FIELD_ID = 274896119
+PROPERTY_TYPE_FIELD_ID = 274896120
+
+# Contact & Context
+APN_FIELD_ID = 274896121
+VALIDATED_MAILING_ADDRESS_FIELD_ID = 274896122
+
+# Timeline & Compliance
+FIRST_PUBLICATION_DATE_FIELD_ID = 274896123
+LAW_FIRM_NAME_FIELD_ID = 274896124
+
 
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
@@ -156,6 +178,40 @@ else:
 # CONFIGURATION VALIDATION
 # ============================================================================
 
+def validate_enriched_fields():
+    """Validate V4.0 enriched field IDs at startup"""
+    enriched_fields = {
+        'LEAD_SCORE_FIELD_ID': LEAD_SCORE_FIELD_ID,
+        'LEAD_TIER_FIELD_ID': LEAD_TIER_FIELD_ID,
+        'ESTIMATED_PROPERTY_VALUE_FIELD_ID': ESTIMATED_PROPERTY_VALUE_FIELD_ID,
+        'EQUITY_PERCENTAGE_FIELD_ID': EQUITY_PERCENTAGE_FIELD_ID,
+        'ESTIMATED_EQUITY_FIELD_ID': ESTIMATED_EQUITY_FIELD_ID,
+        'YEAR_BUILT_FIELD_ID': YEAR_BUILT_FIELD_ID,
+        'PROPERTY_TYPE_FIELD_ID': PROPERTY_TYPE_FIELD_ID,
+        'APN_FIELD_ID': APN_FIELD_ID,
+        'VALIDATED_MAILING_ADDRESS_FIELD_ID': VALIDATED_MAILING_ADDRESS_FIELD_ID,
+        'FIRST_PUBLICATION_DATE_FIELD_ID': FIRST_PUBLICATION_DATE_FIELD_ID,
+        'LAW_FIRM_NAME_FIELD_ID': LAW_FIRM_NAME_FIELD_ID,
+    }
+    
+    print(f"\n{'='*50}")
+    print(f"=== V4.0 ENRICHED FIELD VALIDATION ===")
+    all_valid = True
+    for field_name, field_id in enriched_fields.items():
+        if field_id is not None:
+            print(f"✅ {field_name}: {field_id}")
+        else:
+            print(f"❌ {field_name}: NOT SET")
+            all_valid = False
+    
+    if all_valid:
+        print(f"✅ All 11 enriched field IDs validated successfully")
+    else:
+        print(f"⚠️ WARNING: Some enriched field IDs are missing")
+    print(f"{'='*50}\n")
+    
+    return all_valid
+
 def validate_environment():
     """Validate critical environment variables at startup"""
     required_vars = {
@@ -178,6 +234,9 @@ def validate_environment():
         else:
             print(f"❌ {var_name}: NOT SET")
     print(f"{'='*50}\n")
+    
+    # V4.0: Validate enriched field IDs
+    validate_enriched_fields()
 
 # Call validation on module load (for serverless)
 validate_environment()
