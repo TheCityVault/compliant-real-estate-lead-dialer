@@ -62,7 +62,7 @@
 | :---- | :---- | :---- | :---- | :---- |
 | **4.0.1** | **Create Contract Management Infrastructure** | ✅ DONE | 💻 Code Mode | Establish folders and protocols for contract governance |
 | **4.0.2** | **Review & Approve Bilateral Contract** | ✅ DONE | 🧠 High-Level Advisor | Validate business value and field priorities with Data Team's proposed schema |
-| **4.0.3** | **Update Podio Master Lead App Schema** | PENDING | 💻 Code Mode | Create 11 new enriched fields in Podio using approved contract v1.1.1 |
+| **4.0.3** | **Update Podio Master Lead App Schema** | ✅ DONE | 💻 Code Mode | Create 11 new enriched fields in Podio using approved contract v1.1.1 |
 | **4.0.4** | **Update Configuration Management** | PENDING | 💻 Code Mode | Add enriched field IDs to config.py |
 | **4.0.5** | **Extend Podio Service Layer** | PENDING | 💻 Code Mode | Add extraction utilities to podio_service.py |
 | **4.0.6** | **Implement Lead Intelligence Panel UI** | PENDING | 💻 Code Mode | Add enriched data display to workspace.html |
@@ -186,9 +186,9 @@ Create `scripts/add_enriched_fields_v4.py` to programmatically add fields based 
 After field creation, you MUST update the contract with actual field IDs (replacing "TBD_XXX" placeholders).
 
 ### **Deliverables**
-- [ ] `scripts/add_enriched_fields_v4.py` (or manual creation evidence)
-- [ ] `scripts/enriched_field_ids_v4.json` (actual field ID mapping)
-- [ ] Updated contract with real field IDs committed
+- [x] `scripts/add_enriched_fields_v4.py` - Programmatic field creation script
+- [x] `scripts/enriched_field_ids_v4.json` - Field ID mappings (274896114 - 274896124)
+- [x] Updated contract with real field IDs committed to [`docs/integration_contracts/podio-schema-v1.1.json`](docs/integration_contracts/podio-schema-v1.1.json:1)
 
 ### **Success Criteria**
 - All 11 fields visible in Podio Master Lead App
@@ -499,41 +499,54 @@ Once V4.0 integration is complete, the following improvements are expected:
 
 ## **➡️ Next Action Item (Immediate Priority)**
 
-**Status:** Phase 4.0.2 COMPLETE. Bilateral contract v1.1.1 approved with 11 enriched fields.
+**Status:** **Phase 4.0.3 COMPLETE**. All 11 enriched fields created in Podio Master Lead App with field IDs 274896114-274896124.
 
-**Next Phase:** 4.0.3 - Update Podio Master Lead App Schema
+**Completion Summary:**
+- ✅ Created [`scripts/add_enriched_fields_v4.py`](scripts/add_enriched_fields_v4.py:1) - Programmatic field creation script
+- ✅ Generated [`scripts/enriched_field_ids_v4.json`](scripts/enriched_field_ids_v4.json:1) - Field ID mappings
+- ✅ Updated [`docs/integration_contracts/podio-schema-v1.1.json`](docs/integration_contracts/podio-schema-v1.1.json:1) with actual field IDs
+- ✅ Field ID Range: 274896114 (Lead Score) to 274896124 (Law Firm Name)
+
+**Next Phase:** 4.0.4 - Update Configuration Management
 
 **Delegate to 💻 Code Mode:**
 
 ```
-Task: Phase 4.0.3 - Create 11 Enriched Fields in Podio Master Lead App
+Task: Phase 4.0.4 - Update Configuration Management
 
-Objective: Use the Podio API to programmatically create 11 new fields based on approved contract v1.1.1.
+Objective: Add the 11 new enriched field IDs to config.py for programmatic access by the CRM application.
 
-Contract Reference: docs/integration_contracts/podio-schema-v1.1.json
-
-Required Fields (Priority Order):
-1. Lead Score (number, 0-100) - TBD_001
-2. Lead Tier (category: HOT/WARM/COLD) - TBD_002
-3. Estimated Property Value (money) - TBD_003
-4. Equity % (number, -50 to 100) - TBD_004
-5. Estimated Equity (money) - TBD_005
-6. Year Built (number, 1800-2025) - TBD_006
-7. Property Type (category: 385_Single_Family, 369_Duplex, 388_Triplex, 360_Apartments, Other) - TBD_007
-8. APN (Parcel Number) (text) - TBD_008
-9. Validated Mailing Address (text) - TBD_009
-10. First Publication Date (date) - TBD_010
-11. Law Firm Name (text) - TBD_011
+Reference Files:
+- Field ID Mapping: scripts/enriched_field_ids_v4.json
+- Contract: docs/integration_contracts/podio-schema-v1.1.json
+- Target File: config.py
 
 Implementation:
-- Create scripts/add_enriched_fields_v4.py using Podio API
-- Document actual field IDs in scripts/enriched_field_ids_v4.json
-- Update contract (replace TBD_XXX with real IDs)
-- Commit finalized contract back to docs/integration_contracts/podio-schema-v1.1.json
+1. Add new section to config.py for V4.0 enriched field IDs
+2. Create field ID constants for all 11 enriched fields (274896114 - 274896124)
+3. Add validation function to verify field configuration on app startup
+4. Group fields by category (Priority Metrics, Deal Qualification, Context)
 
-CRITICAL: After field creation, you MUST update the contract file with actual Podio field IDs so the Data Team can deploy podio-sync with correct mappings.
+Field ID Constants to Add:
+- LEAD_SCORE_FIELD_ID = 274896114
+- LEAD_TIER_FIELD_ID = 274896115
+- ESTIMATED_PROPERTY_VALUE_FIELD_ID = 274896116
+- EQUITY_PERCENTAGE_FIELD_ID = 274896117
+- ESTIMATED_EQUITY_FIELD_ID = 274896118
+- YEAR_BUILT_FIELD_ID = 274896119
+- PROPERTY_TYPE_FIELD_ID = 274896120
+- APN_FIELD_ID = 274896121
+- VALIDATED_MAILING_ADDRESS_FIELD_ID = 274896122
+- FIRST_PUBLICATION_DATE_FIELD_ID = 274896123
+- LAW_FIRM_NAME_FIELD_ID = 274896124
 
-Completion: Use attempt_completion when all 11 fields created, IDs documented, and contract updated.
+Success Criteria:
+- config.py includes all 11 field ID constants
+- Validation function added to verify configuration
+- Application can start without field configuration warnings
+- Field IDs match contract specification exactly
+
+Completion: Use attempt_completion when config.py updated and validated.
 ```
 
 ---
