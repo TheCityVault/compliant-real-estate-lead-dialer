@@ -61,8 +61,8 @@
 | Step | Task Description | Status | Owner | Rationale |
 | :---- | :---- | :---- | :---- | :---- |
 | **4.0.1** | **Create Contract Management Infrastructure** | ✅ DONE | 💻 Code Mode | Establish folders and protocols for contract governance |
-| **4.0.2** | **Review & Approve Bilateral Contract** | PENDING | 🧠 High-Level Advisor | Validate business value and field priorities with Data Team's proposed schema |
-| **4.0.3** | **Update Podio Master Lead App Schema** | PENDING | 💻 Code Mode | Create 10 new enriched fields in Podio using API/script |
+| **4.0.2** | **Review & Approve Bilateral Contract** | ✅ DONE | 🧠 High-Level Advisor | Validate business value and field priorities with Data Team's proposed schema |
+| **4.0.3** | **Update Podio Master Lead App Schema** | PENDING | 💻 Code Mode | Create 11 new enriched fields in Podio using approved contract v1.1.1 |
 | **4.0.4** | **Update Configuration Management** | PENDING | 💻 Code Mode | Add enriched field IDs to config.py |
 | **4.0.5** | **Extend Podio Service Layer** | PENDING | 💻 Code Mode | Add extraction utilities to podio_service.py |
 | **4.0.6** | **Implement Lead Intelligence Panel UI** | PENDING | 💻 Code Mode | Add enriched data display to workspace.html |
@@ -175,7 +175,7 @@ The Data Team's Enrichment Specialist will deliver a Bilateral Contract JSON wit
 ## **📊 Phase 4.0.3: Update Podio Master Lead App Schema**
 
 ### **Objective**
-Create the 10 new enriched fields in the Podio Master Lead App using the approved contract.
+Create the 11 new enriched fields in the Podio Master Lead App using the approved contract v1.1.1.
 
 ### **Implementation Approach**
 
@@ -191,7 +191,7 @@ After field creation, you MUST update the contract with actual field IDs (replac
 - [ ] Updated contract with real field IDs committed
 
 ### **Success Criteria**
-- All 10 fields visible in Podio Master Lead App
+- All 11 fields visible in Podio Master Lead App
 - Field IDs documented and committed to contract
 - Data Team acknowledges contract update with real IDs
 
@@ -207,7 +207,7 @@ Add the new enriched field IDs to config.py for programmatic access.
 Update config.py to include enriched field constants and add validation for field configuration.
 
 ### **Deliverables**
-- [ ] config.py updated with 10 new field ID constants
+- [ ] config.py updated with 11 new field ID constants
 - [ ] Validation function added
 - [ ] Environment variable documentation (if using env vars for field IDs)
 
@@ -301,7 +301,7 @@ Validate that the CRM project correctly consumes enriched data from the Data Pip
 **Phase 1: Manual Test Lead Creation**
 1. Create a test lead directly in Podio with enriched fields populated
 2. Access the workspace for that lead
-3. Verify Lead Intelligence Panel displays all 10 fields correctly
+3. Verify Lead Intelligence Panel displays all 11 fields correctly
 
 **Phase 2: Contract Validation**
 1. Compare actual field IDs in Podio vs. contract specification
@@ -329,7 +329,7 @@ Create `docs/v4.0_integration_testing_report.md` to track results with field val
 - [ ] Both teams sign off on integration success
 
 ### **Success Criteria**
-- All 10 enriched fields display correctly
+- All 11 enriched fields display correctly
 - No JavaScript errors in browser console
 - Graceful handling of missing data
 - Both CRM and Data teams approve integration
@@ -351,7 +351,7 @@ Monitor the first 48 hours of live data synchronization from the Data Pipeline t
    - Sync success rate (% successful vs. failed)
 
 2. **CRM Consumption Metrics (Your Responsibility):**
-   - % of leads with complete enrichment (all 10 fields populated)
+   - % of leads with complete enrichment (all 11 fields populated)
    - % of leads with partial enrichment
    - % of leads with no enrichment
    - Average agent workspace load time with intelligence panel
@@ -499,36 +499,41 @@ Once V4.0 integration is complete, the following improvements are expected:
 
 ## **➡️ Next Action Item (Immediate Priority)**
 
-**Status:** Phase 4.0.1 COMPLETE. Infrastructure ready for Data Team's contract delivery.
+**Status:** Phase 4.0.2 COMPLETE. Bilateral contract v1.1.1 approved with 11 enriched fields.
 
-**Awaiting:** Data Team to deliver bilateral contract JSON with 10 enriched field specifications (Phase 4.0.2).
+**Next Phase:** 4.0.3 - Update Podio Master Lead App Schema
 
-**When Contract Received - Delegate to 🧠 High-Level Advisor Mode:**
+**Delegate to 💻 Code Mode:**
 
 ```
-Task: Phase 4.0.2 - Review & Approve Bilateral Contract
+Task: Phase 4.0.3 - Create 11 Enriched Fields in Podio Master Lead App
 
-Objective: Review the Data Team's proposed 10-field enrichment schema and validate alignment with Core Pillars.
+Objective: Use the Podio API to programmatically create 11 new fields based on approved contract v1.1.1.
 
-Critical Fields to Validate:
-- Lead Score (0-100 numeric) - Pillar #2: Agent routing priority
-- Lead Tier (HOT/WARM/COLD category) - Pillar #2: Triage classification
-- Estimated Property Value (money) - Pillar #4: Deal qualification
-- Equity Percentage (number) - Pillar #4: Instant qualification metric
-- Law Firm Name (text) - Pillar #1: Compliance/foreclosure handling
-- First Publication Date (date) - Pillar #3: Urgency indicator
-- Days on Market (number) - Pillar #3: Staleness metric
-- Owner Phone Validation Status (category) - Pillar #1: Contact compliance
-- Property Type (category) - Pillar #4: Deal filtering
-- Lien Count (number) - Pillar #4: Complexity indicator
+Contract Reference: docs/integration_contracts/podio-schema-v1.1.json
 
-Approval Criteria:
-- All MUST HAVE fields included (first 5 fields)
-- All dialer_usage specifications complete
-- Field types match business requirements
-- No security/compliance concerns
+Required Fields (Priority Order):
+1. Lead Score (number, 0-100) - TBD_001
+2. Lead Tier (category: HOT/WARM/COLD) - TBD_002
+3. Estimated Property Value (money) - TBD_003
+4. Equity % (number, -50 to 100) - TBD_004
+5. Estimated Equity (money) - TBD_005
+6. Year Built (number, 1800-2025) - TBD_006
+7. Property Type (category: 385_Single_Family, 369_Duplex, 388_Triplex, 360_Apartments, Other) - TBD_007
+8. APN (Parcel Number) (text) - TBD_008
+9. Validated Mailing Address (text) - TBD_009
+10. First Publication Date (date) - TBD_010
+11. Law Firm Name (text) - TBD_011
 
-Completion: Use attempt_completion when contract is approved and saved to docs/integration_contracts/podio-schema-v1.1.json
+Implementation:
+- Create scripts/add_enriched_fields_v4.py using Podio API
+- Document actual field IDs in scripts/enriched_field_ids_v4.json
+- Update contract (replace TBD_XXX with real IDs)
+- Commit finalized contract back to docs/integration_contracts/podio-schema-v1.1.json
+
+CRITICAL: After field creation, you MUST update the contract file with actual Podio field IDs so the Data Team can deploy podio-sync with correct mappings.
+
+Completion: Use attempt_completion when all 11 fields created, IDs documented, and contract updated.
 ```
 
 ---
@@ -560,7 +565,7 @@ Once V4.0 is stable, consider these future enhancements:
 V4.0 will be considered **COMPLETE** when:
 
 - [ ] All 8 phases (4.0.1 - 4.0.8) marked as DONE
-- [ ] 10 enriched fields successfully syncing from Data Pipeline to Podio
+- [ ] 11 enriched fields successfully syncing from Data Pipeline to Podio
 - [ ] Lead Intelligence Panel displaying correctly in workspace.html
 - [ ] 48 hours of production monitoring completed with > 90% success rate
 - [ ] Both CRM and Data teams sign off on integration stability
@@ -581,4 +586,4 @@ V4.0 will be considered **COMPLETE** when:
 
 **Document prepared by:** 🧠 High-Level Advisor Mode  
 **Last updated:** 2025-11-25  
-**Next review:** Upon completion of Phase 4.0.2
+**Next review:** Upon completion of Phase 4.0.3
