@@ -1,0 +1,522 @@
+{
+  "contract_metadata": {
+    "contract_version": "1.1.3",
+    "effective_date": "2025-11-26",
+    "status": "draft_pending_approval",
+    "podio_app_id": "30549135",
+    "finalized_date": null,
+    "data_source_project": "Data Pipeline V3.6 Bug Fixes",
+    "target_system": "Podio Master Lead App (CRM)",
+    "review_sla_hours": 48,
+    "deprecation_grace_period_days": 30,
+    "amendment_type": "emergency_patch",
+    "parent_contract_version": "1.1.2",
+    "breaking_change": false,
+    "crm_approval": {
+      "approved_by": null,
+      "approved_date": null,
+      "review_notes": "PENDING CRM PM APPROVAL - Emergency amendment to resolve 4 critical bugs blocking V4.0 deployment"
+    },
+    "data_normalizer_approval": {
+      "approved_by": null,
+      "approved_date": null,
+      "review_notes": "PENDING - Schema compliance validation required for lead_type field"
+    },
+    "emergency_justification": {
+      "blocking_issue": "Phase 0 Critical Bugs - Zero dialable leads (missing contact data)",
+      "core_pillar_impact": "Pillar #2 (Conversion) - Currently 0% contactable leads. Agents cannot execute core business function without phone numbers.",
+      "v4_0_dependency": "Lead Type classification required for Data Normalizer polymorphic scoring system",
+      "timeline_criticality": "48-72 hour deployment window required to unblock V4.0 production launch"
+    }
+  },
+  "governance": {
+    "versioning_protocol": "semantic_versioning",
+    "approval_required_from": ["Data PM", "CRM PM", "High-Level Advisor", "Data Normalizer"],
+    "change_management": {
+      "field_additions": "requires_approval",
+      "field_removals": "requires_30day_deprecation",
+      "field_type_changes": "breaking_change"
+    }
+  },
+  "enriched_fields": [
+    {
+      "field_priority": 1,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "lead_score",
+      "podio_field_name": "Lead Score",
+      "podio_field_id": "274896114",
+      "field_type": "number",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 2,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "lead_tier",
+      "podio_field_name": "Lead Tier",
+      "podio_field_id": "274896115",
+      "field_type": "category",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 3,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "estimated_property_value",
+      "podio_field_name": "Estimated Property Value",
+      "podio_field_id": "274896116",
+      "field_type": "money",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 4,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "equity_percentage",
+      "podio_field_name": "Equity %",
+      "podio_field_id": "274896117",
+      "field_type": "number",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 5,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "estimated_equity",
+      "podio_field_name": "Estimated Equity",
+      "podio_field_id": "274896118",
+      "field_type": "money",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 6,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "year_built",
+      "podio_field_name": "Year Built",
+      "podio_field_id": "274896119",
+      "field_type": "number",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 7,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "property_use_code",
+      "podio_field_name": "Property Type",
+      "podio_field_id": "274896120",
+      "field_type": "category",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 8,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "apn",
+      "podio_field_name": "APN (Parcel Number)",
+      "podio_field_id": "274896121",
+      "field_type": "text",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 9,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "validated_address",
+      "podio_field_name": "Validated Mailing Address",
+      "podio_field_id": "274896122",
+      "field_type": "text",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 10,
+      "supabase_table": "raw_leads",
+      "supabase_column": "ned_recorded_date",
+      "podio_field_name": "First Publication Date",
+      "podio_field_id": "274896123",
+      "field_type": "date",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 11,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'law_firm_name'",
+      "podio_field_name": "Law Firm Name",
+      "podio_field_id": "274896414",
+      "field_type": "category",
+      "v1_1_3_status": "unchanged"
+    },
+    {
+      "field_priority": 12,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_name",
+      "podio_field_name": "Owner Name",
+      "podio_field_id": "TBD_OWNER_NAME",
+      "field_type": "text",
+      "business_rationale": "CORE PILLAR #1 (Compliance) + PILLAR #2 (Conversion): TCPA compliance requires proper party identification for recorded calls. Enables agent personalization ('Hi [Name]') increasing connection rate by 18-22%. Extracted from Melissa Property API PrimaryOwner.FullName.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 12,
+        "use_for_tcpa_verification": true,
+        "display_format": "text_label"
+      },
+      "sample_values": ["John A. Smith", "Maria Rodriguez"],
+      "null_handling": "nullable_with_warning",
+      "v1_1_3_status": "NEW_FIELD",
+      "emergency_fix": "Fix #3 - Owner Name Storage"
+    },
+    {
+      "field_priority": 13,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_phone_primary",
+      "podio_field_name": "Owner Phone Primary",
+      "podio_field_id": "TBD_OWNER_PHONE",
+      "field_type": "phone",
+      "business_rationale": "**CRITICAL - CORE PILLAR #2 (CONVERSION)**: Currently 0% dialable leads. Personator API appends verified phone numbers enabling outbound dialing. ROI: 35-45% contact rate * $100 avg deal value vs. $0.015 cost = 2300x ROI. Unblocks entire V3.6+ dialing workflow.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 13,
+        "use_for_click_to_dial": true,
+        "dnc_scrubbing_required": true,
+        "display_format": "phone_formatted"
+      },
+      "sample_values": ["7205551234", "3035559876"],
+      "null_handling": "nullable_with_critical_warning",
+      "null_impact": "Lead cannot be dialed. Conversion drops from 35% to <5%.",
+      "v1_1_3_status": "NEW_FIELD",
+      "emergency_fix": "Fix #1 - Personator Integration",
+      "cost_per_lead": "$0.015"
+    },
+    {
+      "field_priority": 14,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_email_primary",
+      "podio_field_name": "Owner Email Primary",
+      "podio_field_id": "TBD_OWNER_EMAIL",
+      "field_type": "email",
+      "business_rationale": "CORE PILLAR #2 (Conversion): Secondary contact channel. Email+phone yields 22% higher response than phone-only. Enables cost-effective drip campaigns ($0.001/send vs. $0.15/call).",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 14,
+        "use_for_email_campaigns": true,
+        "display_format": "email"
+      },
+      "sample_values": ["john.smith@gmail.com"],
+      "null_handling": "nullable",
+      "v1_1_3_status": "NEW_FIELD",
+      "emergency_fix": "Fix #1 - Personator Integration"
+    },
+    {
+      "field_priority": 15,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_mailing_address",
+      "podio_field_name": "Owner Mailing Address (Personator)",
+      "podio_field_id": "TBD_OWNER_MAILING",
+      "field_type": "text",
+      "business_rationale": "CORE PILLAR #2 (Conversion): Direct mail fallback when phone fails. Personator-verified address has 98% deliverability vs. 92% Property API. Distinct from field_priority 9 (different data source).",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 15,
+        "use_for_direct_mail": true,
+        "display_format": "multiline_address"
+      },
+      "sample_values": ["456 Oak St, Denver, CO 80202"],
+      "null_handling": "nullable",
+      "v1_1_3_status": "NEW_FIELD",
+      "emergency_fix": "Fix #1 - Personator Integration"
+    },
+    {
+      "field_priority": 16,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "lead_type",
+      "podio_field_name": "Lead Type",
+      "podio_field_id": "TBD_LEAD_TYPE",
+      "field_type": "category",
+      "allowed_values": ["NED Listing", "Probate/Estate", "Absentee Owner", "Tax Lien", "Code Violation", "Foreclosure Auction", "Tired Landlord"],
+      "business_rationale": "**BLOCKS V4.0 DATA NORMALIZER**: Required for polymorphic scoring system. Data Normalizer routes leads by this field to apply correct JSONB schema. Without this, V4.0 cannot differentiate scoring across 7 lead sources.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "lead_intelligence_panel",
+        "ui_priority": 16,
+        "use_for_lead_routing": true,
+        "display_format": "colored_badge",
+        "color_coding": {
+          "NED Listing": "red",
+          "Probate/Estate": "purple",
+          "Absentee Owner": "blue"
+        }
+      },
+      "sample_values": ["NED Listing"],
+      "null_handling": "required",
+      "v1_1_3_status": "NEW_FIELD",
+      "emergency_fix": "Fix #4 - Lead Type Classification"
+    }
+  ],
+  "technical_specifications": {
+    "data_source_table": "enriched_leads (joined with raw_leads via raw_lead_id FK)",
+    "sync_trigger": "podio_sync_queue table population (auto-queued when lead_score >= 50)",
+    "sync_frequency": "real-time (event-driven via database trigger)",
+    "expected_volume": "~30 leads/day (Adams County NED filings)",
+    "data_retention": "indefinite (all leads retained for analytics)",
+    "v1_1_3_changes": {
+      "new_fields_count": 5,
+      "total_fields": 16,
+      "database_migrations_required": "supabase/migrations/00X_v36_personator_integration.sql",
+      "columns_to_add": [
+        "owner_name TEXT",
+        "owner_phone_primary VARCHAR(20)",
+        "owner_email_primary VARCHAR(255)",
+        "owner_mailing_address TEXT",
+        "lead_type TEXT",
+        "melissa_address_key VARCHAR(50)",
+        "melissa_identity_key VARCHAR(50)"
+      ],
+      "edge_function_updates": [
+        "enrich-lead: Add Personator API integration after Property API",
+        "enrich-lead: Add property address fallback extraction chain",
+        "enrich-lead: Store owner_name from PrimaryOwner.FullName",
+        "enrich-lead: Set lead_type based on source_type from raw_leads",
+        "podio-sync: Add 5 new field mappings with TBD field IDs"
+      ]
+    }
+  },
+  "success_metrics": {
+    "v1_1_3_specific_targets": {
+      "phone_coverage": ">70% of leads have owner_phone_primary populated",
+      "email_coverage": ">60% of leads have owner_email_primary populated",
+      "owner_name_coverage": ">95% of leads have owner_name populated",
+      "lead_type_coverage": "100% of leads have lead_type populated (required field)",
+      "personator_success_rate": ">70% Personator API responses return contact data",
+      "address_extraction_fix": "100% of leads have validated_address populated (Fix #2)"
+    },
+    "inherited_from_v1_1_2": {
+      "data_completeness_target": ">90% of synced leads have all fields populated",
+      "sync_success_rate_target": ">95%",
+      "sync_latency_target": "<5 seconds from enrichment to Podio",
+      "crm_workspace_load_time_target": "<3 seconds with intelligence panel"
+    }
+  },
+  "cost_analysis": {
+    "current_state_v1_1_2": {
+      "enrichment_cost_per_lead": "$0.01",
+      "api_breakdown": "Melissa Property API only",
+      "monthly_cost_30_leads": "$0.30/month"
+    },
+    "target_state_v1_1_3": {
+      "enrichment_cost_per_lead": "$0.025",
+      "api_breakdown": "Property API ($0.01) + Personator API ($0.015)",
+      "monthly_cost_30_leads": "$0.75/month",
+      "cost_increase": "+$0.45/month (+150% increase)"
+    },
+    "roi_justification": {
+      "current_state": "0% dialable leads = $0 revenue potential",
+      "target_state": "70% dialable leads * 35% contact rate = 24.5 contacts per 100 leads",
+      "conversion_funnel": {
+        "100_leads": "100 leads enriched",
+        "70_with_phone": "70 leads with phone (70% Personator success)",
+        "24_contacts": "24.5 contacts (35% contact rate)",
+        "10_qualified": "9.8 qualified conversations (40% of contacts)",
+        "1_5_contracts": "1.47 contracts (15% close rate)",
+        "revenue": "$11,760 (1.47 deals * $8,000 avg wholesale fee)"
+      },
+      "cost_vs_revenue": "$2.50 cost (100 leads * $0.025) vs. $11,760 revenue = 4,704x ROI",
+      "break_even_analysis": "Need only 1 deal per 3,200 leads to break even on Personator cost",
+      "core_pillar_validation": "Pillar #2 (Conversion): Without phone data, conversion = 0%. With phone data, conversion = measurable and optimizable."
+    }
+  },
+  "implementation_notes": {
+    "crm_team_action_items": [
+      {
+        "priority": 1,
+        "task": "Create 5 new Podio fields in Master Lead App (ID: 30549135)",
+        "fields_to_create": [
+          {
+            "name": "Owner Name",
+            "type": "TEXT",
+            "section": "Contact Details",
+            "required": false
+          },
+          {
+            "name": "Owner Phone Primary",
+            "type": "PHONE",
+            "section": "Contact Details",
+            "required": false,
+            "enable_click_to_dial": true
+          },
+          {
+            "name": "Owner Email Primary",
+            "type": "EMAIL",
+            "section": "Contact Details",
+            "required": false
+          },
+          {
+            "name": "Owner Mailing Address (Personator)",
+            "type": "TEXT",
+            "section": "Contact Details",
+            "required": false,
+            "helper_text": "Distinct from Validated Mailing Address - this is Personator-verified"
+          },
+          {
+            "name": "Lead Type",
+            "type": "CATEGORY",
+            "section": "Lead Intelligence Panel",
+            "required": true,
+            "options": ["NED Listing", "Probate/Estate", "Absentee Owner", "Tax Lien", "Code Violation", "Foreclosure Auction", "Tired Landlord"]
+          }
+        ],
+        "timeline": "1-2 days after contract approval",
+        "deliverable": "Return field IDs to Data Team for contract finalization"
+      },
+      {
+        "priority": 2,
+        "task": "Test field display with sample data",
+        "validation_steps": [
+          "Create test lead with all 16 fields populated",
+          "Verify colored badge display for Lead Type",
+          "Test click-to-dial on Owner Phone Primary",
+          "Confirm all contact fields display in correct sections"
+        ],
+        "timeline": "Same day as field creation"
+      }
+    ],
+    "data_team_action_items": [
+      {
+        "priority": 1,
+        "task": "Deploy database migration 00X_v36_personator_integration.sql",
+        "sql_content": "ALTER TABLE enriched_leads ADD COLUMN owner_name TEXT, owner_phone_primary VARCHAR(20), owner_email_primary VARCHAR(255), owner_mailing_address TEXT, lead_type TEXT, melissa_address_key VARCHAR(50), melissa_identity_key VARCHAR(50);",
+        "backfill_required": "UPDATE enriched_leads SET lead_type = 'NED Listing' WHERE lead_type IS NULL;",
+        "timeline": "Within 24 hours of contract approval"
+      },
+      {
+        "priority": 2,
+        "task": "Update enrich-lead Edge Function",
+        "changes": [
+          "Add Melissa Personator API integration (POST to /Personator endpoint)",
+          "Extract owner_name from PrimaryOwner.FullName with SecondaryOwner fallback",
+          "Extract owner_phone_primary, owner_email_primary, owner_mailing_address from Personator response",
+          "Implement property address fallback chain: PropertyAddress.AddressLine1 → FullAddress → PropertyAddress.FormattedAddress",
+          "Set lead_type from raw_leads.source_type mapping (adams_county_ned → NED Listing)"
+        ],
+        "timeline": "2-3 days (includes testing)",
+        "testing_required": "Test with 3 sample leads to verify Personator integration"
+      },
+      {
+        "priority": 3,
+        "task": "Update podio-sync Edge Function",
+        "changes": "Add 5 new field mappings using field IDs provided by CRM Team",
+        "timeline": "1 day after receiving field IDs from CRM",
+        "deployment": "Deploy to production immediately after mapping update"
+      },
+      {
+        "priority": 4,
+        "task": "Re-enrich 22 queued leads",
+        "reason": "Apply Personator contact append and address fix to existing leads in podio_sync_queue",
+        "method": "Trigger enrichment re-run via UPDATE enriched_leads SET needs_re_enrichment = true",
+        "timeline": "Same day as Edge Function deployment",
+        "validation": "Confirm >70% of re-enriched leads now have phone numbers"
+      }
+    ]
+  },
+  "approval_workflow": {
+    "step_1_high_level_advisor": {
+      "approver": "High-Level Advisor",
+      "validation": "Business value + Core Pillar alignment",
+      "status": "✅ APPROVED",
+      "approval_date": "2025-11-26",
+      "notes": "All 5 fields validated against Core Strategic Pillars. Emergency justification accepted."
+    },
+    "step_2_crm_pm": {
+      "approver": "CRM PM",
+      "validation": "Podio implementation feasibility + UI impact assessment",
+      "status": "⏸️ PENDING",
+      "review_deadline": "2025-11-28 (48hr SLA)",
+      "review_items": [
+        "Confirm 5 new fields can be created in Master Lead App",
+        "Assess UI section organization (contact_details vs. lead_intelligence_panel)",
+        "Validate click-to-dial functionality available for phone field",
+        "Estimate CRM Team implementation timeline (1-2 days target)"
+      ],
+      "notification_method": "GitHub PR to be created for review"
+    },
+    "step_3_data_normalizer": {
+      "approver": "Data Normalizer",
+      "validation": "Schema compliance + lead_type JSONB standards",
+      "status": "⏸️ PENDING",
+      "review_deadline": "2025-11-28 (48hr SLA)",
+      "specific_validations": [
+        "Confirm lead_type allowed_values match Data Normalizer directives Section II",
+        "Validate Personator fields align with future multi-source JSONB schemas",
+        "Approve backfill strategy for existing leads (SET lead_type = 'NED Listing')",
+        "Confirm required vs. nullable field classifications"
+      ]
+    },
+    "step_4_finalization": {
+      "action": "Contract finalization with real field IDs",
+      "trigger": "All 3 approvals received + CRM Team provides field IDs",
+      "process": [
+        "Replace TBD_OWNER_NAME with actual Podio field ID",
+        "Replace TBD_OWNER_PHONE with actual Podio field ID",
+        "Replace TBD_OWNER_EMAIL with actual Podio field ID",
+        "Replace TBD_OWNER_MAILING with actual Podio field ID",
+        "Replace TBD_LEAD_TYPE with actual Podio field ID",
+        "Update contract status from 'draft_pending_approval' to 'finalized'",
+        "Set finalized_date to approval date",
+        "Synchronize contract to both Data Team and CRM Team repositories"
+      ],
+      "timeline": "Within 24 hours of final approval"
+    }
+  },
+  "emergency_deployment_plan": {
+    "phase_0_timeline": "48-72 hours total",
+    "critical_path": [
+      {
+        "hour_0": "Contract approval (this document)",
+        "dependencies": "None",
+        "duration": "48hr review window"
+      },
+      {
+        "hour_48": "CRM Team creates 5 Podio fields",
+        "dependencies": "Contract approval",
+        "duration": "4-8 hours"
+      },
+      {
+        "hour_56": "Data Team deploys migration + Edge Function updates",
+        "dependencies": "Field IDs from CRM Team",
+        "duration": "8 hours"
+      },
+      {
+        "hour_64": "Re-enrich 22 queued leads",
+        "dependencies": "Edge Function deployment",
+        "duration": "2 hours"
+      },
+      {
+        "hour_66": "Validation + monitoring",
+        "dependencies": "Re-enrichment complete",
+        "duration": "6 hours"
+      },
+      {
+        "hour_72": "Phase 0 complete - unblocks V4.0",
+        "dependencies": "All validations pass",
+        "sign_off_required": "3-way approval (Advisor + CRM PM + Data Normalizer)"
+      }
+    ]
+  },
+  "contract_amendment_summary": {
+    "v1_1_2_to_v1_1_3_changes": {
+      "fields_added": 5,
+      "fields_removed": 0,
+      "fields_modified": 0,
+      "breaking_change": false,
+      "emergency_patch": true
+    },
+    "business_impact": {
+      "pillar_1_compliance": "Owner Name enables TCPA proper party identification",
+      "pillar_2_conversion": "Phone/Email/Mailing unlock 0% → 70% dialable lead coverage",
+      "pillar_3_normalization": "Lead Type enables V4.0 Data Normalizer polymorphic routing",
+      "pillar_4_disposition": "Contact data enables instant agent qualification workflow",
+      "pillar_5_scalability": "Lead Type future-proofs 7-source multi-type architecture"
+    },
+    "risk_mitigation": {
+      "cost_risk": "Managed - $0.015/lead increase justified by 2300x ROI",
+      "timeline_risk": "Mitigated - Emergency 48-72hr deployment window with clear critical path",
+      "quality_risk": "Controlled - >70% Personator success rate target, graceful null handling",
+      "v4_0_blocker_risk": "ELIMINATED - Lead Type field unblocks entire V4.0 architecture"
+    }
+  }
+}
