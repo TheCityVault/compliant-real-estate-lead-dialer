@@ -33,6 +33,106 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
+        
+        /* Lead Type Badge Styles (Contract v1.1.3) */
+        .lead-type-badge {
+            display: inline-block;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .lead-type-badge[data-type="NED Listing"] {
+            background: #ff6b6b;
+            color: white;
+        }
+        .lead-type-badge[data-type="Probate/Estate"] {
+            background: #4ecdc4;
+            color: white;
+        }
+        .lead-type-badge[data-type="Absentee Owner"] {
+            background: #ffe66d;
+            color: #333;
+        }
+        .lead-type-badge[data-type="Tax Lien"] {
+            background: #ffa500;
+            color: white;
+        }
+        .lead-type-badge[data-type="Code Violation"] {
+            background: #9b59b6;
+            color: white;
+        }
+        .lead-type-badge[data-type="Foreclosure Auction"] {
+            background: #e74c3c;
+            color: white;
+        }
+        .lead-type-badge[data-type="Tired Landlord"] {
+            background: #27ae60;
+            color: white;
+        }
+        .lead-type-badge[data-type="Unknown"],
+        .lead-type-badge:not([data-type]) {
+            background: #6c757d;
+            color: white;
+        }
+        
+        /* Contact Information Section Styles (Contract v1.1.3) */
+        .contact-information {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .contact-information .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .contact-information .info-row:last-child {
+            border-bottom: none;
+        }
+        .contact-information .label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 150px;
+        }
+        .contact-information .value {
+            flex: 1;
+            text-align: right;
+            color: #212529;
+        }
+        .contact-information .primary-contact {
+            background: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 8px 0;
+        }
+        .phone-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .phone-link:hover {
+            text-decoration: underline;
+        }
+        .copy-btn {
+            margin-left: 8px;
+            padding: 4px 8px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .copy-btn:hover {
+            background: #5a6268;
+        }
+        .missing-data {
+            font-style: italic;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -74,8 +174,242 @@
                     <p class="mt-1 text-base text-gray-900" id="lead-address">{{ lead.address }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-600">Lead Source</label>
-                    <p class="mt-1 text-base text-gray-900" id="lead-source">{{ lead.source }}</p>
+                    <label class="block text-sm font-medium text-gray-600">Lead Type</label>
+                    <div class="mt-1 lead-type-badge" data-type="{{ lead_data.lead_type }}">
+                        <span class="badge-icon">📋</span>
+                        <strong>{{ lead_data.lead_type or 'Unknown' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lead Intelligence Panel (V4.0.6) -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-lg mb-6 p-6 border-2 border-indigo-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">📊 Lead Intelligence</h2>
+                <span class="text-xs text-gray-500 italic">Data Pipeline V4.0</span>
+            </div>
+            
+            <!-- Section 1: Priority Metrics (Most Prominent) -->
+            <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Priority Metrics</h3>
+                <div class="flex items-center justify-center space-x-8">
+                    <!-- Lead Score (Priority 1 - Largest) -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-medium text-gray-600 mb-2">Lead Score</span>
+                        {% if intelligence.lead_score is not none %}
+                            {% if intelligence.lead_score >= 70 %}
+                                <span class="inline-flex items-center justify-center w-20 h-20 rounded-full text-3xl font-bold bg-green-100 text-green-800 border-4 border-green-300">
+                                    {{ intelligence.lead_score|int }}
+                                </span>
+                            {% elif intelligence.lead_score >= 50 %}
+                                <span class="inline-flex items-center justify-center w-20 h-20 rounded-full text-3xl font-bold bg-yellow-100 text-yellow-800 border-4 border-yellow-300">
+                                    {{ intelligence.lead_score|int }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center justify-center w-20 h-20 rounded-full text-3xl font-bold bg-red-100 text-red-800 border-4 border-red-300">
+                                    {{ intelligence.lead_score|int }}
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="inline-flex items-center justify-center w-20 h-20 rounded-full text-lg font-bold bg-gray-100 text-gray-500 border-4 border-gray-300">
+                                N/A
+                            </span>
+                        {% endif %}
+                    </div>
+                    <!-- Lead Tier (Priority 2 - Large) -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-medium text-gray-600 mb-2">Lead Tier</span>
+                        {% if intelligence.lead_tier %}
+                            {% if intelligence.lead_tier == 'HOT' %}
+                                <span class="inline-flex items-center px-6 py-3 rounded-full text-2xl font-bold bg-red-100 text-red-800 border-2 border-red-400">
+                                    🔥 HOT
+                                </span>
+                            {% elif intelligence.lead_tier == 'WARM' %}
+                                <span class="inline-flex items-center px-6 py-3 rounded-full text-2xl font-bold bg-orange-100 text-orange-800 border-2 border-orange-400">
+                                    ⚡ WARM
+                                </span>
+                            {% elif intelligence.lead_tier == 'COLD' %}
+                                <span class="inline-flex items-center px-6 py-3 rounded-full text-2xl font-bold bg-blue-100 text-blue-800 border-2 border-blue-400">
+                                    ❄️ COLD
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-6 py-3 rounded-full text-2xl font-bold bg-gray-100 text-gray-800 border-2 border-gray-400">
+                                    {{ intelligence.lead_tier }}
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="inline-flex items-center px-6 py-3 rounded-full text-lg font-bold bg-gray-100 text-gray-500 border-2 border-gray-300">
+                                Unknown
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- Section 2: Deal Qualification -->
+            <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Deal Qualification</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- Estimated Property Value -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Estimated Property Value</label>
+                        {% if intelligence.estimated_property_value is not none %}
+                            <p class="text-lg font-bold text-gray-900">${{ '{:,.0f}'.format(intelligence.estimated_property_value) }}</p>
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">Unknown</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Equity Percentage -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Equity %</label>
+                        {% if intelligence.equity_percentage is not none %}
+                            {% if intelligence.equity_percentage < 0 %}
+                                <p class="text-lg font-bold text-red-600">{{ '{:.1f}'.format(intelligence.equity_percentage) }}%</p>
+                                <p class="text-xs text-red-500 mt-1">⚠️ Underwater</p>
+                            {% elif intelligence.equity_percentage <= 20 %}
+                                <p class="text-lg font-bold text-orange-600">{{ '{:.1f}'.format(intelligence.equity_percentage) }}%</p>
+                                <p class="text-xs text-orange-500 mt-1">🎯 High Motivation</p>
+                            {% else %}
+                                <p class="text-lg font-bold text-green-600">{{ '{:.1f}'.format(intelligence.equity_percentage) }}%</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">Unknown</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Estimated Equity -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Estimated Equity</label>
+                        {% if intelligence.estimated_equity is not none %}
+                            {% if intelligence.estimated_equity < 0 %}
+                                <p class="text-lg font-bold text-red-600">-${{ '{:,.0f}'.format(intelligence.estimated_equity|abs) }}</p>
+                            {% else %}
+                                <p class="text-lg font-bold text-green-600">+${{ '{:,.0f}'.format(intelligence.estimated_equity) }}</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">Unknown</p>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- Section 3: Property Details -->
+            <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Property Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- Year Built -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Year Built</label>
+                        {% if intelligence.year_built is not none %}
+                            <p class="text-base font-semibold text-gray-900">{{ intelligence.year_built|int }}</p>
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">Unknown</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Property Type -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Property Type</label>
+                        {% if intelligence.property_type %}
+                            {% set clean_type = intelligence.property_type.split('_')[1:] | join(' ') if '_' in intelligence.property_type else intelligence.property_type %}
+                            <p class="text-base font-semibold text-gray-900">{{ clean_type }}</p>
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">Unknown</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Validated Mailing Address -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Validated Mailing Address</label>
+                        {% if intelligence.validated_mailing_address %}
+                            <p class="text-sm text-gray-900 leading-tight">{{ intelligence.validated_mailing_address }}</p>
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">N/A</p>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- Section 4: Compliance & Timeline -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Compliance & Timeline</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- First Publication Date -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">First Publication Date</label>
+                        {% if intelligence.first_publication_date %}
+                            {% set date_parts = intelligence.first_publication_date.split('-') %}
+                            <p class="text-base font-semibold text-gray-900">{{ date_parts[1] }}/{{ date_parts[2] }}/{{ date_parts[0] }}</p>
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">Unknown</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Law Firm Name -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Law Firm Name</label>
+                        {% if intelligence.law_firm_name %}
+                            <div class="flex items-center space-x-2">
+                                <p class="text-base font-semibold text-red-700">{{ intelligence.law_firm_name }}</p>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    ⚖️ Attorney Represented
+                                </span>
+                            </div>
+                            <p class="text-xs text-red-600 mt-1">⚠️ Compliance: Obtain attorney consent before dialing</p>
+                        {% else %}
+                            <p class="text-base font-semibold text-gray-400">N/A</p>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Contact Information Section (Contract v1.1.3) -->
+        <div class="bg-white rounded-lg shadow-md mb-6 p-6">
+            <div class="intelligence-section contact-information">
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">📞 Contact Information</h4>
+                
+                <div class="info-row">
+                    <span class="label">Owner Name:</span>
+                    <span class="value">{{ lead_data.owner_name or 'N/A' }}</span>
+                </div>
+                
+                <div class="info-row primary-contact">
+                    <span class="label">Phone:</span>
+                    <span class="value">
+                        {% if lead_data.owner_phone %}
+                            <a href="tel:{{ lead_data.owner_phone }}" class="phone-link">{{ lead_data.owner_phone }}</a>
+                            <button class="copy-btn" onclick="copyToClipboard('{{ lead_data.owner_phone }}')">📋 Copy</button>
+                        {% else %}
+                            <span class="missing-data" style="color: #e74c3c;">⚠️ No phone available</span>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">Email:</span>
+                    <span class="value">
+                        {% if lead_data.owner_email %}
+                            <a href="mailto:{{ lead_data.owner_email }}" class="phone-link">{{ lead_data.owner_email }}</a>
+                        {% else %}
+                            <span class="missing-data">N/A</span>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="info-row conditional" id="mailing-address-row">
+                    <span class="label">Mailing Address:</span>
+                    <span class="value">{{ lead_data.owner_mailing_address or 'Same as property' }}</span>
                 </div>
             </div>
         </div>
@@ -499,6 +833,57 @@
         validateForm();
 
         // ==========================================
+        // CONTACT INFORMATION FUNCTIONS (Contract v1.1.3)
+        // ==========================================
+        
+        // Hide mailing address row if same as property address
+        function checkMailingAddress() {
+            const mailingAddr = "{{ lead_data.owner_mailing_address }}";
+            const propertyAddr = "{{ intelligence.validated_mailing_address }}";
+            
+            if (mailingAddr === propertyAddr || !mailingAddr || mailingAddr === 'Same as property') {
+                const row = document.getElementById('mailing-address-row');
+                if (row) row.style.display = 'none';
+            }
+        }
+        
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 Phone number copied: ' + text);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('📋 Phone number copied: ' + text);
+            });
+        }
+        
+        // Auto-populate dialer with owner phone if available
+        function initializeDialer() {
+            const ownerPhone = "{{ lead_data.owner_phone }}";
+            const ownerName = "{{ lead_data.owner_name }}";
+            
+            if (ownerPhone) {
+                // Log successful auto-population
+                console.log('✅ Dialer auto-populated with owner phone:', ownerPhone);
+                
+                // Auto-fill contact name in lead name field (if owner name exists)
+                const leadNameEl = document.getElementById('lead-name');
+                if (leadNameEl && ownerName) {
+                    leadNameEl.textContent = ownerName;
+                }
+            } else {
+                console.warn('⚠️ No owner phone available for auto-populate');
+            }
+        }
+
+        // ==========================================
         // TWILIO VOICE SDK INITIALIZATION
         // ==========================================
 
@@ -636,7 +1021,11 @@
         }
 
         // Initialize on page load
-        window.addEventListener('DOMContentLoaded', initializeTwilioClient);
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeTwilioClient();
+            checkMailingAddress();
+            initializeDialer();
+        });
     </script>
 </body>
 </html>

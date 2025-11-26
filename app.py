@@ -103,25 +103,37 @@ def workspace():
             'name': extract_field_value(lead_item, 'Owner Name'),
             'phone': extract_field_value(lead_item, 'Best Contact Number'),
             'address': extract_field_value(lead_item, 'Full Address'),
-            'source': 'Podio Master Lead'
+            'source': 'Podio Master Lead',
+            # Contract v1.1.3 fields
+            'lead_type': extract_field_value(lead_item, 'Lead Type'),
+            'owner_name': extract_field_value(lead_item, 'Owner Name'),
+            'owner_phone': extract_field_value(lead_item, 'Owner Phone'),
+            'owner_email': extract_field_value(lead_item, 'Owner Email'),
+            'owner_mailing_address': extract_field_value(lead_item, 'Owner Mailing Address')
         }
         
-        # V4.0: Extract enriched intelligence data from Data Pipeline
-        intelligence = get_lead_intelligence(lead_item)
+        # V4.0.5: Extract enriched intelligence data from Data Pipeline
+        # Updated to call get_lead_intelligence(item_id) which handles retrieval internally
+        intelligence = get_lead_intelligence(item_id)
         
         print(f"DEBUG: intelligence data extracted:")
         import json
         print(json.dumps(intelligence, indent=2, default=str))
         
-        print(f"DEBUG: lead_data being passed to template:")
+        print(f"DEBUG: lead_data being passed to template (Contract v1.1.3):")
         print(f"  item_id: {lead_data['item_id']}")
         print(f"  name: {lead_data['name']}")
         print(f"  phone: {lead_data['phone']}")
         print(f"  address: {lead_data['address']}")
+        print(f"  lead_type: {lead_data['lead_type']}")
+        print(f"  owner_name: {lead_data['owner_name']}")
+        print(f"  owner_phone: {lead_data['owner_phone']}")
+        print(f"  owner_email: {lead_data['owner_email']}")
+        print(f"  owner_mailing_address: {lead_data['owner_mailing_address']}")
         print("="*50)
         
-        # Render workspace template with lead data
-        return render_template('workspace.html', lead=lead_data, intelligence=intelligence)
+        # Render workspace template with lead data (pass as both 'lead' and 'lead_data' for compatibility)
+        return render_template('workspace.html', lead=lead_data, lead_data=lead_data, intelligence=intelligence)
         
     except Exception as e:
         return f"Error loading workspace: {str(e)}", 500
