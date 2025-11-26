@@ -77,6 +77,13 @@ VALIDATED_MAILING_ADDRESS_FIELD_ID = 274896122
 FIRST_PUBLICATION_DATE_FIELD_ID = 274896123
 LAW_FIRM_NAME_FIELD_ID = 274896414
 
+# V3.6 Contact Fields (Contract v1.1.3 - Phase 0)
+OWNER_NAME_FIELD_ID = 274769677
+OWNER_PHONE_FIELD_ID = 274909275  # CRITICAL: Click-to-dial enabled for direct owner contact
+OWNER_EMAIL_FIELD_ID = 274909276
+OWNER_MAILING_ADDRESS_FIELD_ID = 274909277
+LEAD_TYPE_FIELD_ID = 274909279  # BLOCKS V4.0: Required field for advanced lead categorization
+
 
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
@@ -179,8 +186,9 @@ else:
 # ============================================================================
 
 def validate_enriched_fields():
-    """Validate V4.0 enriched field IDs at startup"""
+    """Validate V4.0 enriched field IDs + V3.6 contact fields at startup"""
     enriched_fields = {
+        # V4.0 Enriched Fields (11 fields)
         'LEAD_SCORE_FIELD_ID': LEAD_SCORE_FIELD_ID,
         'LEAD_TIER_FIELD_ID': LEAD_TIER_FIELD_ID,
         'ESTIMATED_PROPERTY_VALUE_FIELD_ID': ESTIMATED_PROPERTY_VALUE_FIELD_ID,
@@ -192,10 +200,16 @@ def validate_enriched_fields():
         'VALIDATED_MAILING_ADDRESS_FIELD_ID': VALIDATED_MAILING_ADDRESS_FIELD_ID,
         'FIRST_PUBLICATION_DATE_FIELD_ID': FIRST_PUBLICATION_DATE_FIELD_ID,
         'LAW_FIRM_NAME_FIELD_ID': LAW_FIRM_NAME_FIELD_ID,
+        # V3.6 Contact Fields (5 fields - Contract v1.1.3)
+        'OWNER_NAME_FIELD_ID': OWNER_NAME_FIELD_ID,
+        'OWNER_PHONE_FIELD_ID': OWNER_PHONE_FIELD_ID,
+        'OWNER_EMAIL_FIELD_ID': OWNER_EMAIL_FIELD_ID,
+        'OWNER_MAILING_ADDRESS_FIELD_ID': OWNER_MAILING_ADDRESS_FIELD_ID,
+        'LEAD_TYPE_FIELD_ID': LEAD_TYPE_FIELD_ID,
     }
     
     print(f"\n{'='*50}")
-    print(f"=== V4.0 ENRICHED FIELD VALIDATION ===")
+    print(f"=== V4.0 ENRICHED FIELD + V3.6 CONTACT FIELD VALIDATION ===")
     all_valid = True
     for field_name, field_id in enriched_fields.items():
         if field_id is not None:
@@ -205,9 +219,9 @@ def validate_enriched_fields():
             all_valid = False
     
     if all_valid:
-        print(f"✅ All 11 enriched field IDs validated successfully")
+        print(f"✅ All 16 field IDs validated successfully (11 enriched + 5 contact)")
     else:
-        print(f"⚠️ WARNING: Some enriched field IDs are missing")
+        print(f"⚠️ WARNING: Some field IDs are missing")
     print(f"{'='*50}\n")
     
     return all_valid
