@@ -22,7 +22,8 @@ from config import (
     TWILIO_API_SECRET,
     TWILIO_TWIML_APP_SID,
     DISPOSITION_TASK_MAPPING,  # V3.3: Task automation mapping
-    validate_environment
+    validate_environment,
+    VALIDATED_MAILING_ADDRESS_FIELD_ID  # V4.0.6: Property Address field ID
 )
 
 # Import service functions
@@ -38,9 +39,11 @@ from twilio_service import (
 from podio_service import (
     get_podio_item,
     extract_field_value,
+    extract_field_value_by_id,  # V4.0.6: Field ID based extraction (robust to renames)
     create_call_activity_item,
     update_call_activity_recording,  # V3.2.3
-    create_follow_up_task  # V3.3: Automated task creation
+    create_follow_up_task,  # V3.3: Automated task creation
+    get_lead_intelligence  # V4.0: Add intelligence extraction
 )
 
 from db_service import (
@@ -97,23 +100,46 @@ def workspace():
             print(f"  - {field_label} (ID: {field_id}): {field_values}")
         
         # Extract lead data for workspace
+        # V4.0.6 FIX: Lead Information section shows OWNER contact info (for reaching the owner)
+        # - address: Owner Mailing Address (274909277) - where to send direct mail to contact owner
+        # Note: Property Address (274896122) is displayed in Property Details section via intelligence data
+        from config import OWNER_MAILING_ADDRESS_FIELD_ID
         lead_data = {
             'item_id': item_id,
             'name': extract_field_value(lead_item, 'Owner Name'),
             'phone': extract_field_value(lead_item, 'Best Contact Number'),
-            'address': extract_field_value(lead_item, 'Full Address'),
-            'source': 'Podio Master Lead'
+            'address': extract_field_value_by_id(lead_item, OWNER_MAILING_ADDRESS_FIELD_ID),  # Owner Mailing Address (ID: 274909277)
+            'source': 'Podio Master Lead',
+            # Contract v1.1.3 fields
+            'lead_type': extract_field_value(lead_item, 'Lead Type'),
+            'owner_name': extract_field_value(lead_item, 'Owner Name'),
+            'owner_phone': extract_field_value(lead_item, 'Owner Phone'),
+            'owner_email': extract_field_value(lead_item, 'Owner Email'),
+            'owner_mailing_address': extract_field_value(lead_item, 'Owner Mailing Address')
         }
         
-        print(f"DEBUG: lead_data being passed to template:")
+        # V4.0.5: Extract enriched intelligence data from Data Pipeline
+        # Updated to call get_lead_intelligence(item_id) which handles retrieval internally
+        intelligence = get_lead_intelligence(item_id)
+        
+        print(f"DEBUG: intelligence data extracted:")
+        import json
+        print(json.dumps(intelligence, indent=2, default=str))
+        
+        print(f"DEBUG: lead_data being passed to template (Contract v1.1.3):")
         print(f"  item_id: {lead_data['item_id']}")
         print(f"  name: {lead_data['name']}")
         print(f"  phone: {lead_data['phone']}")
         print(f"  address: {lead_data['address']}")
+        print(f"  lead_type: {lead_data['lead_type']}")
+        print(f"  owner_name: {lead_data['owner_name']}")
+        print(f"  owner_phone: {lead_data['owner_phone']}")
+        print(f"  owner_email: {lead_data['owner_email']}")
+        print(f"  owner_mailing_address: {lead_data['owner_mailing_address']}")
         print("="*50)
         
-        # Render workspace template with lead data
-        return render_template('workspace.html', lead=lead_data)
+        # Render workspace template with lead data (pass as both 'lead' and 'lead_data' for compatibility)
+        return render_template('workspace.html', lead=lead_data, lead_data=lead_data, intelligence=intelligence)
         
     except Exception as e:
         return f"Error loading workspace: {str(e)}", 500

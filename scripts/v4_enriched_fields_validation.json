@@ -1,0 +1,104 @@
+{
+  "app_id": "30549135",
+  "validation_passed": true,
+  "total_fields_in_app": 40,
+  "enriched_fields_validated": 11,
+  "enriched_fields_missing": 0,
+  "type_mismatches": 0,
+  "data_team_authorization": "APPROVED",
+  "results": {
+    "fields_validated": [
+      {
+        "field_id": 274896114,
+        "name": "Lead Score",
+        "expected_type": "number",
+        "actual_type": "number",
+        "type_match": true,
+        "ui_priority": 1
+      },
+      {
+        "field_id": 274896115,
+        "name": "Lead Tier",
+        "expected_type": "category",
+        "actual_type": "category",
+        "type_match": true,
+        "ui_priority": 2
+      },
+      {
+        "field_id": 274896116,
+        "name": "Estimated Property Value",
+        "expected_type": "money",
+        "actual_type": "money",
+        "type_match": true,
+        "ui_priority": 3
+      },
+      {
+        "field_id": 274896117,
+        "name": "Equity Percentage",
+        "expected_type": "number",
+        "actual_type": "number",
+        "type_match": true,
+        "ui_priority": 4
+      },
+      {
+        "field_id": 274896118,
+        "name": "Estimated Equity",
+        "expected_type": "money",
+        "actual_type": "money",
+        "type_match": true,
+        "ui_priority": 5
+      },
+      {
+        "field_id": 274896119,
+        "name": "Year Built",
+        "expected_type": "number",
+        "actual_type": "number",
+        "type_match": true,
+        "ui_priority": 6
+      },
+      {
+        "field_id": 274896120,
+        "name": "Property Type",
+        "expected_type": "category",
+        "actual_type": "category",
+        "type_match": true,
+        "ui_priority": 7
+      },
+      {
+        "field_id": 274896121,
+        "name": "APN",
+        "expected_type": "text",
+        "actual_type": "text",
+        "type_match": true,
+        "ui_priority": 8
+      },
+      {
+        "field_id": 274896122,
+        "name": "Validated Mailing Address",
+        "expected_type": "text",
+        "actual_type": "text",
+        "type_match": true,
+        "ui_priority": 9
+      },
+      {
+        "field_id": 274896123,
+        "name": "First Publication Date",
+        "expected_type": "date",
+        "actual_type": "date",
+        "type_match": true,
+        "ui_priority": 10
+      },
+      {
+        "field_id": 274896414,
+        "name": "Law Firm Name",
+        "expected_type": "category",
+        "actual_type": "category",
+        "type_match": true,
+        "ui_priority": 11
+      }
+    ],
+    "fields_missing": [],
+    "type_mismatches": [],
+    "all_fields_valid": true
+  }
+}

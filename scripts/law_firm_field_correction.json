@@ -1,0 +1,19 @@
+{
+  "amendment": "v1.1.3-A2",
+  "timestamp": "2025-11-29T03:39:05.336537Z",
+  "action": "CATEGORY \u2192 TEXT field type change",
+  "app_id": 30549135,
+  "old_field": {
+    "field_id": 274896414,
+    "type": "category",
+    "status": "deleted"
+  },
+  "new_field": {
+    "field_id": 274943276,
+    "type": "text",
+    "label": "Law Firm Name",
+    "status": "created"
+  },
+  "reason": "Data Team sync failing - CATEGORY type cannot accept arbitrary law firm names",
+  "error_fixed": "\"attribute-law-firm-name\" has an invalid option \"Barrett, Frappier & Weisserman, LLP\""
+}

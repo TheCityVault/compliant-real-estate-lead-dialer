@@ -1,0 +1,211 @@
+{
+  "contract_version": "1.0",
+  "contract_type": "baseline",
+  "status": "ACTIVE",
+  "effective_date": "2025-11-25",
+  "description": "Production Baseline - Pre-Enrichment (V3.3 Complete)",
+  "podio_app": {
+    "app_id": "30549135",
+    "app_name": "Master Lead App",
+    "workspace": "Real Estate Lead Management"
+  },
+  "schema_ownership": {
+    "maintained_by": "CRM Team",
+    "integration_partner": "Data Pipeline Team (V4.0+)",
+    "last_updated": "2025-11-25"
+  },
+  "existing_fields": [
+    {
+      "field_id": 274769797,
+      "field_name": "Title",
+      "field_type": "text",
+      "field_category": "system",
+      "required": true,
+      "description": "Lead identifier/title",
+      "current_usage": {
+        "populated_by": "Manual entry or import",
+        "used_in_ui": true,
+        "used_in_workflow": true,
+        "business_purpose": "Primary lead identification"
+      },
+      "data_source": "Manual/Import",
+      "introduced_in_version": "V1.0"
+    },
+    {
+      "field_id": 274851083,
+      "field_name": "Disposition Code",
+      "field_type": "category",
+      "field_category": "agent_workspace",
+      "required": false,
+      "description": "Call outcome classification",
+      "current_usage": {
+        "populated_by": "Agent via workspace.html form",
+        "used_in_ui": true,
+        "used_in_workflow": true,
+        "business_purpose": "Track call outcomes and trigger automated task creation"
+      },
+      "allowed_values": [
+        "Voicemail",
+        "No Answer",
+        "Appointment Set",
+        "Callback Scheduled",
+        "Not Interested",
+        "Wrong Number",
+        "Do Not Call"
+      ],
+      "data_source": "Agent Input",
+      "introduced_in_version": "V2.0",
+      "workflow_integration": {
+        "triggers_task_creation": true,
+        "task_mapping": "See DISPOSITION_TASK_MAPPING in config.py"
+      }
+    },
+    {
+      "field_id": 274851084,
+      "field_name": "Agent Notes",
+      "field_type": "text",
+      "field_category": "agent_workspace",
+      "required": false,
+      "description": "Free-form notes captured during call",
+      "current_usage": {
+        "populated_by": "Agent via workspace.html form",
+        "used_in_ui": true,
+        "used_in_workflow": false,
+        "business_purpose": "Capture conversation details and context for follow-up"
+      },
+      "data_source": "Agent Input",
+      "introduced_in_version": "V2.0"
+    },
+    {
+      "field_id": 274851085,
+      "field_name": "Motivation Level",
+      "field_type": "category",
+      "field_category": "agent_workspace",
+      "required": false,
+      "description": "Agent's assessment of prospect motivation",
+      "current_usage": {
+        "populated_by": "Agent via workspace.html form",
+        "used_in_ui": true,
+        "used_in_workflow": false,
+        "business_purpose": "Qualify lead urgency and conversion probability"
+      },
+      "allowed_values": [
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "data_source": "Agent Assessment",
+      "introduced_in_version": "V2.0"
+    },
+    {
+      "field_id": 274851086,
+      "field_name": "Next Action Date",
+      "field_type": "date",
+      "field_category": "agent_workspace",
+      "required": false,
+      "description": "Scheduled date for next contact attempt",
+      "current_usage": {
+        "populated_by": "Agent via workspace.html form",
+        "used_in_ui": true,
+        "used_in_workflow": false,
+        "business_purpose": "Schedule follow-up activities"
+      },
+      "data_source": "Agent Input",
+      "introduced_in_version": "V2.0"
+    },
+    {
+      "field_id": 274851087,
+      "field_name": "Asking Price",
+      "field_type": "money",
+      "field_category": "agent_workspace",
+      "required": false,
+      "description": "Property asking price captured during call",
+      "current_usage": {
+        "populated_by": "Agent via workspace.html form",
+        "used_in_ui": true,
+        "used_in_workflow": false,
+        "business_purpose": "Track property valuation for deal qualification"
+      },
+      "data_source": "Agent Input",
+      "introduced_in_version": "V2.0",
+      "notes": "Manual entry - will be complemented by automated 'Estimated Property Value' in V4.0"
+    }
+  ],
+  "related_apps": {
+    "call_activity_app": {
+      "app_id": "30549170",
+      "relationship_field_id": 274851864,
+      "description": "Tracks individual call records with relationship back to Master Lead",
+      "key_fields": [
+        {
+          "field_id": 274769799,
+          "field_name": "Date of Call",
+          "field_type": "date"
+        },
+        {
+          "field_id": 274769800,
+          "field_name": "Call Duration",
+          "field_type": "duration"
+        },
+        {
+          "field_id": 274769801,
+          "field_name": "Recording URL",
+          "field_type": "text"
+        }
+      ]
+    },
+    "task_app": {
+      "app_id": "TBD",
+      "description": "Automated task creation based on disposition codes (V3.3)",
+      "integration_status": "Active"
+    }
+  },
+  "integration_readiness": {
+    "v4_enrichment_status": "READY_FOR_ENRICHMENT_FIELDS",
+    "available_field_slots": "10+ new fields can be added without conflicts",
+    "recommended_enrichment_categories": [
+      "Lead Scoring & Prioritization",
+      "Property Valuation & Equity",
+      "Compliance & Legal Status",
+      "Urgency & Time Metrics",
+      "Contact Validation"
+    ]
+  },
+  "field_statistics": {
+    "total_fields": 6,
+    "agent_workspace_fields": 5,
+    "system_fields": 1,
+    "required_fields": 1,
+    "optional_fields": 5
+  },
+  "version_history": {
+    "v1.0": {
+      "date": "2025-11-25",
+      "changes": "Initial baseline documentation of existing Master Lead App fields",
+      "project_version": "V3.3 Complete (Task Automation)",
+      "notes": "This contract represents the production state before V4.0 Data Pipeline integration"
+    }
+  },
+  "notes": [
+    "This is the production baseline schema as of V3.3 (Task Automation Complete)",
+    "All field IDs are confirmed from config.py",
+    "V4.0 will add 10 new enriched fields via bilateral contract with Data Team",
+    "Field IDs marked as 'TBD' in related apps will be updated when available",
+    "This contract serves as the reference point for all V4.0 enrichment additions"
+  ],
+  "next_steps": {
+    "phase_4_0_2": "Await bilateral contract delivery from Data Team with 10 enriched field specifications",
+    "expected_fields": [
+      "Lead Score (0-100)",
+      "Lead Tier (HOT/WARM/COLD)",
+      "Estimated Property Value",
+      "Equity Percentage",
+      "Law Firm Name",
+      "First Publication Date",
+      "Days on Market",
+      "Owner Phone Validation Status",
+      "Property Type",
+      "Lien Count"
+    ]
+  }
+}

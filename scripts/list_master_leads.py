@@ -31,8 +31,8 @@ def main():
     token = get_podio_token()
     print("✓ Authentication successful\n")
     
-    # Master Lead app ID
-    app_id = 30549169
+    # Master Lead app ID (corrected to match contract)
+    app_id = 30549135
     
     print(f"Fetching items from Master Lead app (ID: {app_id})...")
     

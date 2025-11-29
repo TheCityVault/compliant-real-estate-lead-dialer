@@ -33,6 +33,24 @@ from config import (
     TASK_TYPE_FIELD_ID,
     TASK_DUE_DATE_FIELD_ID,
     TASK_MASTER_LEAD_RELATIONSHIP_FIELD_ID,
+    # V4.0 Enriched Data Field IDs
+    LEAD_SCORE_FIELD_ID,
+    LEAD_TIER_FIELD_ID,
+    ESTIMATED_PROPERTY_VALUE_FIELD_ID,
+    EQUITY_PERCENTAGE_FIELD_ID,
+    ESTIMATED_EQUITY_FIELD_ID,
+    YEAR_BUILT_FIELD_ID,
+    PROPERTY_TYPE_FIELD_ID,
+    APN_FIELD_ID,
+    VALIDATED_MAILING_ADDRESS_FIELD_ID,
+    FIRST_PUBLICATION_DATE_FIELD_ID,
+    LAW_FIRM_NAME_FIELD_ID,
+    # V3.6 Contact Fields (Contract v1.1.3)
+    OWNER_NAME_FIELD_ID,
+    OWNER_PHONE_FIELD_ID,
+    OWNER_EMAIL_FIELD_ID,
+    OWNER_MAILING_ADDRESS_FIELD_ID,
+    LEAD_TYPE_FIELD_ID,
     podio_access_token
 )
 
@@ -174,15 +192,30 @@ def extract_field_value(item, field_label):
         
     Returns:
         str: Field value, or empty string if not found
+        
+    Note:
+        V3.6 Fix: Handles multiple field types:
+        - Text fields: {'value': '<p>Name</p>'} -> strips HTML
+        - Category fields: {'value': {'text': 'NED Listing', ...}} -> extracts 'text'
+        - Other fields: converts to string
     """
     for field in item.get('fields', []):
         if field.get('label') == field_label:
             values = field.get('values', [])
             if values:
                 value = values[0]
+                
                 # Handle different field types
                 if isinstance(value, dict):
-                    text = value.get('value', '')
+                    inner_value = value.get('value', '')
+                    
+                    # V3.6 FIX: Handle category fields with nested {'text': '...'} structure
+                    if isinstance(inner_value, dict):
+                        # Category field - extract 'text' property
+                        text = inner_value.get('text', '')
+                    else:
+                        # Text field or other - convert to string
+                        text = str(inner_value) if inner_value is not None else ''
                 else:
                     text = str(value)
                 
@@ -190,6 +223,140 @@ def extract_field_value(item, field_label):
                 text = re.sub(r'<[^>]+>', '', text)
                 return text.strip()
     return ''
+
+def extract_field_value_by_id(item, field_id, field_type=None):
+    """
+    Extract field value from Podio item by field ID (V4.0.5 Enhanced)
+    
+    Args:
+        item: Podio item dictionary
+        field_id: Numeric field ID to extract
+        field_type: Optional field type hint (number, category, money, text, date)
+                   If not provided, type is auto-detected from field metadata
+        
+    Returns:
+        Extracted value (type varies: int, float, str), or None if not found
+        
+    Note:
+        Handles all Podio field types: number, category, money, text, date.
+        Returns None for graceful degradation in UI.
+    """
+    if not item:
+        return None
+    
+    for field in item.get('fields', []):
+        if field.get('field_id') == int(field_id):
+            values = field.get('values', [])
+            if not values:
+                return None
+            
+            value = values[0]
+            # Use provided field_type or auto-detect from field metadata
+            detected_type = field.get('type')
+            field_type = field_type or detected_type
+            
+            # Handle different Podio field types
+            if field_type == 'category':
+                # Category fields: [{'value': {'text': 'WARM', ...}}]
+                # Extract nested 'value' dict first
+                if isinstance(value, dict) and 'value' in value:
+                    inner_value = value['value']
+                    return inner_value.get('text') if isinstance(inner_value, dict) else str(inner_value)
+                # Fallback for direct structure (shouldn't happen but defensive)
+                return value.get('text') if isinstance(value, dict) else str(value)
+            elif field_type == 'money':
+                # Money fields: [{'value': '323000.0000', 'currency': 'USD'}]
+                # Already handles nested 'value' correctly
+                return float(value.get('value')) if isinstance(value, dict) else None
+            elif field_type == 'number':
+                # Number fields: [{'value': '65.0000'}]
+                # Extract nested 'value' string first
+                if isinstance(value, dict) and 'value' in value:
+                    try:
+                        return float(value['value']) if value['value'] else None
+                    except (ValueError, TypeError):
+                        return None
+                # Fallback for direct value (old behavior)
+                try:
+                    return float(value) if value else None
+                except (ValueError, TypeError):
+                    return None
+            elif field_type == 'date':
+                # Date fields return dict with 'start' key (YYYY-MM-DD format)
+                return value.get('start') if isinstance(value, dict) else str(value)
+            elif field_type == 'text':
+                # Text fields: [{'value': '<p>R0090271</p>'}]
+                # Extract nested 'value' first
+                if isinstance(value, dict) and 'value' in value:
+                    text = value['value']
+                else:
+                    text = str(value) if value else None
+                
+                if text:
+                    text = re.sub(r'<[^>]+>', '', str(text))
+                    return text.strip()
+                return None
+            else:
+                # Default: return raw value
+                return value
+    return None
+
+def get_lead_intelligence(item_id):
+    """
+    Extract all V4.0.5 enriched intelligence fields + V3.6 contact fields from Podio Master Lead item
+    
+    Args:
+        item_id: Podio Master Lead item ID to retrieve and extract from
+        
+    Returns:
+        dict: Intelligence data with all enriched fields, or empty dict if item not found
+        
+    Note:
+        All fields return None if not populated (graceful degradation).
+        UI layer must handle None values appropriately (display "Unknown" or "N/A").
+        This function retrieves the item from Podio and extracts 16 total fields:
+        - 11 V4.0 enriched fields (Contract v1.1.2)
+        - 5 V3.6 contact fields (Contract v1.1.3)
+    """
+    # Retrieve the lead item from Podio
+    item = get_podio_item(item_id)
+    
+    if not item:
+        print(f"WARNING: Could not retrieve item {item_id} for intelligence extraction")
+        return {}
+    
+    intelligence = {
+        # Priority Metrics (ui_priority 1-2) - MOST IMPORTANT
+        'lead_score': extract_field_value_by_id(item, LEAD_SCORE_FIELD_ID),
+        'lead_tier': extract_field_value_by_id(item, LEAD_TIER_FIELD_ID),
+        
+        # Deal Qualification (ui_priority 3-5) - FINANCIAL INTELLIGENCE
+        'estimated_property_value': extract_field_value_by_id(item, ESTIMATED_PROPERTY_VALUE_FIELD_ID),
+        'equity_percentage': extract_field_value_by_id(item, EQUITY_PERCENTAGE_FIELD_ID),
+        'estimated_equity': extract_field_value_by_id(item, ESTIMATED_EQUITY_FIELD_ID),
+        
+        # Property Details (ui_priority 6-7) - CONTEXT
+        'year_built': extract_field_value_by_id(item, YEAR_BUILT_FIELD_ID),
+        'property_type': extract_field_value_by_id(item, PROPERTY_TYPE_FIELD_ID),
+        
+        # Contact & Context (ui_priority 9) - APN hidden, address displayed
+        'validated_mailing_address': extract_field_value_by_id(item, VALIDATED_MAILING_ADDRESS_FIELD_ID),
+        
+        # Timeline & Compliance (ui_priority 10-11) - REGULATORY
+        'first_publication_date': extract_field_value_by_id(item, FIRST_PUBLICATION_DATE_FIELD_ID),
+        'law_firm_name': extract_field_value_by_id(item, LAW_FIRM_NAME_FIELD_ID),
+    }
+    
+    # V3.6 Contact Fields (Contract v1.1.3) - NEW
+    intelligence.update({
+        'owner_name': extract_field_value_by_id(item, OWNER_NAME_FIELD_ID),
+        'owner_phone': extract_field_value_by_id(item, OWNER_PHONE_FIELD_ID),  # Click-to-dial enabled
+        'owner_email': extract_field_value_by_id(item, OWNER_EMAIL_FIELD_ID),
+        'owner_mailing_address': extract_field_value_by_id(item, OWNER_MAILING_ADDRESS_FIELD_ID),
+        'lead_type': extract_field_value_by_id(item, LEAD_TYPE_FIELD_ID),  # Required for V4.0
+    })
+    
+    return intelligence
 
 # ============================================================================
 # DATA TRANSFORMATION UTILITIES
