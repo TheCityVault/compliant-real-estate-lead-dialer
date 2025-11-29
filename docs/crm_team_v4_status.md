@@ -2,9 +2,9 @@
 
 **Document Type:** Collaborative Project Status (CRM Team Perspective)  
 **Counterpart Document:** [`docs/data_team_v4_status.md`](docs/data_team_v4_status.md:1)  
-**Last Updated:** 2025-11-29 (Phase 0 COMPLETE - Lead Sync Verified)
+**Last Updated:** 2025-11-29 (Phase 1 STARTED - Contract v2.0 Review In Progress)
 **Document Owner:** CRM PM Mode
-**Current Phase:** Phase 0 - V3.6 Schema Updates ✅ COMPLETE
+**Current Phase:** Phase 1 - V4.0 Contract v2.0 Review 🚧 IN PROGRESS
 
 ---
 
@@ -54,14 +54,14 @@ Transform the Compliant Lead Dialer from a single-source calling tool into an **
 
 ### **Upcoming Phases Overview:**
 
-| Phase | Name                          | Timeline  | Status      | Blocker                      |
-| ----- | ----------------------------- | --------- | ----------- | ---------------------------- |
-| **0** | V3.6 Schema Updates           | 2-3 days  | ✅ COMPLETE | N/A (all blockers resolved)  |
-| **1** | V4.0 Contract v2.0 Review     | Week 2-3  | 🟡 READY    | Phase 0 complete ✅          |
-| **2** | V4.0 Podio Schema (46 fields) | Week 3-4  | ⏸️ PENDING  | Contract v2.0 approval       |
-| **3** | V4.1 Probate UI Enhancements  | Week 5-6  | ⏸️ PENDING  | Probate scraper operational  |
-| **4** | V4.2 Absentee UI Enhancements | Week 7-8  | ⏸️ PENDING  | Absentee scraper operational |
-| **5** | V4.3 Final UI Polish          | Week 9-10 | ⏸️ PENDING  | All 7 lead types operational |
+| Phase | Name                          | Timeline  | Status        | Blocker                      |
+| ----- | ----------------------------- | --------- | ------------- | ---------------------------- |
+| **0** | V3.6 Schema Updates           | 2-3 days  | ✅ COMPLETE   | N/A (all blockers resolved)  |
+| **1** | V4.0 Contract v2.0 Review     | Week 2-3  | 🚧 IN PROGRESS | Phase 0 complete ✅          |
+| **2** | V4.0 Podio Schema (46 fields) | Week 3-4  | ⏸️ PENDING    | Contract v2.0 approval       |
+| **3** | V4.1 Probate UI Enhancements  | Week 5-6  | ⏸️ PENDING    | Probate scraper operational  |
+| **4** | V4.2 Absentee UI Enhancements | Week 7-8  | ⏸️ PENDING    | Absentee scraper operational |
+| **5** | V4.3 Final UI Polish          | Week 9-10 | ⏸️ PENDING    | All 7 lead types operational |
 
 ---
 
@@ -704,6 +704,30 @@ Data Team initially described this as "non-breaking" with "field ID unchanged". 
 
 **Business Justification (Core Pillar #5 - Scalability):**
 TEXT field accepts any law firm name string without manual category maintenance. Zero-maintenance syncing supports growth to 100+ law firms.
+
+---
+
+### **🚧 PHASE 1 STARTED** ⭐ CURRENT PHASE
+
+**Start Date:** 2025-11-29
+**Feature Branch:** `feature/v4-0-contract-v2-review`
+**Status:** 🚧 IN PROGRESS - Contract v2.0 Draft Creation
+
+**Objective:**
+Review and approve comprehensive contract v2.0 defining ~46 Podio fields for all 7 lead types. This enables 2+ years of multi-source growth without repeated schema overhauls.
+
+**Phase 1 Tasks:**
+
+| Task | Description | Assignee | Status |
+|------|-------------|----------|--------|
+| 1.1 | Validate Podio Technical Feasibility (46 fields) | CRM PM | ⏸️ PENDING |
+| 1.2 | Validate Business Value of Field Bundles | CRM PM + Advisor | ⏸️ PENDING |
+| 1.3 | Plan Implementation Sprint | CRM PM | ⏸️ PENDING |
+| 1.4 | Approve Contract v2.0 | CRM PM + Advisor | ⏸️ PENDING |
+
+**Contract v2.0 Draft:** `docs/integration_contracts/podio-schema-v2.0.json` (TO BE CREATED)
+
+**Blocking Issues:** None identified
 
 ---
 
