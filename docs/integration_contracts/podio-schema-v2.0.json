@@ -1,0 +1,997 @@
+{
+  "contract_metadata": {
+    "contract_version": "2.0.0",
+    "effective_date": "2025-12-03",
+    "status": "pending_crm_approval",
+    "podio_app_id": "30549135",
+    "finalized": false,
+    "finalized_date": null,
+    "data_source_project": "Data Pipeline V4.0 Multi-Source Architecture",
+    "target_system": "Podio Master Lead App (CRM)",
+    "review_sla_hours": 48,
+    "deprecation_grace_period_days": 30,
+    "amendment_type": "major_version",
+    "parent_contract_version": "1.1.3",
+    "breaking_change": false,
+    "notes": [
+      "Multi-source schema supporting all 7 lead types",
+      "47 total fields (16 universal + 31 lead-type-specific)",
+      "Field IDs TBD - CRM Team to provide during implementation",
+      "Phase 3 Contract - enables parallel scraper development",
+      "v1.6 Amendment (2025-11-29): Added Field 47 (court_jurisdiction), aligned null_handling for Tired Landlord fields"
+    ],
+    "crm_approval": {
+      "approved_by": null,
+      "approved_date": null,
+      "review_notes": "Pending CRM Team review - 48hr SLA from 2025-11-29"
+    },
+    "data_normalizer_approval": {
+      "approved_by": "Data Normalizer Mode",
+      "approved_date": "2025-11-29",
+      "approval_status": "APPROVED",
+      "review_notes": "JSONB schema alignment validated. 6 amendments applied to Directives v1.6. See docs/contract_v2.0_jsonb_validation_report.md"
+    },
+    "high_level_advisor_approval": {
+      "approved_by": "High-Level Advisor Mode",
+      "approved_date": "2025-11-29",
+      "approval_status": "APPROVED",
+      "review_notes": "Strategic alignment validated against 5 Core Pillars. All 47 fields have documented business rationale. Directives amendments approved for bilateral alignment."
+    }
+  },
+  "governance": {
+    "versioning_protocol": "semantic_versioning",
+    "approval_required_from": ["Data PM", "CRM PM", "High-Level Advisor", "Data Normalizer"],
+    "change_management": {
+      "field_additions": "requires_approval",
+      "field_removals": "requires_30day_deprecation",
+      "field_type_changes": "breaking_change"
+    }
+  },
+
+  "section_organization": {
+    "description": "Recommended Podio section organization for agent usability",
+    "sections": [
+      {
+        "section_name": "Lead Intelligence",
+        "field_priority_range": [1, 2, 16],
+        "display_always": true,
+        "description": "Critical scoring and classification - always visible"
+      },
+      {
+        "section_name": "Contact Details",
+        "field_priority_range": [12, 13, 14, 15, 44, 45, 46],
+        "display_always": true,
+        "description": "Primary and secondary owner contact information"
+      },
+      {
+        "section_name": "Property Details",
+        "field_priority_range": [3, 4, 5, 6, 7, 8, 9],
+        "display_always": true,
+        "description": "Property valuation, equity, and characteristics"
+      },
+      {
+        "section_name": "NED Foreclosure Fields",
+        "field_priority_range": [10, 11, 17, 18, 19],
+        "display_condition": "lead_type = 'NED Listing'",
+        "hidden_if_empty": true,
+        "description": "NED-specific foreclosure data"
+      },
+      {
+        "section_name": "Probate/Estate Fields",
+        "field_priority_range": [20, 21, 22, 23, 24, 47],
+        "display_condition": "lead_type = 'Probate/Estate'",
+        "hidden_if_empty": true,
+        "description": "Probate case, executor, and court jurisdiction information"
+      },
+      {
+        "section_name": "Property Owner Intelligence",
+        "field_priority_range": [25, 26, 27, 28, 29],
+        "display_condition": "lead_type IN ('Absentee Owner', 'Tired Landlord')",
+        "hidden_if_empty": true,
+        "description": "Landlord portfolio and ownership history"
+      },
+      {
+        "section_name": "Tax Lien Fields",
+        "field_priority_range": [30, 31, 32, 33],
+        "display_condition": "lead_type = 'Tax Lien'",
+        "hidden_if_empty": true,
+        "description": "Tax delinquency and redemption data"
+      },
+      {
+        "section_name": "Code Violation Fields",
+        "field_priority_range": [34, 35, 36, 37],
+        "display_condition": "lead_type = 'Code Violation'",
+        "hidden_if_empty": true,
+        "description": "Municipal violation and fine data"
+      },
+      {
+        "section_name": "Foreclosure Auction Fields",
+        "field_priority_range": [38, 39, 40, 41, 42],
+        "display_condition": "lead_type = 'Foreclosure Auction'",
+        "hidden_if_empty": true,
+        "description": "Live auction platform and registration data"
+      },
+      {
+        "section_name": "Compliance & Risk",
+        "field_priority_range": [43],
+        "display_always": true,
+        "description": "TCPA compliance and owner-occupied status"
+      }
+    ]
+  },
+
+  "enriched_fields": [
+    {
+      "_comment": "========== SECTION: Lead Intelligence (Universal) ==========",
+      "field_priority": 1,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "lead_score",
+      "podio_field_name": "Lead Score",
+      "podio_field_id": "274896114",
+      "field_type": "number",
+      "section": "Lead Intelligence",
+      "business_rationale": "**PILLAR #2 (CONVERSION)**: Composite score (0-100) synthesizing Financial Duress (30pts), Physical Condition (12pts), Emotional/Life Event (48pts), and Timeline Urgency (10pts). Drives prioritized dialing queue.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "lead_intelligence",
+        "ui_priority": 1,
+        "use_for_lead_routing": true,
+        "display_format": "large_badge_score"
+      },
+      "null_handling": "required",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 2,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "lead_tier",
+      "podio_field_name": "Lead Tier",
+      "podio_field_id": "274896115",
+      "field_type": "category",
+      "allowed_values": ["Platinum", "Gold", "Silver", "Bronze"],
+      "section": "Lead Intelligence",
+      "business_rationale": "**PILLAR #2 (CONVERSION)**: Qualitative tier: Platinum=NED/Auction (hard deadline), Gold=Tax Lien/Probate, Silver=Absentee/Code, Bronze=Cold.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "lead_intelligence",
+        "ui_priority": 2,
+        "display_format": "colored_badge"
+      },
+      "null_handling": "required",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "_comment": "========== SECTION: Property Details (Universal) ==========",
+      "field_priority": 3,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "estimated_property_value",
+      "podio_field_name": "Estimated Property Value",
+      "podio_field_id": "274896116",
+      "field_type": "money",
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #4 (DISPOSITION)**: ARV baseline from Melissa GrpEstimatedValue. Critical for MAO calculation: MAO = ARV × 0.70 - Repairs - Fee.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 3,
+        "display_format": "currency_usd"
+      },
+      "null_handling": "nullable_with_warning",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 4,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "equity_percentage",
+      "podio_field_name": "Equity %",
+      "podio_field_id": "274896117",
+      "field_type": "number",
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #2 (CONVERSION)**: Dynamic LTV. Sweet spot 80-95% LTV = Maximum motivation with negotiable equity.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 4,
+        "display_format": "percentage_gauge"
+      },
+      "null_handling": "nullable_with_warning",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 5,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "estimated_equity",
+      "podio_field_name": "Estimated Equity",
+      "podio_field_id": "274896118",
+      "field_type": "money",
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #4 (DISPOSITION)**: Dollar equity = Value - Debt. Sets negotiation ceiling. If <$20K, wholesale may not be viable.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 5,
+        "display_format": "currency_usd"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 6,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "year_built",
+      "podio_field_name": "Year Built",
+      "podio_field_id": "274896119",
+      "field_type": "number",
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #4 (DISPOSITION)**: Deferred Maintenance Proxy. Properties >40 years old require higher repair deductions.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 6,
+        "display_format": "year"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 7,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "property_use_code",
+      "podio_field_name": "Property Type",
+      "podio_field_id": "274896120",
+      "field_type": "category",
+      "allowed_values": ["SFR", "Multi-Family", "Condo", "Townhouse", "Manufactured", "Vacant Land", "Commercial", "Other"],
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #4 (DISPOSITION)**: SFR most liquid. Commercial codes 366, 371 auto-rejected from enrichment.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 7,
+        "display_format": "text_badge"
+      },
+      "null_handling": "nullable_with_warning",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 8,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "apn",
+      "podio_field_name": "APN (Parcel Number)",
+      "podio_field_id": "274896121",
+      "field_type": "text",
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #3 (NORMALIZATION)**: Immutable property identifier for deduplication across lead sources.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 8,
+        "display_format": "text_monospace"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 9,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "validated_address",
+      "podio_field_name": "Property Address",
+      "podio_field_id": "274896122",
+      "field_type": "text",
+      "section": "Property Details",
+      "business_rationale": "**PILLAR #3 (NORMALIZATION)**: CASS-standardized subject property address. Distinct from Owner Mailing Address.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "property_details",
+        "ui_priority": 9,
+        "display_format": "address_link",
+        "enable_google_maps_link": true
+      },
+      "null_handling": "required",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "_comment": "========== SECTION: NED Foreclosure Fields ==========",
+      "field_priority": 10,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'ned_recorded_date'",
+      "podio_field_name": "First Publication Date",
+      "podio_field_id": "274896123",
+      "field_type": "date",
+      "section": "NED Foreclosure Fields",
+      "lead_types_applicable": ["NED Listing"],
+      "business_rationale": "**PILLAR #2 (Timeline Urgency)**: NED recording starts 110-125 day countdown. First contact within 48hrs = 47% higher contract rate.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "ned_foreclosure",
+        "ui_priority": 10,
+        "display_format": "date_with_age"
+      },
+      "null_handling": "required_for_ned_leads",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 11,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'law_firm_name'",
+      "podio_field_name": "Law Firm Name",
+      "podio_field_id": "274943276",
+      "field_type": "text",
+      "section": "NED Foreclosure Fields",
+      "lead_types_applicable": ["NED Listing"],
+      "business_rationale": "**PILLAR #1 (COMPLIANCE)**: Identifies foreclosing party's counsel. TEXT type supports 50+ Colorado firms.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "ned_foreclosure",
+        "ui_priority": 11,
+        "display_format": "text_label"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "amended_in_v1.1.3-A2"
+    },
+    {
+      "_comment": "========== SECTION: Contact Details (Universal) ==========",
+      "field_priority": 12,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_name",
+      "podio_field_name": "Owner Name",
+      "podio_field_id": "274769677",
+      "field_type": "text",
+      "section": "Contact Details",
+      "business_rationale": "**PILLAR #1 (COMPLIANCE) + #2 (CONVERSION)**: TCPA proper party identification. Personalization increases connection rate 18-22%.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 12,
+        "use_for_tcpa_verification": true,
+        "display_format": "text_label_large"
+      },
+      "null_handling": "nullable_with_warning",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 13,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_phone_primary",
+      "podio_field_name": "Owner Phone Primary",
+      "podio_field_id": "274909275",
+      "field_type": "phone",
+      "section": "Contact Details",
+      "business_rationale": "**CRITICAL - PILLAR #2 (CONVERSION)**: Primary outbound dialing. Without phone, conversion drops from 35% to <5%.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 13,
+        "use_for_click_to_dial": true,
+        "dnc_scrubbing_required": true,
+        "display_format": "phone_formatted"
+      },
+      "null_handling": "nullable_with_critical_warning",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 14,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_email_primary",
+      "podio_field_name": "Owner Email Primary",
+      "podio_field_id": "274909276",
+      "field_type": "email",
+      "section": "Contact Details",
+      "business_rationale": "**PILLAR #2 (CONVERSION)**: Secondary channel. Email+phone yields 22% higher response than phone-only.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 14,
+        "use_for_email_campaigns": true,
+        "display_format": "email_link"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 15,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_mailing_address",
+      "podio_field_name": "Owner Mailing Address",
+      "podio_field_id": "274909277",
+      "field_type": "text",
+      "section": "Contact Details",
+      "business_rationale": "**PILLAR #2 (CONVERSION)**: Direct mail fallback. Personator-verified = 98% deliverability. Distinct from Property Address for absentee.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "contact_details",
+        "ui_priority": 15,
+        "use_for_direct_mail": true,
+        "display_format": "multiline_address"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "field_priority": 16,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "lead_type",
+      "podio_field_name": "Lead Type",
+      "podio_field_id": "274909279",
+      "field_type": "category",
+      "allowed_values": ["NED Listing", "Probate/Estate", "Absentee Owner", "Tax Lien", "Code Violation", "Foreclosure Auction", "Tired Landlord"],
+      "section": "Lead Intelligence",
+      "business_rationale": "**PILLAR #3 (NORMALIZATION) + #5 (SCALABILITY)**: V4.0 polymorphic routing. Controls which lead-type-specific field bundle displays. Enables parallel scraper development.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "lead_intelligence",
+        "ui_priority": 16,
+        "use_for_lead_routing": true,
+        "display_format": "colored_badge",
+        "color_coding": {
+          "NED Listing": "#DC143C",
+          "Probate/Estate": "#800080",
+          "Absentee Owner": "#4169E1",
+          "Tax Lien": "#FF8C00",
+          "Code Violation": "#2F4F4F",
+          "Foreclosure Auction": "#B22222",
+          "Tired Landlord": "#228B22"
+        }
+      },
+      "null_handling": "required",
+      "v2_0_status": "inherited_from_v1.1.3"
+    },
+    {
+      "_comment": "========== NED Foreclosure Fields (Continued) ==========",
+      "field_priority": 17,
+      "supabase_table": "raw_leads",
+      "supabase_column": "auction_date",
+      "podio_field_name": "Auction Date",
+      "podio_field_id": "TBD_AUCTION_DATE",
+      "field_type": "date",
+      "section": "NED Foreclosure Fields",
+      "lead_types_applicable": ["NED Listing", "Foreclosure Auction"],
+      "business_rationale": "**PILLAR #2 (Timeline Urgency - 10pts)**: Hard deadline driving exponential urgency score. <7 days = maximum multiplier. Anchors all pitch timing.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "ned_foreclosure",
+        "ui_priority": 17,
+        "display_format": "countdown_days",
+        "highlight_if_less_than_days": 14
+      },
+      "null_handling": "required_for_ned_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 18,
+      "supabase_table": "raw_leads",
+      "supabase_column": "balance_due",
+      "podio_field_name": "Balance Due",
+      "podio_field_id": "TBD_BALANCE_DUE",
+      "field_type": "money",
+      "section": "NED Foreclosure Fields",
+      "lead_types_applicable": ["NED Listing"],
+      "business_rationale": "**PILLAR #2 (Financial Duress - 30pts)**: Primary debt amount for LTV calculation. Combined with opening_bid for true debt total.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "ned_foreclosure",
+        "ui_priority": 18,
+        "display_format": "currency_usd"
+      },
+      "null_handling": "nullable_with_warning",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 19,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'opening_bid'",
+      "podio_field_name": "Opening Bid",
+      "podio_field_id": "TBD_OPENING_BID",
+      "field_type": "money",
+      "section": "NED Foreclosure Fields",
+      "lead_types_applicable": ["NED Listing", "Foreclosure Auction"],
+      "business_rationale": "**PILLAR #4 (DISPOSITION)**: Minimum floor price to clear primary debt. MAO must exceed this to be viable. Per Lead Enhancement Strategy: anchors negotiation floor.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "ned_foreclosure",
+        "ui_priority": 19,
+        "display_format": "currency_usd"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Probate/Estate Fields ==========",
+      "field_priority": 20,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'executor_name'",
+      "podio_field_name": "Executor Name",
+      "podio_field_id": "TBD_EXECUTOR_NAME",
+      "field_type": "text",
+      "section": "Probate/Estate Fields",
+      "lead_types_applicable": ["Probate/Estate"],
+      "business_rationale": "**PILLAR #1 (COMPLIANCE) + #2 (Emotional Distance - 20pts)**: Personal Representative identification. Pitch targets fiduciary duty, not emotional attachment. Required for probate contact.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "probate_estate",
+        "ui_priority": 20,
+        "use_for_tcpa_verification": true,
+        "display_format": "text_label_large"
+      },
+      "null_handling": "required_for_probate_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 21,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'probate_case_number'",
+      "podio_field_name": "Probate Case Number",
+      "podio_field_id": "TBD_PROBATE_CASE",
+      "field_type": "text",
+      "section": "Probate/Estate Fields",
+      "lead_types_applicable": ["Probate/Estate"],
+      "business_rationale": "**PILLAR #3 (NORMALIZATION)**: Court case identifier for deduplication and record verification. Links to county clerk for document retrieval.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "probate_estate",
+        "ui_priority": 21,
+        "display_format": "text_monospace"
+      },
+      "null_handling": "required_for_probate_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 22,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'filing_date'",
+      "podio_field_name": "Probate Filing Date",
+      "podio_field_id": "TBD_PROBATE_FILING",
+      "field_type": "date",
+      "section": "Probate/Estate Fields",
+      "lead_types_applicable": ["Probate/Estate"],
+      "business_rationale": "**PILLAR #2 (Timeline Urgency)**: Probate timeline 6-18 months. Earlier filings may indicate stalled estates. Recent filings = hot leads.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "probate_estate",
+        "ui_priority": 22,
+        "display_format": "date_with_age"
+      },
+      "null_handling": "required_for_probate_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 23,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'estate_value'",
+      "podio_field_name": "Estate Value",
+      "podio_field_id": "TBD_ESTATE_VALUE",
+      "field_type": "money",
+      "section": "Probate/Estate Fields",
+      "lead_types_applicable": ["Probate/Estate"],
+      "business_rationale": "**PILLAR #4 (DISPOSITION)**: Total estate value from court filings. May include property + other assets. Cross-reference with Property Value for accuracy.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "probate_estate",
+        "ui_priority": 23,
+        "display_format": "currency_usd"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 24,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'decedent_name'",
+      "podio_field_name": "Decedent Name",
+      "podio_field_id": "TBD_DECEDENT_NAME",
+      "field_type": "text",
+      "section": "Probate/Estate Fields",
+      "lead_types_applicable": ["Probate/Estate"],
+      "business_rationale": "**PILLAR #1 (COMPLIANCE)**: Original property owner for title research. Enables title company verification of chain of ownership.",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "probate_estate",
+        "ui_priority": 24,
+        "display_format": "text_label"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "Field 47 added in v1.6 per Data Normalizer validation report",
+      "field_priority": 47,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'court_jurisdiction'",
+      "podio_field_name": "Court Jurisdiction",
+      "podio_field_id": "TBD_COURT_JURISDICTION",
+      "field_type": "text",
+      "section": "Probate/Estate Fields",
+      "lead_types_applicable": ["Probate/Estate"],
+      "business_rationale": "**PILLAR #3 (NORMALIZATION)**: County court identifier enables multi-county probate case lookup and deduplication. Critical for Colorado Front Range expansion (Adams, Arapahoe, Boulder, Denver, Jefferson counties).",
+      "dialer_usage": {
+        "display_in_ui": true,
+        "ui_section": "probate_estate",
+        "ui_priority": 47,
+        "display_format": "text_label"
+      },
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Property Owner Intelligence ==========",
+      "field_priority": 25,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'portfolio_count'",
+      "podio_field_name": "Portfolio Count",
+      "podio_field_id": "TBD_PORTFOLIO_COUNT",
+      "field_type": "number",
+      "section": "Property Owner Intelligence",
+      "lead_types_applicable": ["Absentee Owner", "Tired Landlord"],
+      "business_rationale": "**PILLAR #2 (Landlord Fatigue - 25pts)**: From /LookupHomesByOwner TotalRecords. Portfolio >5 = max burnout score.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "owner_intelligence", "ui_priority": 25, "display_format": "number_badge"},
+      "null_handling": "required_for_tired_landlord_leads",
+      "null_handling_note": "v1.6: REQUIRED for lead_type='Tired Landlord', nullable for other lead types per Directives alignment",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 26,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'ownership_tenure_years'",
+      "podio_field_name": "Ownership Tenure (Years)",
+      "podio_field_id": "TBD_OWNERSHIP_TENURE",
+      "field_type": "number",
+      "section": "Property Owner Intelligence",
+      "lead_types_applicable": ["Absentee Owner", "Tired Landlord"],
+      "business_rationale": "**PILLAR #2 (Senior Transition)**: Long ownership (>20yr) = Senior Transition profile. Lower price sensitivity.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "owner_intelligence", "ui_priority": 26},
+      "null_handling": "required_for_tired_landlord_leads",
+      "null_handling_note": "v1.6: REQUIRED for lead_type='Tired Landlord', nullable for other lead types per Directives alignment",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 27,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'mailing_address_out_of_state'",
+      "podio_field_name": "Out-of-State Owner",
+      "podio_field_id": "TBD_OUT_OF_STATE",
+      "field_type": "category",
+      "allowed_values": ["Yes", "No"],
+      "section": "Property Owner Intelligence",
+      "lead_types_applicable": ["Absentee Owner"],
+      "business_rationale": "**PILLAR #2**: Out-of-state = 40% more likely to sell quickly due to management distance.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "owner_intelligence", "ui_priority": 27, "display_format": "boolean_badge"},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 28,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'last_sale_date'",
+      "podio_field_name": "Last Sale Date",
+      "podio_field_id": "TBD_LAST_SALE_DATE",
+      "field_type": "date",
+      "section": "Property Owner Intelligence",
+      "lead_types_applicable": ["Absentee Owner", "Tired Landlord"],
+      "business_rationale": "**PILLAR #4**: Recent purchase (<3yr) = may flip. Old purchase (>15yr) = equity accumulation.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "owner_intelligence", "ui_priority": 28, "display_format": "date_with_age"},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 29,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'vacancy_duration_months'",
+      "podio_field_name": "Vacancy Duration (Months)",
+      "podio_field_id": "TBD_VACANCY_DURATION",
+      "field_type": "number",
+      "section": "Property Owner Intelligence",
+      "lead_types_applicable": ["Tired Landlord"],
+      "business_rationale": "**PILLAR #2**: Vacancy >6mo = max management stress. Carrying costs with zero income.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "owner_intelligence", "ui_priority": 29, "highlight_if_greater_than": 6},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Tax Lien Fields ==========",
+      "field_priority": 30,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'tax_debt_amount'",
+      "podio_field_name": "Tax Debt Amount",
+      "podio_field_id": "TBD_TAX_DEBT",
+      "field_type": "money",
+      "section": "Tax Lien Fields",
+      "lead_types_applicable": ["Tax Lien"],
+      "business_rationale": "**PILLAR #2 (Dual Financial Pressure - 25pts)**: Tax + mortgage debt = maximum duress.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "tax_lien", "ui_priority": 30, "display_format": "currency_usd_warning"},
+      "null_handling": "required_for_tax_lien_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 31,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'delinquency_start_date'",
+      "podio_field_name": "Delinquency Start Date",
+      "podio_field_id": "TBD_DELINQUENCY_DATE",
+      "field_type": "date",
+      "section": "Tax Lien Fields",
+      "lead_types_applicable": ["Tax Lien"],
+      "business_rationale": "**PILLAR #2**: >2 years = likely abandonment. <6mo = may still be recoverable.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "tax_lien", "ui_priority": 31, "display_format": "date_with_age"},
+      "null_handling": "required_for_tax_lien_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 32,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'redemption_deadline'",
+      "podio_field_name": "Redemption Deadline",
+      "podio_field_id": "TBD_REDEMPTION_DEADLINE",
+      "field_type": "date",
+      "section": "Tax Lien Fields",
+      "lead_types_applicable": ["Tax Lien"],
+      "business_rationale": "**PILLAR #2 (Timeline Urgency - 10pts)**: Hard legal deadline. Exponential urgency as deadline approaches.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "tax_lien", "ui_priority": 32, "display_format": "countdown_days", "highlight_if_less_than_days": 30},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 33,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'lien_type'",
+      "podio_field_name": "Lien Type",
+      "podio_field_id": "TBD_LIEN_TYPE",
+      "field_type": "category",
+      "allowed_values": ["County Property Tax", "Municipal Utility", "HOA Lien", "State Tax Lien", "Federal Tax Lien", "Other"],
+      "section": "Tax Lien Fields",
+      "lead_types_applicable": ["Tax Lien"],
+      "business_rationale": "**PILLAR #1**: Different lien types have different priority and redemption rules.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "tax_lien", "ui_priority": 33},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Code Violation Fields ==========",
+      "field_priority": 34,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'violation_type'",
+      "podio_field_name": "Violation Type",
+      "podio_field_id": "TBD_VIOLATION_TYPE",
+      "field_type": "category",
+      "allowed_values": ["Structural", "Electrical", "Plumbing", "Zoning", "Maintenance", "Health/Safety", "Fire Code", "Other"],
+      "section": "Code Violation Fields",
+      "lead_types_applicable": ["Code Violation"],
+      "business_rationale": "**PILLAR #4**: Structural/Health = highest repair costs. Confirms poor condition.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "code_violation", "ui_priority": 34, "display_format": "text_badge_warning"},
+      "null_handling": "required_for_code_violation_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 35,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'violation_date'",
+      "podio_field_name": "Violation Date",
+      "podio_field_id": "TBD_VIOLATION_DATE",
+      "field_type": "date",
+      "section": "Code Violation Fields",
+      "lead_types_applicable": ["Code Violation"],
+      "business_rationale": "**PILLAR #2**: Older violations = accumulated fines and increasing legal pressure.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "code_violation", "ui_priority": 35, "display_format": "date_with_age"},
+      "null_handling": "required_for_code_violation_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 36,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'fine_amount'",
+      "podio_field_name": "Fine Amount",
+      "podio_field_id": "TBD_FINE_AMOUNT",
+      "field_type": "money",
+      "section": "Code Violation Fields",
+      "lead_types_applicable": ["Code Violation"],
+      "business_rationale": "**PILLAR #2 (Governmental Pressure - 20pts)**: Fine >$10K = max governmental pressure score.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "code_violation", "ui_priority": 36, "display_format": "currency_usd_warning"},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 37,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'compliance_deadline'",
+      "podio_field_name": "Compliance Deadline",
+      "podio_field_id": "TBD_COMPLIANCE_DEADLINE",
+      "field_type": "date",
+      "section": "Code Violation Fields",
+      "lead_types_applicable": ["Code Violation"],
+      "business_rationale": "**PILLAR #2**: Municipal deadline before escalation (demolition, additional fines).",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "code_violation", "ui_priority": 37, "display_format": "countdown_days", "highlight_if_less_than_days": 30},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Foreclosure Auction Fields ==========",
+      "field_priority": 38,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'auction_platform'",
+      "podio_field_name": "Auction Platform",
+      "podio_field_id": "TBD_AUCTION_PLATFORM",
+      "field_type": "category",
+      "allowed_values": ["GovEase", "Zeus Auction", "RealAuction", "Bid4Assets", "Auction.com", "County Courthouse", "Other"],
+      "section": "Foreclosure Auction Fields",
+      "lead_types_applicable": ["Foreclosure Auction"],
+      "business_rationale": "**PILLAR #5**: Different platforms require different authentication. Enables scraper routing.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "auction", "ui_priority": 38},
+      "null_handling": "required_for_auction_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 39,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'auction_date'",
+      "podio_field_name": "Auction Date (Platform)",
+      "podio_field_id": "TBD_AUCTION_DATE_PLATFORM",
+      "field_type": "date",
+      "section": "Foreclosure Auction Fields",
+      "lead_types_applicable": ["Foreclosure Auction"],
+      "business_rationale": "**PILLAR #2 (Timeline Urgency - 10pts)**: Platform-specific auction date. Hard deadline for max urgency.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "auction", "ui_priority": 39, "display_format": "countdown_days", "highlight_if_less_than_days": 7},
+      "null_handling": "required_for_auction_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 40,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'opening_bid_auction'",
+      "podio_field_name": "Opening Bid (Platform)",
+      "podio_field_id": "TBD_OPENING_BID_PLATFORM",
+      "field_type": "money",
+      "section": "Foreclosure Auction Fields",
+      "lead_types_applicable": ["Foreclosure Auction"],
+      "business_rationale": "**PILLAR #4**: Platform-published opening bid. Critical for MAO floor calculation.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "auction", "ui_priority": 40, "display_format": "currency_usd"},
+      "null_handling": "required_for_auction_leads",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 41,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'auction_location'",
+      "podio_field_name": "Auction Location",
+      "podio_field_id": "TBD_AUCTION_LOCATION",
+      "field_type": "text",
+      "section": "Foreclosure Auction Fields",
+      "lead_types_applicable": ["Foreclosure Auction"],
+      "business_rationale": "**PILLAR #5**: Online vs physical auction logistics. Enables buyer coordination.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "auction", "ui_priority": 41},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 42,
+      "supabase_table": "raw_leads",
+      "supabase_column": "raw_data_json->>'registration_deadline'",
+      "podio_field_name": "Registration Deadline",
+      "podio_field_id": "TBD_REG_DEADLINE",
+      "field_type": "date",
+      "section": "Foreclosure Auction Fields",
+      "lead_types_applicable": ["Foreclosure Auction"],
+      "business_rationale": "**PILLAR #2**: Bidder registration deadline. Backup if pre-auction purchase fails.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "auction", "ui_priority": 42, "display_format": "date_with_age"},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Compliance & Risk ==========",
+      "field_priority": 43,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_occupied",
+      "podio_field_name": "Owner Occupied",
+      "podio_field_id": "TBD_OWNER_OCCUPIED",
+      "field_type": "category",
+      "allowed_values": ["Yes", "No", "Unknown"],
+      "section": "Compliance & Risk",
+      "lead_types_applicable": ["ALL"],
+      "business_rationale": "**CRITICAL - PILLAR #1 (COMPLIANCE)**: From Melissa OwnerOccupied. 'Yes' triggers CFPA compliance - mandatory legal review. 'No' = absentee = higher motivation.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "compliance", "ui_priority": 43, "display_format": "compliance_badge", "compliance_gate": true},
+      "null_handling": "nullable_with_compliance_warning",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "_comment": "========== SECTION: Secondary Owner Contact ==========",
+      "field_priority": 44,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_name_secondary",
+      "podio_field_name": "Owner Name (Secondary)",
+      "podio_field_id": "TBD_OWNER_NAME_SECONDARY",
+      "field_type": "text",
+      "section": "Contact Details",
+      "lead_types_applicable": ["ALL"],
+      "business_rationale": "**PILLAR #1 + #2**: 33% of NED leads have joint ownership. Both parties must be contacted for TCPA compliance.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "contact_details", "ui_priority": 44},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 45,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_phone_secondary",
+      "podio_field_name": "Owner Phone (Secondary)",
+      "podio_field_id": "TBD_OWNER_PHONE_SECONDARY",
+      "field_type": "phone",
+      "section": "Contact Details",
+      "lead_types_applicable": ["ALL"],
+      "business_rationale": "**PILLAR #2**: Dual contact numbers increase effective contact rate by ~40%.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "contact_details", "ui_priority": 45, "use_for_click_to_dial": true, "dnc_scrubbing_required": true},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    },
+    {
+      "field_priority": 46,
+      "supabase_table": "enriched_leads",
+      "supabase_column": "owner_email_secondary",
+      "podio_field_name": "Owner Email (Secondary)",
+      "podio_field_id": "TBD_OWNER_EMAIL_SECONDARY",
+      "field_type": "email",
+      "section": "Contact Details",
+      "lead_types_applicable": ["ALL"],
+      "business_rationale": "**PILLAR #2**: Secondary email for joint ownership outreach. Enables parallel drip campaigns.",
+      "dialer_usage": {"display_in_ui": true, "ui_section": "contact_details", "ui_priority": 46, "use_for_email_campaigns": true},
+      "null_handling": "nullable",
+      "v2_0_status": "new_in_v2.0"
+    }
+  ],
+
+  "technical_specifications": {
+    "data_source_table": "enriched_leads (joined with raw_leads via raw_lead_id FK)",
+    "sync_trigger": "podio_sync_queue table population (auto-queued when lead_score >= 50)",
+    "sync_frequency": "real-time (event-driven via database trigger)",
+    "expected_volume": "~150 leads/month across all 7 lead types (5x growth from v1.1.3)",
+    "data_retention": "indefinite",
+    "v2_0_changes": {
+      "new_fields_count": 30,
+      "total_fields": 46,
+      "database_migrations_required": "supabase/migrations/02X_v2_multi_source_schema.sql",
+      "edge_function_updates": [
+        "podio-sync: Add 30 new field mappings with lead_type conditional logic",
+        "enrich-lead: Add OwnerOccupied extraction",
+        "enrich-lead: Add lead-type-specific scorer classes"
+      ]
+    }
+  },
+
+  "success_metrics": {
+    "v2_0_targets": {
+      "multi_source_coverage": "7 lead types supported",
+      "field_completeness_universal": ">90%",
+      "field_completeness_type_specific": ">85%",
+      "schema_stability": "Zero breaking changes for 90 days",
+      "scraper_independence": "New scrapers deploy without CRM schema changes"
+    }
+  },
+
+  "cost_analysis": {
+    "blended_average": "$0.035/lead",
+    "monthly_projection_150_leads": "$5.25/month",
+    "roi_justification": "150 leads × 35% contact × 15% close = 7.9 deals/mo × $8K = $63K revenue vs $5.25 cost = 12,000x ROI"
+  },
+
+  "approval_workflow": {
+    "step_1_data_normalizer": {
+      "approver": "Data Normalizer",
+      "validation": "JSONB schema alignment check",
+      "status": "✅ APPROVED",
+      "approved_date": "2025-11-29",
+      "review_notes": "6 bilateral amendments applied to Directives v1.6"
+    },
+    "step_2_high_level_advisor": {
+      "approver": "High-Level Advisor",
+      "validation": "Core Pillar strategic alignment",
+      "status": "✅ APPROVED",
+      "approved_date": "2025-11-29",
+      "review_notes": "All amendments justified against 5 Core Pillars"
+    },
+    "step_3_crm_pm": {
+      "approver": "CRM PM",
+      "validation": "Podio implementation feasibility",
+      "status": "⏸️ PENDING",
+      "review_deadline": "2025-12-01 (48hr SLA from 2025-11-29)"
+    },
+    "step_4_finalization": {
+      "action": "Replace TBD_* placeholders with real Podio field IDs",
+      "trigger": "CRM PM approval received + CRM Team provides field IDs"
+    }
+  }
+}

@@ -84,6 +84,26 @@ OWNER_EMAIL_FIELD_ID = 274909276
 OWNER_MAILING_ADDRESS_FIELD_ID = 274909277
 LEAD_TYPE_FIELD_ID = 274909279  # BLOCKS V4.0: Required field for advanced lead categorization
 
+# V4.0 Phase 1 Fields (Contract v2.0 - NED/Foreclosure Auction Bundle)
+# NED Foreclosure Section
+AUCTION_DATE_FIELD_ID = 274947463
+BALANCE_DUE_FIELD_ID = 274947464
+OPENING_BID_FIELD_ID = 274947465
+
+# Foreclosure Auction Section
+AUCTION_PLATFORM_FIELD_ID = 274947466
+AUCTION_DATE_PLATFORM_FIELD_ID = 274947467
+OPENING_BID_PLATFORM_FIELD_ID = 274947468
+AUCTION_LOCATION_FIELD_ID = 274947469
+REGISTRATION_DEADLINE_FIELD_ID = 274947470
+
+# Compliance & Risk Section (CRITICAL)
+OWNER_OCCUPIED_FIELD_ID = 274947471
+
+# Contact Details Section (Secondary Owner)
+OWNER_NAME_SECONDARY_FIELD_ID = 274947475
+OWNER_PHONE_SECONDARY_FIELD_ID = 274947473
+OWNER_EMAIL_SECONDARY_FIELD_ID = 274947474
 
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
@@ -186,7 +206,7 @@ else:
 # ============================================================================
 
 def validate_enriched_fields():
-    """Validate V4.0 enriched field IDs + V3.6 contact fields at startup"""
+    """Validate V4.0 enriched field IDs + V3.6 contact fields + V4.0 Phase 1 fields at startup"""
     enriched_fields = {
         # V4.0 Enriched Fields (11 fields)
         'LEAD_SCORE_FIELD_ID': LEAD_SCORE_FIELD_ID,
@@ -206,10 +226,27 @@ def validate_enriched_fields():
         'OWNER_EMAIL_FIELD_ID': OWNER_EMAIL_FIELD_ID,
         'OWNER_MAILING_ADDRESS_FIELD_ID': OWNER_MAILING_ADDRESS_FIELD_ID,
         'LEAD_TYPE_FIELD_ID': LEAD_TYPE_FIELD_ID,
+        # V4.0 Phase 1 Fields (12 fields - Contract v2.0)
+        # NED Foreclosure Section
+        'AUCTION_DATE_FIELD_ID': AUCTION_DATE_FIELD_ID,
+        'BALANCE_DUE_FIELD_ID': BALANCE_DUE_FIELD_ID,
+        'OPENING_BID_FIELD_ID': OPENING_BID_FIELD_ID,
+        # Foreclosure Auction Section
+        'AUCTION_PLATFORM_FIELD_ID': AUCTION_PLATFORM_FIELD_ID,
+        'AUCTION_DATE_PLATFORM_FIELD_ID': AUCTION_DATE_PLATFORM_FIELD_ID,
+        'OPENING_BID_PLATFORM_FIELD_ID': OPENING_BID_PLATFORM_FIELD_ID,
+        'AUCTION_LOCATION_FIELD_ID': AUCTION_LOCATION_FIELD_ID,
+        'REGISTRATION_DEADLINE_FIELD_ID': REGISTRATION_DEADLINE_FIELD_ID,
+        # Compliance & Risk Section
+        'OWNER_OCCUPIED_FIELD_ID': OWNER_OCCUPIED_FIELD_ID,
+        # Secondary Owner Contact
+        'OWNER_NAME_SECONDARY_FIELD_ID': OWNER_NAME_SECONDARY_FIELD_ID,
+        'OWNER_PHONE_SECONDARY_FIELD_ID': OWNER_PHONE_SECONDARY_FIELD_ID,
+        'OWNER_EMAIL_SECONDARY_FIELD_ID': OWNER_EMAIL_SECONDARY_FIELD_ID,
     }
     
     print(f"\n{'='*50}")
-    print(f"=== V4.0 ENRICHED FIELD + V3.6 CONTACT FIELD VALIDATION ===")
+    print(f"=== V4.0 PHASE 1 FIELD VALIDATION (28 FIELDS) ===")
     all_valid = True
     for field_name, field_id in enriched_fields.items():
         if field_id is not None:
@@ -219,7 +256,7 @@ def validate_enriched_fields():
             all_valid = False
     
     if all_valid:
-        print(f"✅ All 16 field IDs validated successfully (11 enriched + 5 contact)")
+        print(f"✅ All 28 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1)")
     else:
         print(f"⚠️ WARNING: Some field IDs are missing")
     print(f"{'='*50}\n")

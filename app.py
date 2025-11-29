@@ -115,7 +115,8 @@ def workspace():
             'owner_name': extract_field_value(lead_item, 'Owner Name'),
             'owner_phone': extract_field_value(lead_item, 'Owner Phone'),
             'owner_email': extract_field_value(lead_item, 'Owner Email'),
-            'owner_mailing_address': extract_field_value(lead_item, 'Owner Mailing Address')
+            'owner_mailing_address': extract_field_value(lead_item, 'Owner Mailing Address'),
+            'owner_occupied': extract_field_value(lead_item, 'Owner Occupied')
         }
         
         # V4.0.5: Extract enriched intelligence data from Data Pipeline
@@ -136,6 +137,7 @@ def workspace():
         print(f"  owner_phone: {lead_data['owner_phone']}")
         print(f"  owner_email: {lead_data['owner_email']}")
         print(f"  owner_mailing_address: {lead_data['owner_mailing_address']}")
+        print(f"  owner_occupied: {lead_data['owner_occupied']}")
         print("="*50)
         
         # Render workspace template with lead data (pass as both 'lead' and 'lead_data' for compatibility)

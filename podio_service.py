@@ -51,11 +51,49 @@ from config import (
     OWNER_EMAIL_FIELD_ID,
     OWNER_MAILING_ADDRESS_FIELD_ID,
     LEAD_TYPE_FIELD_ID,
+    # V4.0 Phase 1 Fields (Contract v2.0 - NED/Foreclosure Auction Bundle)
+    AUCTION_DATE_FIELD_ID,
+    BALANCE_DUE_FIELD_ID,
+    OPENING_BID_FIELD_ID,
+    AUCTION_PLATFORM_FIELD_ID,
+    AUCTION_DATE_PLATFORM_FIELD_ID,
+    OPENING_BID_PLATFORM_FIELD_ID,
+    AUCTION_LOCATION_FIELD_ID,
+    REGISTRATION_DEADLINE_FIELD_ID,
+    OWNER_OCCUPIED_FIELD_ID,
+    OWNER_NAME_SECONDARY_FIELD_ID,
+    OWNER_PHONE_SECONDARY_FIELD_ID,
+    OWNER_EMAIL_SECONDARY_FIELD_ID,
     podio_access_token
 )
 
 # Global variable to hold the access token
 _podio_token = podio_access_token
+
+# ============================================================================
+# LEAD-TYPE-SPECIFIC FIELD BUNDLES (Contract v2.0)
+# ============================================================================
+
+# Lead-type-specific field bundles per Contract v2.0
+# Fields are extracted based on lead_type for optimized data retrieval
+FIELD_BUNDLES = {
+    "NED Listing": [
+        "auction_date",        # NED auction date
+        "balance_due",         # Amount owed
+        "opening_bid",         # NED opening bid
+        "law_firm_name",       # Already in universal fields but critical for NED
+        "first_publication_date"  # Already in universal fields but critical for NED
+    ],
+    "Foreclosure Auction": [
+        "auction_platform",      # Platform (Auction.com, Hubzu, etc.)
+        "auction_date_platform", # Platform-specific auction date
+        "opening_bid_platform",  # Platform-specific opening bid
+        "auction_location",      # Physical or online location
+        "registration_deadline"  # Deadline to register for auction
+    ],
+    # Probate/Estate, Tax Lien, Code Violation - Phase 2
+    # Absentee Owner, Tired Landlord - Phase 3
+}
 
 # ============================================================================
 # OAUTH TOKEN MANAGEMENT
@@ -303,7 +341,8 @@ def extract_field_value_by_id(item, field_id, field_type=None):
 
 def get_lead_intelligence(item_id):
     """
-    Extract all V4.0.5 enriched intelligence fields + V3.6 contact fields from Podio Master Lead item
+    Extract all V4.0 Phase 1 enriched intelligence fields from Podio Master Lead item
+    with lead-type-aware bundle extraction per Contract v2.0.
     
     Args:
         item_id: Podio Master Lead item ID to retrieve and extract from
@@ -314,9 +353,16 @@ def get_lead_intelligence(item_id):
     Note:
         All fields return None if not populated (graceful degradation).
         UI layer must handle None values appropriately (display "Unknown" or "N/A").
-        This function retrieves the item from Podio and extracts 16 total fields:
-        - 11 V4.0 enriched fields (Contract v1.1.2)
-        - 5 V3.6 contact fields (Contract v1.1.3)
+        This function retrieves the item from Podio and extracts up to 28 total fields:
+        - 11 V4.0 enriched fields (Contract v1.1.2) - Universal
+        - 5 V3.6 contact fields (Contract v1.1.3) - Universal
+        - 12 V4.0 Phase 1 fields (Contract v2.0) - Lead-type-specific + universal compliance
+        
+    Lead-Type-Aware Extraction:
+        - lead_type is extracted first to determine which bundle to include
+        - Universal fields are always extracted
+        - Lead-type-specific bundle fields are extracted based on lead_type
+        - Secondary owner and owner_occupied fields are always extracted (apply to ALL lead types)
     """
     # Retrieve the lead item from Podio
     item = get_podio_item(item_id)
@@ -325,6 +371,10 @@ def get_lead_intelligence(item_id):
         print(f"WARNING: Could not retrieve item {item_id} for intelligence extraction")
         return {}
     
+    # STEP 1: Extract lead_type FIRST (determines bundle extraction)
+    lead_type = extract_field_value_by_id(item, LEAD_TYPE_FIELD_ID)
+    
+    # STEP 2: Extract Universal Fields (always included - 16 fields from v1.1.2/v1.1.3)
     intelligence = {
         # Priority Metrics (ui_priority 1-2) - MOST IMPORTANT
         'lead_score': extract_field_value_by_id(item, LEAD_SCORE_FIELD_ID),
@@ -345,15 +395,53 @@ def get_lead_intelligence(item_id):
         # Timeline & Compliance (ui_priority 10-11) - REGULATORY
         'first_publication_date': extract_field_value_by_id(item, FIRST_PUBLICATION_DATE_FIELD_ID),
         'law_firm_name': extract_field_value_by_id(item, LAW_FIRM_NAME_FIELD_ID),
-    }
-    
-    # V3.6 Contact Fields (Contract v1.1.3) - NEW
-    intelligence.update({
+        
+        # V3.6 Contact Fields (Contract v1.1.3)
         'owner_name': extract_field_value_by_id(item, OWNER_NAME_FIELD_ID),
         'owner_phone': extract_field_value_by_id(item, OWNER_PHONE_FIELD_ID),  # Click-to-dial enabled
         'owner_email': extract_field_value_by_id(item, OWNER_EMAIL_FIELD_ID),
         'owner_mailing_address': extract_field_value_by_id(item, OWNER_MAILING_ADDRESS_FIELD_ID),
-        'lead_type': extract_field_value_by_id(item, LEAD_TYPE_FIELD_ID),  # Required for V4.0
+        'lead_type': lead_type,  # Already extracted above
+    }
+    
+    # STEP 3: Extract Lead-Type-Specific Bundle Fields (Contract v2.0)
+    if lead_type == "NED Listing":
+        # NED Foreclosure Bundle
+        intelligence.update({
+            'auction_date': extract_field_value_by_id(item, AUCTION_DATE_FIELD_ID),
+            'balance_due': extract_field_value_by_id(item, BALANCE_DUE_FIELD_ID),
+            'opening_bid': extract_field_value_by_id(item, OPENING_BID_FIELD_ID),
+        })
+        print(f"V4.0 Phase 1: Extracted NED Listing bundle for item {item_id}")
+        
+    elif lead_type == "Foreclosure Auction":
+        # Foreclosure Auction Bundle
+        intelligence.update({
+            'auction_platform': extract_field_value_by_id(item, AUCTION_PLATFORM_FIELD_ID),
+            'auction_date_platform': extract_field_value_by_id(item, AUCTION_DATE_PLATFORM_FIELD_ID),
+            'opening_bid_platform': extract_field_value_by_id(item, OPENING_BID_PLATFORM_FIELD_ID),
+            'auction_location': extract_field_value_by_id(item, AUCTION_LOCATION_FIELD_ID),
+            'registration_deadline': extract_field_value_by_id(item, REGISTRATION_DEADLINE_FIELD_ID),
+        })
+        print(f"V4.0 Phase 1: Extracted Foreclosure Auction bundle for item {item_id}")
+        
+    else:
+        # Unknown or unsupported lead type - log for Phase 2/3 development
+        if lead_type:
+            print(f"V4.0 Phase 1: Lead type '{lead_type}' not yet supported - Phase 2/3 bundle")
+        else:
+            print(f"V4.0 Phase 1: No lead_type set for item {item_id}")
+    
+    # STEP 4: Extract Universal Compliance & Secondary Owner Fields (apply to ALL lead types)
+    # These fields are critical for compliance and apply regardless of lead type
+    intelligence.update({
+        # Compliance & Risk Section (CRITICAL - applies to all lead types)
+        'owner_occupied': extract_field_value_by_id(item, OWNER_OCCUPIED_FIELD_ID),
+        
+        # Secondary Owner Contact (applies to all lead types with co-owners)
+        'owner_name_secondary': extract_field_value_by_id(item, OWNER_NAME_SECONDARY_FIELD_ID),
+        'owner_phone_secondary': extract_field_value_by_id(item, OWNER_PHONE_SECONDARY_FIELD_ID),
+        'owner_email_secondary': extract_field_value_by_id(item, OWNER_EMAIL_SECONDARY_FIELD_ID),
     })
     
     return intelligence

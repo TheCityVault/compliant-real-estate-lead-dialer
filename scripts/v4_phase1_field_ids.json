@@ -1,0 +1,22 @@
+{
+  "created_date": "2025-11-29",
+  "contract_version": "2.0.0",
+  "phase": "1",
+  "app_id": "30549135",
+  "success_count": 12,
+  "failure_count": 0,
+  "fields": {
+    "auction_date": 274947463,
+    "balance_due": 274947464,
+    "opening_bid": 274947465,
+    "auction_platform": 274947466,
+    "auction_date_platform": 274947467,
+    "opening_bid_platform": 274947468,
+    "auction_location": 274947469,
+    "registration_deadline": 274947470,
+    "owner_occupied": 274947471,
+    "owner_name_secondary": 274947475,
+    "owner_phone_secondary": 274947473,
+    "owner_email_secondary": 274947474
+  }
+}
