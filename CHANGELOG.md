@@ -6,9 +6,64 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+
+## [3.6.0] - 2025-11-29
+
+### Phase 0 - V3.6 Schema Updates (V4.0+ Multi-Source Integration)
+
+**Milestone:** Phase 0a - 3/5 Contact Fields Deployed
+
+#### Added
+
+- **5 New Podio Fields Created:**
+  - Owner Name (ID: 274769677) - TEXT field for agent personalization
+  - Owner Phone (ID: 274909275) - PHONE field for primary contact (deferred)
+  - Owner Email (ID: 274909276) - EMAIL field for nurture campaigns (deferred)
+  - Owner Mailing Address (ID: 274909277) - TEXT field for direct mail
+  - Lead Type (ID: 274909279) - CATEGORY field for lead intelligence
+- **Lead Intelligence Panel:** Dynamic workspace display with Lead Type badge
+- **Contact Information Section:** Owner Name, Phone, Email, Mailing Address display
+- **Law Firm Compliance Warning:** "⚖️ Attorney Represented" badge with dialing guidance
+- **HTML Tag Handling:** Graceful extraction of clean text from Podio rich text fields
+
+#### Changed
+
+- **podio_service.py:** Extended `get_lead_intelligence()` to extract 16 fields (11 enriched + 5 contact)
+- **config.py:** Added 5 new field ID constants for V3.6 contact fields
+- **app.py:** Updated workspace endpoint to extract and pass V3.6 contact fields
+- **workspace.html:** Added Lead Type badge and Contact Information panel
+
+#### Fixed
+
+- **HTML Tag Handling:** `extract_field_value()` now strips `<p>` tags from text fields
+- **Category Field Extraction:** Handles nested dict values for Lead Type display
+- **Property Address Mapping:** Fixed field label lookup from "Full Address" to "Owner Mailing Address"
+
+#### Technical Details
+
+- 16-field extraction operational
+- Workspace load time: <1 second (target: <3 seconds)
+- Zero JavaScript console errors
+- Graceful null handling for deferred fields (Phone/Email show "N/A")
+
+#### Strategic Pivot (Approved 2025-11-29)
+
+- **Phase 0a (NOW):** 3/5 fields deployed (Owner Name, Mailing Address, Lead Type)
+- **Phase 0b (Week 2):** Phone field via hybrid skip trace (TLOxp + Melissa)
+- **Phase 0c (Week 3):** Email append on contacted leads only
+
+### High-Level Advisor Sign-Off
+
+- All 5 Core Pillars validated
+- Performance exceeds targets
+- Production deployment approved
+
+---
+
 ## [V3.3] - 2024-11-23
 
 ### Added
+
 - **Automated Task Creation**: Tasks automatically created based on call dispositions
 - **Smart Due Dates**: Configurable default due dates (0-2 days) based on disposition type
 - **Agent Override**: Agents can override default due dates with custom dates from "Next Action Date" field
@@ -16,33 +71,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Priority Logic**: Agent-specified dates take precedence over defaults with graceful fallback
 
 ### Fixed
+
 - Disposition mapping keys corrected to match workspace form values
   - `'Left Voicemail'` → `'Voicemail'`
   - `'Callback Requested'` → `'Callback Scheduled'`
   - `'Interested - Schedule Appointment'` → `'Appointment Set'`
 
 ### Configuration
+
 - 7 disposition types mapped to task automation rules
 - Non-blocking error handling ensures Call Activity creation always succeeds
 - Comprehensive V3.3 logging for debugging
 
 ### Task Automation Rules
-| Disposition | Creates Task? | Default Due Date | Agent Override |
-|-------------|---------------|------------------|----------------|
-| Voicemail | Yes | 2 days | Yes |
-| No Answer | Yes | 1 day | Yes |
-| Appointment Set | Yes | Today | Yes |
-| Callback Scheduled | Yes | 1 day | Yes |
-| Not Interested | No | - | - |
-| Wrong Number | No | - | - |
-| Do Not Call | No | - | - |
+
+| Disposition        | Creates Task? | Default Due Date | Agent Override |
+| ------------------ | ------------- | ---------------- | -------------- |
+| Voicemail          | Yes           | 2 days           | Yes            |
+| No Answer          | Yes           | 1 day            | Yes            |
+| Appointment Set    | Yes           | Today            | Yes            |
+| Callback Scheduled | Yes           | 1 day            | Yes            |
+| Not Interested     | No            | -                | -              |
+| Wrong Number       | No            | -                | -              |
+| Do Not Call        | No            | -                | -              |
 
 ### Documentation
+
 - Added `docs/vercel_v3.3_environment_variables.md` - Vercel configuration guide
 - Added `docs/v3.3_bug_fix_report.md` - Bug analysis and testing guide
 - Added `scripts/create_task_app.py` - Automated Task app creation script
 
 ### Files Modified
+
 - `config.py` - Task automation configuration
 - `podio_service.py` - Task creation function with agent override
 - `app.py` - Task automation integration
@@ -61,17 +121,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### ✨ New Features
 
 **V3.2.1 - Frontend CallSid Capture**
+
 - Modified Agent Workspace to capture Twilio CallSid from dial response
 - CallSid automatically included in form submission payload
 - Enables server-side mapping storage
 
 **V3.2.2 - Backend Mapping Storage**
+
 - New Firestore collection `call_sid_mappings` for persistent state
 - `store_call_sid_mapping()` function stores CallSid→PodioItemId pairs
 - Mapping created immediately after Podio Call Activity item is written
 - Uses CallSid as document ID for efficient direct lookup
 
 **V3.2.3 - Webhook Integration**
+
 - `get_podio_item_id_from_call_sid()` retrieves PodioItemId using CallSid
 - `/recording_status` webhook automatically updates Podio with recording URL
 - Authentication-free proxy URL format (`/play_recording/{RecordingSid}`)
@@ -107,29 +170,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-
 ## [3.1.0] - 2024-11-23
 
 ### 🎙️ **Major Release: Call Recording & Playback**
 
 #### Added
+
 - **Automatic Call Recording**
   - TwiML `<Dial>` verb configured with `record='record-from-answer'`
   - Recording starts automatically when prospect answers call
   - No agent action required
-  
 - **Recording Status Webhook**
+
   - New route: `POST /recording_status`
   - Receives RecordingSid, RecordingUrl, CallSid, RecordingDuration from Twilio
   - Triggered automatically when recording completes
 
 - **Firestore Recording Metadata Storage**
+
   - New function: `update_call_recording_metadata()` in `db_service.py`
   - Queries `call_logs` collection by CallSid
   - Updates existing call log with recording data
   - Fields added: RecordingSid, RecordingUrl, RecordingDuration, RecordingTimestamp
 
 - **Secure Recording Proxy Endpoint**
+
   - New route: `GET /play_recording/<recording_sid>`
   - Server-side Twilio authentication
   - Streams MP3 audio to browser without exposing credentials
@@ -141,23 +206,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Placeholder implementation documented for future enhancement
 
 #### Changed
+
 - **twilio_service.py**: Modified `generate_connect_prospect_twiml()` to enable recording
 - **db_service.py**: Added `base_url` parameter to `update_call_recording_metadata()`
 - **app.py**: Added `requests` import for HTTP streaming
 - **app.py**: Updated `/recording_status` webhook to construct base URLs dynamically
 
 #### Security
+
 - ✅ No Twilio credentials exposed to browser clients
 - ✅ Server-side authentication for all recording access
 - ✅ Clean, shareable proxy URLs
 - ✅ HTTP Basic Auth eliminated from client-side requests
 
 #### Known Limitations (V3.1)
+
 - Podio Call Activity items NOT automatically updated with recording URLs
 - Manual Firestore query required to access recordings
 - CallSid→CallActivityItemId mapping not implemented (planned for V3.2)
 
 #### Technical Details
+
 - Proxy endpoint uses `requests` library for Twilio API streaming
 - Recording URLs stored as `https://your-app.vercel.app/play_recording/RExxx`
 - Firestore `call_logs` collection schema extended with recording fields
@@ -170,6 +239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎉 Major Release: VOIP-Only Architecture
 
 #### Added
+
 - ✅ **Twilio Voice SDK v2.11.1 Integration** - Self-hosted browser-based VOIP
 - ✅ **Auto-Generated Agent Identities** - System-managed client:agent_xxxxx format
 - ✅ **VOIP Status Indicator** - Real-time SDK registration status in UI
@@ -178,27 +248,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Read-Only Identity Field** - Prevents user configuration errors
 
 #### Changed
+
 - 🔄 **Agent Connection Method** - PSTN → Browser-based VOIP (WebRTC)
 - 🔄 **Backend Architecture** - Capability Tokens → Access Tokens + VoiceGrant
 - 🔄 **/dial Endpoint** - Now requires agent_id parameter (VOIP-only)
 - 🔄 **Environment Validation** - Updated for V2.1 VOIP-only requirements
 
 #### Fixed
+
 - ✅ **Eliminated "Busy" Statuses** - VOIP removes carrier blocking risk
 - ✅ **SDK Compatibility** - Resolved SDK v2.x CDN unavailability (self-hosted)
 - ✅ **Identity Mismatch** - Fixed SIP 480 errors with consistent identity management
 - ✅ **HTML Tag Display** - Stripped HTML from Podio field values in UI
 
 #### Removed
+
 - ❌ **PSTN Agent Fallback** - Prevents carrier blocking (VOIP-only enforcement)
 - ❌ **AGENT_PHONE_NUMBER Environment Variable** - No longer used in V2.1
 
 #### Breaking Changes
+
 - ⚠️ **AGENT_PHONE_NUMBER** environment variable is deprecated
 - ⚠️ All agents must use browser-based VOIP (no phone dial-in support)
 - ⚠️ Requires new environment variables: TWILIO_API_KEY, TWILIO_API_SECRET, TWILIO_TWIML_APP_SID
 
 #### Technical Details
+
 - **SDK Migration:** Twilio Voice SDK v1.14 → v2.11.1 (self-hosted due to CDN removal)
 - **Authentication:** ClientCapabilityToken → AccessToken with VoiceGrant
 - **Device API:** Twilio.Voice.Device → Twilio.Device (correct for self-hosted build)
@@ -210,6 +285,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - 2024-11-20
 
 ### Added - Agent Workspace (Major Architectural Upgrade)
+
 - **Agent Workspace UI**: Stateful browser interface replacing auto-close window
 - **5-Field Disposition Form**: Mandatory data collection (Disposition Code, Agent Notes, Seller Motivation, Next Action Date, Target Asking Price)
 - **Direct Podio Write**: Real-time Call Activity creation via Podio API (eliminates Make/Zapier dependency)
@@ -220,12 +296,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **/submit_call_data Endpoint**: Handles disposition submission with 10-field Podio mapping
 
 ### Changed
+
 - Link field URL: `/dial?item_id=X` → `/workspace?item_id=X`
 - Call workflow: Immediate dial → Agent workspace with mandatory disposition
 - Data flow: External connector → Direct Podio API integration
 - Field mapping: Simplified schema (removed 4 duplicate legacy fields)
 
 ### Fixed
+
 - Podio API 404 errors (implemented app-based filtering workaround)
 - Twilio call connection errors (added callerId parameter)
 - Podio datetime format errors (YYYY-MM-DD HH:MM:SS compliance)
@@ -236,15 +314,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incorrect relationship field ID (corrected to 274851864)
 
 ### Technical Details
+
 - **Relationship Field**: 274851864 (Call Activity → Master Lead)
 - **System Fields**: 274769797-274769801 (Title, Relationship, Date, Duration, Recording)
 - **Agent Fields**: 274851083-274851087 (5 disposition fields)
 - **Apps**: Master Lead (30549135), Call Activity (30549170)
 
 ### Known Issues
+
 - Intermittent Twilio "busy status" (carrier-level SIP 603 decline - normal behavior, agents can retry)
 
 ### Dependencies
+
 - Added: pypodio2 (Podio Python SDK)
 - Existing: Flask, Twilio SDK, Firebase Admin SDK
 
@@ -253,6 +334,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-11-19 - PRODUCTION RELEASE 🎉
 
 ### 🎯 Production Status
+
 **This is the first production-ready release of the Compliant Real Estate Lead Dialer.**
 
 - **Deployment Platform**: Vercel (Serverless)
@@ -266,12 +348,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### ✨ Features Implemented
 
 #### Core Dialing System
+
 - **TCPA-Compliant Two-Leg Dialing**: Implemented compliant call architecture that calls the agent first (Leg 1), then connects to the prospect (Leg 2) only after agent answers
 - **Manual Click Initiation**: Every call requires explicit manual action from the agent, avoiding ATDS classification
 - **Twilio Integration**: Full Twilio SDK integration for professional telephony capabilities
 - **E.164 Phone Number Handling**: Automatic formatting and validation of phone numbers
 
 #### Podio CRM Integration
+
 - **Link Field Integration**: Seamless click-to-dial capability directly from Podio lead records
 - **Podio API Integration**: OAuth-based authentication and item retrieval
 - **Dynamic Phone Number Retrieval**: Automatic extraction of "Best Contact Number" from Podio items
@@ -279,24 +363,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fallback Support**: Direct phone number parameter support for testing and non-Podio use cases
 
 #### Audit & Logging
+
 - **Real-Time Firestore Logging**: Immediate call detail logging to Google Cloud Firestore
 - **Comprehensive Call Data**: Captures CallSid, CallStatus, Direction, From/To numbers, and server timestamps
 - **Audit Trail Compliance**: Complete call history maintained for regulatory compliance
 - **Database Write Verification**: Firestore integration tested and verified operational
 
 #### API Endpoints
+
 - **GET /dial**: Primary endpoint for initiating calls with `item_id` or `phone` parameters
 - **POST /connect_prospect**: Internal endpoint for bridging agent to prospect (Leg 2)
 - **POST /call_status**: Twilio webhook for call status callbacks and Firestore logging
 - **GET /**: Health check endpoint
 
 #### User Experience
+
 - **Responsive HTML Feedback**: User-friendly HTML pages showing call initiation status
 - **Auto-Close Window**: Browser window closes automatically after call initiation (3-second delay)
 - **Error Pages**: Clear, actionable error messages for all failure scenarios
 - **Debug Logging**: Comprehensive server-side logging for troubleshooting
 
 #### Deployment & Configuration
+
 - **Vercel Serverless Deployment**: Production-ready deployment using Vercel platform
 - **Environment-Based Configuration**: Secure credential management via environment variables
 - **Python/Flask Backend**: Robust, scalable server-side implementation
@@ -307,6 +395,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🔧 Technical Implementation
 
 #### Dependencies Added
+
 ```
 Flask==3.0.0
 twilio==8.10.0
@@ -315,6 +404,7 @@ requests==2.31.0
 ```
 
 #### Environment Variables Configured
+
 - `TWILIO_ACCOUNT_SID`: Twilio account identifier
 - `TWILIO_AUTH_TOKEN`: Twilio authentication token
 - `TWILIO_PHONE_NUMBER`: Twilio phone number for outbound calls
@@ -326,6 +416,7 @@ requests==2.31.0
 - `PODIO_PASSWORD`: Podio account password
 
 #### Files Created/Modified
+
 - `app.py`: Main Flask application with all endpoints and logic
 - `requirements.txt`: Python dependencies
 - `vercel.json`: Vercel deployment configuration
@@ -343,6 +434,7 @@ requests==2.31.0
 ### 🐛 Bug Fixes
 
 #### Podio Integration Issues Resolved
+
 - **Calculation Field Limitation**: Identified that Podio calculation fields output plain text only and cannot render HTML/JavaScript
 - **Phone Field Protocol Limitation**: Determined that Podio phone fields only support tel:/callto: protocols, not HTTPS
 - **Link Field Solution**: Implemented optimal Link field approach with item_id parameter passing
@@ -350,6 +442,7 @@ requests==2.31.0
 - **Phone Field Extraction**: Fixed phone number extraction from Podio API response structure
 
 #### Call Flow Issues Resolved
+
 - **POST Method Specification**: Explicitly specified POST method for Twilio call creation to ensure proper webhook execution
 - **TwiML Response Generation**: Corrected TwiML XML generation for proper call bridging
 - **URL Encoding**: Implemented proper URL encoding for phone numbers in query parameters
@@ -357,6 +450,7 @@ requests==2.31.0
 - **Base URL Construction**: Fixed absolute URL generation for Vercel deployment environment
 
 #### Error Handling Improvements
+
 - **Missing Phone Number**: Added validation and user-friendly error messages
 - **Empty Podio Fields**: Handle cases where "Best Contact Number" field is empty
 - **Missing Podio Fields**: Detect when required fields don't exist in Podio item
@@ -369,6 +463,7 @@ requests==2.31.0
 ### 📚 Documentation
 
 #### New Documentation Added
+
 - **README.md**: Complete production documentation with:
   - Project overview and architecture
   - Quick start guide
@@ -378,7 +473,6 @@ requests==2.31.0
   - TCPA compliance information
   - Deployment instructions
   - Version history
-  
 - **CHANGELOG.md**: This file - comprehensive version history
 
 - **Updated docs/Project_Progress_Report_Compliant_Lead_Dialer.md**:
@@ -392,13 +486,14 @@ requests==2.31.0
 ### 🧪 Testing
 
 #### Test Scenarios Completed
+
 ✅ **End-to-End Call Flow**: Agent clicks Podio link → Agent phone rings → Agent answers → Prospect called → Call logged to Firestore  
 ✅ **Podio API Integration**: Item retrieval, field extraction, OAuth authentication  
 ✅ **Firestore Logging**: Call details successfully written to call_logs collection  
 ✅ **Error Scenarios**: Missing fields, invalid items, API failures, rate limiting  
 ✅ **Phone Number Formats**: Various phone number formats handled correctly  
 ✅ **Manual Phone Parameter**: Direct phone parameter bypassing Podio works  
-✅ **Vercel Deployment**: Production environment fully operational  
+✅ **Vercel Deployment**: Production environment fully operational
 
 ---
 
@@ -416,13 +511,16 @@ requests==2.31.0
 ### 📋 Known Limitations
 
 1. **Podio Integration Method**: Link field approach requires agent to click a link rather than a button
+
    - _Rationale_: Podio calculation fields cannot render HTML/JavaScript
    - _Impact_: Minimal - Link fields provide clean, native Podio integration
 
 2. **Single Agent Support**: Currently supports one agent phone number
+
    - _Future Enhancement_: Multi-agent support planned for Phase 2
 
 3. **One-Way Sync**: Calls logged to Firestore but not automatically synced back to Podio
+
    - _Status_: Deferred to Phase 2 (Make.com/Zapier integration)
 
 4. **No Call Recording**: Call recording not currently enabled
@@ -456,7 +554,7 @@ requests==2.31.0
 ✅ **TCPA Compliant**: Two-leg architecture verified  
 ✅ **Manual Initiation**: Every call requires explicit agent click  
 ✅ **Audit Trail**: Complete call logging to Firestore  
-✅ **No Auto-Dialing**: System classified as non-ATDS  
+✅ **No Auto-Dialing**: System classified as non-ATDS
 
 ---
 
