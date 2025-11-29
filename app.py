@@ -22,7 +22,8 @@ from config import (
     TWILIO_API_SECRET,
     TWILIO_TWIML_APP_SID,
     DISPOSITION_TASK_MAPPING,  # V3.3: Task automation mapping
-    validate_environment
+    validate_environment,
+    VALIDATED_MAILING_ADDRESS_FIELD_ID  # V4.0.6: Property Address field ID
 )
 
 # Import service functions
@@ -38,6 +39,7 @@ from twilio_service import (
 from podio_service import (
     get_podio_item,
     extract_field_value,
+    extract_field_value_by_id,  # V4.0.6: Field ID based extraction (robust to renames)
     create_call_activity_item,
     update_call_activity_recording,  # V3.2.3
     create_follow_up_task,  # V3.3: Automated task creation
@@ -98,11 +100,15 @@ def workspace():
             print(f"  - {field_label} (ID: {field_id}): {field_values}")
         
         # Extract lead data for workspace
+        # V4.0.6 FIX: Lead Information section shows OWNER contact info (for reaching the owner)
+        # - address: Owner Mailing Address (274909277) - where to send direct mail to contact owner
+        # Note: Property Address (274896122) is displayed in Property Details section via intelligence data
+        from config import OWNER_MAILING_ADDRESS_FIELD_ID
         lead_data = {
             'item_id': item_id,
             'name': extract_field_value(lead_item, 'Owner Name'),
             'phone': extract_field_value(lead_item, 'Best Contact Number'),
-            'address': extract_field_value(lead_item, 'Full Address'),
+            'address': extract_field_value_by_id(lead_item, OWNER_MAILING_ADDRESS_FIELD_ID),  # Owner Mailing Address (ID: 274909277)
             'source': 'Podio Master Lead',
             # Contract v1.1.3 fields
             'lead_type': extract_field_value(lead_item, 'Lead Type'),

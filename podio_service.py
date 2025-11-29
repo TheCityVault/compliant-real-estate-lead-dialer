@@ -192,15 +192,30 @@ def extract_field_value(item, field_label):
         
     Returns:
         str: Field value, or empty string if not found
+        
+    Note:
+        V3.6 Fix: Handles multiple field types:
+        - Text fields: {'value': '<p>Name</p>'} -> strips HTML
+        - Category fields: {'value': {'text': 'NED Listing', ...}} -> extracts 'text'
+        - Other fields: converts to string
     """
     for field in item.get('fields', []):
         if field.get('label') == field_label:
             values = field.get('values', [])
             if values:
                 value = values[0]
+                
                 # Handle different field types
                 if isinstance(value, dict):
-                    text = value.get('value', '')
+                    inner_value = value.get('value', '')
+                    
+                    # V3.6 FIX: Handle category fields with nested {'text': '...'} structure
+                    if isinstance(inner_value, dict):
+                        # Category field - extract 'text' property
+                        text = inner_value.get('text', '')
+                    else:
+                        # Text field or other - convert to string
+                        text = str(inner_value) if inner_value is not None else ''
                 else:
                     text = str(value)
                 

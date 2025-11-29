@@ -1,15 +1,19 @@
 {
-  "old_field_id": 274896124,
-  "old_field_type": "text",
-  "new_field_id": 274896414,
-  "new_field_type": "category",
-  "law_firm_options": [
-    "McCarthy & Holthus, LLP",
-    "Janeway Law Firm PC",
-    "The Sayer Law Group, P.C.",
-    "Altitude Community Law",
-    "Castle Stawiarski, LLC",
-    "Other"
-  ],
-  "timestamp": "2025-11-25T03:16:00Z"
+  "amendment": "v1.1.3-A2",
+  "timestamp": "2025-11-29T03:39:05.336537Z",
+  "action": "CATEGORY \u2192 TEXT field type change",
+  "app_id": 30549135,
+  "old_field": {
+    "field_id": 274896414,
+    "type": "category",
+    "status": "deleted"
+  },
+  "new_field": {
+    "field_id": 274943276,
+    "type": "text",
+    "label": "Law Firm Name",
+    "status": "created"
+  },
+  "reason": "Data Team sync failing - CATEGORY type cannot accept arbitrary law firm names",
+  "error_fixed": "\"attribute-law-firm-name\" has an invalid option \"Barrett, Frappier & Weisserman, LLP\""
 }
