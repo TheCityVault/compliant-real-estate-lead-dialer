@@ -2,7 +2,7 @@
 
 **Document Type:** Collaborative Project Status (CRM Team Perspective)  
 **Counterpart Document:** [`docs/data_team_v4_status.md`](docs/data_team_v4_status.md:1)  
-**Last Updated:** 2025-11-29 (Phase 0 STRATEGIC PIVOT APPROVED)
+**Last Updated:** 2025-11-29 (Amendment v1.1.3-A2 LAW_FIRM_NAME Complete)
 **Document Owner:** CRM PM Mode
 **Current Phase:** Phase 0 - V3.6 Schema Updates (STRATEGIC PIVOT - 3-Phase Deployment)
 
@@ -537,6 +537,45 @@ Appending phone/email to UNSCORED leads is inefficient architecture. Original mo
 
 ---
 
+### **🔧 Amendment v1.1.3-A2 - LAW_FIRM_NAME Field Type Change** ⭐ COMPLETED
+
+**Amendment Date:** 2025-11-29
+**Approved By:** CRM PM + High-Level Advisor (validated against Core Pillar #5)
+**Status:** ✅ COMPLETE (CRM work done, awaiting Data Team podio-sync update)
+
+**Issue Resolved:**
+Podio sync failing with error: `"attribute-law-firm-name" has an invalid option "Barrett, Frappier & Weisserman, LLP"`. CATEGORY field rejected unknown law firm names not in predefined list.
+
+**Root Cause:**
+Field ID `274896414` (LAW_FIRM_NAME) was configured as CATEGORY type. Colorado has 50+ foreclosure law firms - every new firm caused sync failures requiring manual CRM updates.
+
+**Solution Implemented:**
+| Change | Old Value | New Value |
+|--------|-----------|-----------|
+| Field Type | CATEGORY | TEXT |
+| Field ID | 274896414 (deleted) | **274943276** (created) |
+
+**Technical Clarification:**
+Data Team initially described this as "non-breaking" with "field ID unchanged". CRM PM corrected: Podio does NOT support in-place field type changes. Required delete/recreate, generating new field ID.
+
+**CRM Team Actions Completed:**
+
+- ✅ Deleted old CATEGORY field (274896414)
+- ✅ Created new TEXT field (274943276) in Master Lead App (30549135)
+- ✅ Updated [`config.py`](config.py:78) line 78 with new field ID
+- ✅ Documented change in [`scripts/law_firm_field_correction.json`](scripts/law_firm_field_correction.json)
+- ✅ Posted field ID to GitHub PR #2
+
+**Data Team Action Required:**
+
+- Update `podio-sync` Edge Function with new field ID `274943276`
+- Re-sync leads with law firm "Barrett, Frappier & Weisserman, LLP"
+
+**Business Justification (Core Pillar #5 - Scalability):**
+TEXT field accepts any law firm name string without manual category maintenance. Zero-maintenance syncing supports growth to 100+ law firms.
+
+---
+
 ## **📋 PHASE 1: V4.0 Contract v2.0 Review & Approval**
 
 ### **Responsibility:** CRM PM + High-Level Advisor
@@ -759,7 +798,7 @@ PODIO_FIELDS = {
     "ned_listing": {
         "auction_date": "274896130",
         "balance_due": "274896131",
-        "law_firm_name": "274896414", # Keep from v1.1.2
+        "law_firm_name": "274943276", # Updated via Amendment v1.1.3-A2 (TEXT type)
         # ... all NED fields
     },
     "probate_estate": {
@@ -1037,4 +1076,4 @@ V4.0+ will be considered **COMPLETE** from CRM perspective when:
 
 **Document Owner:** CRM PM Mode  
 **Last Updated:** 2025-11-26  
-**Next Review:** After Data Team 3/5 field sync (estimated 2025-11-30)
+**Next Review:** After Data Team podio-sync update with LAW_FIRM_NAME field ID 274943276
