@@ -2,9 +2,9 @@
 
 **Document Type:** Collaborative Project Status (CRM Team Perspective)  
 **Counterpart Document:** [`docs/data_team_v4_status.md`](docs/data_team_v4_status.md:1)  
-**Last Updated:** 2025-11-29 (Phase 1 STARTED - Contract v2.0 Review In Progress)
+**Last Updated:** 2025-11-29 (Phase 1 WAITING - Awaiting Data Team Contract v2.0)
 **Document Owner:** CRM PM Mode
-**Current Phase:** Phase 1 - V4.0 Contract v2.0 Review 🚧 IN PROGRESS
+**Current Phase:** Phase 1 - V4.0 Contract v2.0 Review ⏳ WAITING
 
 ---
 
@@ -54,14 +54,14 @@ Transform the Compliant Lead Dialer from a single-source calling tool into an **
 
 ### **Upcoming Phases Overview:**
 
-| Phase | Name                          | Timeline  | Status        | Blocker                      |
-| ----- | ----------------------------- | --------- | ------------- | ---------------------------- |
-| **0** | V3.6 Schema Updates           | 2-3 days  | ✅ COMPLETE   | N/A (all blockers resolved)  |
+| Phase | Name                          | Timeline  | Status         | Blocker                      |
+| ----- | ----------------------------- | --------- | -------------- | ---------------------------- |
+| **0** | V3.6 Schema Updates           | 2-3 days  | ✅ COMPLETE    | N/A (all blockers resolved)  |
 | **1** | V4.0 Contract v2.0 Review     | Week 2-3  | 🚧 IN PROGRESS | Phase 0 complete ✅          |
-| **2** | V4.0 Podio Schema (46 fields) | Week 3-4  | ⏸️ PENDING    | Contract v2.0 approval       |
-| **3** | V4.1 Probate UI Enhancements  | Week 5-6  | ⏸️ PENDING    | Probate scraper operational  |
-| **4** | V4.2 Absentee UI Enhancements | Week 7-8  | ⏸️ PENDING    | Absentee scraper operational |
-| **5** | V4.3 Final UI Polish          | Week 9-10 | ⏸️ PENDING    | All 7 lead types operational |
+| **2** | V4.0 Podio Schema (46 fields) | Week 3-4  | ⏸️ PENDING     | Contract v2.0 approval       |
+| **3** | V4.1 Probate UI Enhancements  | Week 5-6  | ⏸️ PENDING     | Probate scraper operational  |
+| **4** | V4.2 Absentee UI Enhancements | Week 7-8  | ⏸️ PENDING     | Absentee scraper operational |
+| **5** | V4.3 Final UI Polish          | Week 9-10 | ⏸️ PENDING     | All 7 lead types operational |
 
 ---
 
@@ -711,23 +711,69 @@ TEXT field accepts any law firm name string without manual category maintenance.
 
 **Start Date:** 2025-11-29
 **Feature Branch:** `feature/v4-0-contract-v2-review`
-**Status:** 🚧 IN PROGRESS - Contract v2.0 Draft Creation
+**Status:** ⏳ WAITING - Awaiting Data Team Contract v2.0 Submission
 
 **Objective:**
 Review and approve comprehensive contract v2.0 defining ~46 Podio fields for all 7 lead types. This enables 2+ years of multi-source growth without repeated schema overhauls.
 
 **Phase 1 Tasks:**
 
-| Task | Description | Assignee | Status |
-|------|-------------|----------|--------|
-| 1.1 | Validate Podio Technical Feasibility (46 fields) | CRM PM | ⏸️ PENDING |
-| 1.2 | Validate Business Value of Field Bundles | CRM PM + Advisor | ⏸️ PENDING |
-| 1.3 | Plan Implementation Sprint | CRM PM | ⏸️ PENDING |
-| 1.4 | Approve Contract v2.0 | CRM PM + Advisor | ⏸️ PENDING |
+| Task | Description                                      | Assignee         | Status                         |
+| ---- | ------------------------------------------------ | ---------------- | ------------------------------ |
+| 0.0  | Await Data Team Contract v2.0 Draft              | Data Team        | ⏳ IN PROGRESS                 |
+| 1.1  | Validate Podio Technical Feasibility (46 fields) | CRM PM           | ⏸️ BLOCKED (awaiting contract) |
+| 1.2  | Validate Business Value of Field Bundles         | CRM PM + Advisor | ⏸️ BLOCKED (awaiting contract) |
+| 1.3  | Plan Implementation Sprint                       | CRM PM           | ⏸️ BLOCKED (awaiting contract) |
+| 1.4  | Approve Contract v2.0                            | CRM PM + Advisor | ⏸️ BLOCKED (awaiting contract) |
 
 **Contract v2.0 Draft:** `docs/integration_contracts/podio-schema-v2.0.json` (TO BE CREATED)
 
-**Blocking Issues:** None identified
+#### **CRM Review Criteria Checklist (Ready for Contract Arrival)**
+
+When Data Team submits contract v2.0, CRM PM will validate against these criteria:
+
+**Technical Feasibility (Task 1.1):**
+
+- [ ] Total field count ≤ 50 (Podio performance limit)
+- [ ] All proposed field types supported by Podio (number, text, category, money, date, phone, email)
+- [ ] "Hidden if empty" strategy viable for lead-type-specific fields
+- [ ] Field organization into Sections (8 sections for 7 lead types + Universal)
+- [ ] Performance target: <3 second workspace load with all fields
+
+**Business Value (Task 1.2):**
+
+- [ ] All Universal fields (15) align with Core Pillar requirements
+- [ ] NED Bundle (5 fields): Auction Date, Balance Due, Law Firm, Opening Bid, First Publication
+- [ ] Probate Bundle (5 fields): Executor Name, Case Number, Filing Date, Estate Value, Decedent Name
+- [ ] Absentee Bundle (4 fields): Portfolio Count, Ownership Tenure, Out-of-State Flag, Last Sale Date
+- [ ] Tax Lien Bundle (4 fields): TBD - await Data Team proposal
+- [ ] Code Violation Bundle (4 fields): TBD - await Data Team proposal
+- [ ] Foreclosure Auction Bundle (5 fields): TBD - await Data Team proposal
+- [ ] Tired Landlord Bundle (4 fields): TBD - await Data Team proposal
+- [ ] No redundant fields across bundles
+- [ ] Agent utility validated (each field serves qualification workflow)
+
+**Implementation Planning (Task 1.3):**
+
+- [ ] Estimated effort: X days for Y fields (calculate after contract)
+- [ ] Resource allocation: Code Mode (field creation) + Debug Mode (testing)
+- [ ] Sprint timeline coordinated with Data Team
+
+**Contract Approval (Task 1.4):**
+
+- [ ] All Technical Feasibility items passed
+- [ ] All Business Value items validated
+- [ ] High-Level Advisor Core Pillar alignment confirmed
+- [ ] 48hr review SLA honored (from contract submission date)
+
+**Bilateral Protocol:**
+
+- Contract submitted by Data Team → GitHub PR notification
+- CRM PM completes review within 48 hours
+- Approval/rejection posted to GitHub PR Comments
+- Data Normalizer validation (parallel with CRM review)
+
+**Blocking Issues:** ⏳ Awaiting Data Team contract v2.0 submission (bilateral protocol: Data Team proposes, CRM Team reviews)
 
 ---
 
