@@ -134,6 +134,74 @@
         font-style: italic;
         color: #6c757d;
       }
+
+      /* Probate Fiduciary Gate Styles (Phase 2 - SOFT Gate) */
+      .compliance-badge.fiduciary-contact {
+        background-color: #ff9800;
+        color: #000;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        position: relative;
+      }
+      .compliance-badge.fiduciary-contact:hover {
+        background-color: #f57c00;
+      }
+      .fiduciary-tooltip {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff3e0;
+        border: 2px solid #ff9800;
+        border-radius: 8px;
+        padding: 16px;
+        max-width: 350px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        margin-top: 8px;
+        display: none;
+      }
+      .fiduciary-tooltip.visible {
+        display: block;
+      }
+      .fiduciary-tooltip .tooltip-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .fiduciary-tooltip .tooltip-body {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .fiduciary-tooltip .tooltip-body ul {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+      .fiduciary-tooltip .tooltip-body li {
+        margin: 4px 0;
+      }
+      .fiduciary-tooltip .btn-acknowledge {
+        background: #ff9800;
+        color: #000;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 12px;
+        width: 100%;
+      }
+      .fiduciary-tooltip .btn-acknowledge:hover {
+        background: #f57c00;
+      }
     </style>
   </head>
   <body class="bg-gray-50 min-h-screen">
@@ -144,6 +212,7 @@
           <div class="flex items-center space-x-4">
             <h1 class="text-2xl font-bold text-gray-900">Agent Workspace</h1>
             
+            <!-- Compliance Status Badge -->
             <!-- Compliance Status Badge -->
             {% if lead_data.owner_occupied == 'Yes' %}
             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-red-600 text-white shadow-sm">
@@ -160,7 +229,31 @@
               ❓ Occupancy Unknown
             </span>
             {% endif %}
-          </div>
+            
+            <!-- Probate Fiduciary Gate Badge (SOFT Gate - Phase 2) -->
+            {% if lead_data.lead_type == 'Probate/Estate' %}
+            <div class="relative inline-block" id="fiduciary-badge-container">
+              <span class="compliance-badge fiduciary-contact" id="fiduciary-badge" onclick="toggleFiduciaryTooltip()">
+                🔶 Fiduciary Contact
+              </span>
+              <div class="fiduciary-tooltip" id="fiduciary-tooltip">
+                <div class="tooltip-header">
+                  <span class="icon">⚖️</span>
+                  <strong>Fiduciary Contact Notice</strong>
+                </div>
+                <div class="tooltip-body">
+                  <p><strong>Important:</strong> You are contacting a <em>Personal Representative</em> (Executor or Administrator), NOT the property owner.</p>
+                  <ul>
+                    <li>The property owner is <strong>deceased</strong></li>
+                    <li>The PR has legal authority to sell estate property</li>
+                    <li>Use fiduciary-appropriate language</li>
+                    <li>Avoid phrases implying the PR is "in trouble"</li>
+                  </ul>
+                </div>
+                <button class="btn-acknowledge" onclick="acknowledgeFiduciaryNotice()">I Understand</button>
+              </div>
+            </div>
+            {% endif %}
 
           <div class="flex items-center space-x-2">
             <span
@@ -1434,6 +1527,11 @@
         "Foreclosure Auction": {
           "Auction Details": ["auction_platform", "auction_date", "opening_bid"],
           "Location & Logistics": ["auction_location", "registration_deadline"]
+        },
+        // V4.0 Phase 2 - Probate/Estate Bundle
+        "Probate/Estate": {
+          "Probate Details": ["probate_case_number", "probate_filing_date", "court_jurisdiction"],
+          "Estate Information": ["executor_name", "decedent_name", "estate_value"]
         }
       };
 
@@ -1446,7 +1544,14 @@
         "first_publication_date": { label: "First Publication Date", type: "date" },
         "auction_platform": { label: "Auction Platform", type: "text" },
         "auction_location": { label: "Auction Location", type: "text" },
-        "registration_deadline": { label: "Registration Deadline", type: "date" }
+        "registration_deadline": { label: "Registration Deadline", type: "date" },
+        // V4.0 Phase 2 - Probate/Estate Fields
+        "executor_name": { label: "Personal Representative", type: "fiduciary" },
+        "probate_case_number": { label: "Case Number", type: "text" },
+        "probate_filing_date": { label: "Filing Date", type: "date" },
+        "estate_value": { label: "Estate Value", type: "money" },
+        "decedent_name": { label: "Decedent Name", type: "text" },
+        "court_jurisdiction": { label: "Court Jurisdiction", type: "text" }
       };
 
       function formatMoney(value) {
@@ -1490,6 +1595,17 @@
               </span>
               <p class="text-xs text-red-600 mt-1 w-full">
                 ⚠️ Compliance: Obtain attorney consent before dialing
+              </p>
+            `;
+          } else if (meta.type === 'fiduciary') {
+            // V4.0 Phase 2: Fiduciary contact styling for Personal Representative
+            valueClass = "text-base font-semibold text-orange-700";
+            extraHtml = `
+              <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 ml-2">
+                🔶 Fiduciary
+              </span>
+              <p class="text-xs text-orange-600 mt-1 w-full">
+                ℹ️ This is the Executor/Administrator, not the property owner
               </p>
             `;
           }
@@ -1538,6 +1654,40 @@
           });
         }
       }
+
+      // ==========================================
+      // PROBATE FIDUCIARY GATE (SOFT - Phase 2)
+      // ==========================================
+
+      let fiduciaryNoticeAcknowledged = false;
+
+      function toggleFiduciaryTooltip() {
+        const tooltip = document.getElementById('fiduciary-tooltip');
+        if (tooltip) {
+          tooltip.classList.toggle('visible');
+          if (tooltip.classList.contains('visible')) {
+            console.log('SOFT GATE: Fiduciary notice displayed for lead:', itemId);
+          }
+        }
+      }
+
+      function acknowledgeFiduciaryNotice() {
+        fiduciaryNoticeAcknowledged = true;
+        const tooltip = document.getElementById('fiduciary-tooltip');
+        if (tooltip) {
+          tooltip.classList.remove('visible');
+        }
+        console.log('✅ Fiduciary notice acknowledged by agent for lead:', itemId);
+      }
+
+      // Close tooltip when clicking outside
+      document.addEventListener('click', function(event) {
+        const badge = document.getElementById('fiduciary-badge');
+        const tooltip = document.getElementById('fiduciary-tooltip');
+        if (badge && tooltip && !badge.contains(event.target) && !tooltip.contains(event.target)) {
+          tooltip.classList.remove('visible');
+        }
+      });
 
       // Initialize on page load
       window.addEventListener("DOMContentLoaded", () => {

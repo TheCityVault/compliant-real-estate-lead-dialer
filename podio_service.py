@@ -64,6 +64,13 @@ from config import (
     OWNER_NAME_SECONDARY_FIELD_ID,
     OWNER_PHONE_SECONDARY_FIELD_ID,
     OWNER_EMAIL_SECONDARY_FIELD_ID,
+    # V4.0 Phase 2 Fields (Contract v2.0 Accelerated - Probate/Estate)
+    EXECUTOR_NAME_FIELD_ID,
+    PROBATE_CASE_NUMBER_FIELD_ID,
+    PROBATE_FILING_DATE_FIELD_ID,
+    ESTATE_VALUE_FIELD_ID,
+    DECEDENT_NAME_FIELD_ID,
+    COURT_JURISDICTION_FIELD_ID,
     podio_access_token
 )
 
@@ -91,7 +98,16 @@ FIELD_BUNDLES = {
         "auction_location",      # Physical or online location
         "registration_deadline"  # Deadline to register for auction
     ],
-    # Probate/Estate, Tax Lien, Code Violation - Phase 2
+    # V4.0 Phase 2 - Probate/Estate Bundle (6 fields)
+    "Probate/Estate": [
+        "executor_name",        # Personal Representative (Executor/Administrator)
+        "probate_case_number",  # Court case identifier for deduplication
+        "probate_filing_date",  # Date probate was filed with court
+        "estate_value",         # Total estate value from court filings
+        "decedent_name",        # Original property owner (deceased)
+        "court_jurisdiction"    # County/district court handling probate
+    ],
+    # Tax Lien, Code Violation - Phase 2 (pending Monday sync)
     # Absentee Owner, Tired Landlord - Phase 3
 }
 
@@ -425,12 +441,24 @@ def get_lead_intelligence(item_id):
         })
         print(f"V4.0 Phase 1: Extracted Foreclosure Auction bundle for item {item_id}")
         
+    elif lead_type == "Probate/Estate":
+        # V4.0 Phase 2 - Probate/Estate Bundle (6 fields)
+        intelligence.update({
+            'executor_name': extract_field_value_by_id(item, EXECUTOR_NAME_FIELD_ID),
+            'probate_case_number': extract_field_value_by_id(item, PROBATE_CASE_NUMBER_FIELD_ID),
+            'probate_filing_date': extract_field_value_by_id(item, PROBATE_FILING_DATE_FIELD_ID),
+            'estate_value': extract_field_value_by_id(item, ESTATE_VALUE_FIELD_ID),
+            'decedent_name': extract_field_value_by_id(item, DECEDENT_NAME_FIELD_ID),
+            'court_jurisdiction': extract_field_value_by_id(item, COURT_JURISDICTION_FIELD_ID),
+        })
+        print(f"V4.0 Phase 2: Extracted Probate/Estate bundle for item {item_id}")
+        
     else:
         # Unknown or unsupported lead type - log for Phase 2/3 development
         if lead_type:
-            print(f"V4.0 Phase 1: Lead type '{lead_type}' not yet supported - Phase 2/3 bundle")
+            print(f"V4.0: Lead type '{lead_type}' not yet supported - Phase 2/3 bundle")
         else:
-            print(f"V4.0 Phase 1: No lead_type set for item {item_id}")
+            print(f"V4.0: No lead_type set for item {item_id}")
     
     # STEP 4: Extract Universal Compliance & Secondary Owner Fields (apply to ALL lead types)
     # These fields are critical for compliance and apply regardless of lead type

@@ -105,6 +105,15 @@ OWNER_NAME_SECONDARY_FIELD_ID = 274947475
 OWNER_PHONE_SECONDARY_FIELD_ID = 274947473
 OWNER_EMAIL_SECONDARY_FIELD_ID = 274947474
 
+# V4.0 Phase 2 Fields - Probate/Estate (Contract v2.0 Accelerated)
+# Authorization: High-Level Advisor 2025-11-30
+EXECUTOR_NAME_FIELD_ID = 274950063
+PROBATE_CASE_NUMBER_FIELD_ID = 274950064
+PROBATE_FILING_DATE_FIELD_ID = 274950065
+ESTATE_VALUE_FIELD_ID = 274950066
+DECEDENT_NAME_FIELD_ID = 274950067
+COURT_JURISDICTION_FIELD_ID = 274950068
+
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
 MASTER_LEAD_APP_ID = '30549135'  # Master Lead app for item filtering
@@ -243,10 +252,17 @@ def validate_enriched_fields():
         'OWNER_NAME_SECONDARY_FIELD_ID': OWNER_NAME_SECONDARY_FIELD_ID,
         'OWNER_PHONE_SECONDARY_FIELD_ID': OWNER_PHONE_SECONDARY_FIELD_ID,
         'OWNER_EMAIL_SECONDARY_FIELD_ID': OWNER_EMAIL_SECONDARY_FIELD_ID,
+        # V4.0 Phase 2 Fields - Probate/Estate (6 fields - Contract v2.0 Accelerated)
+        'EXECUTOR_NAME_FIELD_ID': EXECUTOR_NAME_FIELD_ID,
+        'PROBATE_CASE_NUMBER_FIELD_ID': PROBATE_CASE_NUMBER_FIELD_ID,
+        'PROBATE_FILING_DATE_FIELD_ID': PROBATE_FILING_DATE_FIELD_ID,
+        'ESTATE_VALUE_FIELD_ID': ESTATE_VALUE_FIELD_ID,
+        'DECEDENT_NAME_FIELD_ID': DECEDENT_NAME_FIELD_ID,
+        'COURT_JURISDICTION_FIELD_ID': COURT_JURISDICTION_FIELD_ID,
     }
     
     print(f"\n{'='*50}")
-    print(f"=== V4.0 PHASE 1 FIELD VALIDATION (28 FIELDS) ===")
+    print(f"=== V4.0 PHASE 2 FIELD VALIDATION (34 FIELDS) ===")
     all_valid = True
     for field_name, field_id in enriched_fields.items():
         if field_id is not None:
@@ -256,7 +272,7 @@ def validate_enriched_fields():
             all_valid = False
     
     if all_valid:
-        print(f"✅ All 28 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1)")
+        print(f"✅ All 34 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate)")
     else:
         print(f"⚠️ WARNING: Some field IDs are missing")
     print(f"{'='*50}\n")
