@@ -1,0 +1,23 @@
+{
+  "created_date": "2025-11-30T18:32:08Z",
+  "contract_version": "2.0.0",
+  "phase": "2b-TAXLIEN",
+  "authorization": "High-Level Advisor 2025-11-30",
+  "app_id": "30549135",
+  "success_count": 4,
+  "failure_count": 0,
+  "fields": {
+    "tax_debt_amount": 274954741,
+    "delinquency_start_date": 274954742,
+    "redemption_deadline": 274954743,
+    "lien_type": 274954744
+  },
+  "gate_config": {
+    "redemption_deadline": {
+      "gate_type": "SOFT",
+      "trigger_condition": "within_30_days",
+      "badge_text": "\ud83d\udd34 Imminent Deadline",
+      "behavior": "Warning banner about ethical urgency language"
+    }
+  }
+}

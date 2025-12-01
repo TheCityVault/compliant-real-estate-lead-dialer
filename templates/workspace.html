@@ -134,6 +134,158 @@
         font-style: italic;
         color: #6c757d;
       }
+
+      /* Probate Fiduciary Gate Styles (Phase 2a - SOFT Gate) */
+      .compliance-badge.fiduciary-contact {
+        background-color: #ff9800;
+        color: #000;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        position: relative;
+      }
+      .compliance-badge.fiduciary-contact:hover {
+        background-color: #f57c00;
+      }
+
+      /* Tax Lien Redemption Deadline Gate Styles (Phase 2b - SOFT Gate) */
+      .compliance-badge.imminent-deadline {
+        background-color: #dc2626;
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        position: relative;
+        animation: pulse-red 2s infinite;
+      }
+      .compliance-badge.imminent-deadline:hover {
+        background-color: #b91c1c;
+      }
+      @keyframes pulse-red {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+      }
+      .deadline-tooltip {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fef2f2;
+        border: 2px solid #dc2626;
+        border-radius: 8px;
+        padding: 16px;
+        max-width: 380px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        margin-top: 8px;
+        display: none;
+      }
+      .deadline-tooltip.visible {
+        display: block;
+      }
+      .deadline-tooltip .tooltip-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        font-weight: bold;
+        color: #dc2626;
+      }
+      .deadline-tooltip .tooltip-body {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .deadline-tooltip .tooltip-body ul {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+      .deadline-tooltip .tooltip-body li {
+        margin: 4px 0;
+      }
+      .deadline-tooltip .days-remaining {
+        font-size: 24px;
+        font-weight: bold;
+        color: #dc2626;
+        text-align: center;
+        padding: 8px;
+        background: #fee2e2;
+        border-radius: 4px;
+        margin: 8px 0;
+      }
+      .deadline-tooltip .btn-acknowledge {
+        background: #dc2626;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 12px;
+        width: 100%;
+      }
+      .deadline-tooltip .btn-acknowledge:hover {
+        background: #b91c1c;
+      }
+      .fiduciary-tooltip {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff3e0;
+        border: 2px solid #ff9800;
+        border-radius: 8px;
+        padding: 16px;
+        max-width: 350px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        margin-top: 8px;
+        display: none;
+      }
+      .fiduciary-tooltip.visible {
+        display: block;
+      }
+      .fiduciary-tooltip .tooltip-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .fiduciary-tooltip .tooltip-body {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .fiduciary-tooltip .tooltip-body ul {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+      .fiduciary-tooltip .tooltip-body li {
+        margin: 4px 0;
+      }
+      .fiduciary-tooltip .btn-acknowledge {
+        background: #ff9800;
+        color: #000;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 12px;
+        width: 100%;
+      }
+      .fiduciary-tooltip .btn-acknowledge:hover {
+        background: #f57c00;
+      }
     </style>
   </head>
   <body class="bg-gray-50 min-h-screen">
@@ -144,6 +296,7 @@
           <div class="flex items-center space-x-4">
             <h1 class="text-2xl font-bold text-gray-900">Agent Workspace</h1>
             
+            <!-- Compliance Status Badge -->
             <!-- Compliance Status Badge -->
             {% if lead_data.owner_occupied == 'Yes' %}
             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-red-600 text-white shadow-sm">
@@ -160,7 +313,60 @@
               ❓ Occupancy Unknown
             </span>
             {% endif %}
-          </div>
+            
+            <!-- Probate Fiduciary Gate Badge (SOFT Gate - Phase 2) -->
+            {% if lead_data.lead_type == 'Probate/Estate' %}
+            <div class="relative inline-block" id="fiduciary-badge-container">
+              <span class="compliance-badge fiduciary-contact" id="fiduciary-badge" onclick="toggleFiduciaryTooltip()">
+                🔶 Fiduciary Contact
+              </span>
+              <div class="fiduciary-tooltip" id="fiduciary-tooltip">
+                <div class="tooltip-header">
+                  <span class="icon">⚖️</span>
+                  <strong>Fiduciary Contact Notice</strong>
+                </div>
+                <div class="tooltip-body">
+                  <p><strong>Important:</strong> You are contacting a <em>Personal Representative</em> (Executor or Administrator), NOT the property owner.</p>
+                  <ul>
+                    <li>The property owner is <strong>deceased</strong></li>
+                    <li>The PR has legal authority to sell estate property</li>
+                    <li>Use fiduciary-appropriate language</li>
+                    <li>Avoid phrases implying the PR is "in trouble"</li>
+                  </ul>
+                </div>
+                <button class="btn-acknowledge" onclick="acknowledgeFiduciaryNotice()">I Understand</button>
+              </div>
+            </div>
+            {% endif %}
+            
+            <!-- Tax Lien Redemption Deadline Gate Badge (SOFT Gate - Phase 2b) -->
+            {% if lead_data.lead_type == 'Tax Lien' %}
+            <div class="relative inline-block" id="deadline-badge-container" style="display: none;">
+              <span class="compliance-badge imminent-deadline" id="deadline-badge" onclick="toggleDeadlineTooltip()">
+                🔴 Imminent Deadline
+              </span>
+              <div class="deadline-tooltip" id="deadline-tooltip">
+                <div class="tooltip-header">
+                  <span class="icon">⏰</span>
+                  <strong>Redemption Deadline Alert</strong>
+                </div>
+                <div class="days-remaining" id="days-remaining-display">
+                  -- Days Remaining
+                </div>
+                <div class="tooltip-body">
+                  <p><strong>Important:</strong> This property has an imminent tax lien redemption deadline.</p>
+                  <ul>
+                    <li>Avoid applying <strong>undue pressure</strong> based on deadline</li>
+                    <li>Do NOT use fear-based urgency language</li>
+                    <li>Present facts neutrally without creating panic</li>
+                    <li>Respect the owner's decision-making process</li>
+                  </ul>
+                  <p class="text-sm text-gray-600 mt-2">⚠️ Compliance: Ethical outreach required regardless of timeline urgency.</p>
+                </div>
+                <button class="btn-acknowledge" onclick="acknowledgeDeadlineNotice()">I Understand - Proceed Ethically</button>
+              </div>
+            </div>
+            {% endif %}
 
           <div class="flex items-center space-x-2">
             <span
@@ -1434,6 +1640,16 @@
         "Foreclosure Auction": {
           "Auction Details": ["auction_platform", "auction_date", "opening_bid"],
           "Location & Logistics": ["auction_location", "registration_deadline"]
+        },
+        // V4.0 Phase 2a - Probate/Estate Bundle
+        "Probate/Estate": {
+          "Probate Details": ["probate_case_number", "probate_filing_date", "court_jurisdiction"],
+          "Estate Information": ["executor_name", "decedent_name", "estate_value"]
+        },
+        // V4.0 Phase 2b - Tax Lien Bundle
+        "Tax Lien": {
+          "Tax Lien Details": ["lien_type", "tax_debt_amount"],
+          "Timeline & Urgency": ["delinquency_start_date", "redemption_deadline"]
         }
       };
 
@@ -1446,7 +1662,19 @@
         "first_publication_date": { label: "First Publication Date", type: "date" },
         "auction_platform": { label: "Auction Platform", type: "text" },
         "auction_location": { label: "Auction Location", type: "text" },
-        "registration_deadline": { label: "Registration Deadline", type: "date" }
+        "registration_deadline": { label: "Registration Deadline", type: "date" },
+        // V4.0 Phase 2a - Probate/Estate Fields
+        "executor_name": { label: "Personal Representative", type: "fiduciary" },
+        "probate_case_number": { label: "Case Number", type: "text" },
+        "probate_filing_date": { label: "Filing Date", type: "date" },
+        "estate_value": { label: "Estate Value", type: "money" },
+        "decedent_name": { label: "Decedent Name", type: "text" },
+        "court_jurisdiction": { label: "Court Jurisdiction", type: "text" },
+        // V4.0 Phase 2b - Tax Lien Fields
+        "tax_debt_amount": { label: "Tax Debt Amount", type: "money" },
+        "delinquency_start_date": { label: "Delinquency Start Date", type: "date" },
+        "redemption_deadline": { label: "Redemption Deadline", type: "deadline" },
+        "lien_type": { label: "Lien Type", type: "category" }
       };
 
       function formatMoney(value) {
@@ -1492,6 +1720,51 @@
                 ⚠️ Compliance: Obtain attorney consent before dialing
               </p>
             `;
+          } else if (meta.type === 'fiduciary') {
+            // V4.0 Phase 2a: Fiduciary contact styling for Personal Representative
+            valueClass = "text-base font-semibold text-orange-700";
+            extraHtml = `
+              <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 ml-2">
+                🔶 Fiduciary
+              </span>
+              <p class="text-xs text-orange-600 mt-1 w-full">
+                ℹ️ This is the Executor/Administrator, not the property owner
+              </p>
+            `;
+          } else if (meta.type === 'deadline') {
+            // V4.0 Phase 2b: Redemption deadline with urgency indicator
+            const daysRemaining = calculateDaysUntilDeadline(value);
+            if (daysRemaining !== null && daysRemaining <= 30) {
+              valueClass = "text-base font-bold text-red-700";
+              extraHtml = `
+                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
+                  🔴 ${daysRemaining} days remaining
+                </span>
+                <p class="text-xs text-red-600 mt-1 w-full">
+                  ⚠️ Use ethical language - avoid pressure tactics
+                </p>
+              `;
+            } else if (daysRemaining !== null && daysRemaining <= 60) {
+              valueClass = "text-base font-semibold text-orange-600";
+              extraHtml = `
+                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 ml-2">
+                  🟠 ${daysRemaining} days remaining
+                </span>
+              `;
+            }
+          } else if (meta.type === 'category') {
+            // Category fields - display as badge
+            valueClass = "text-base font-semibold text-gray-900";
+            const categoryColors = {
+              'Property Tax': 'bg-green-100 text-green-800',
+              'IRS Federal': 'bg-red-100 text-red-800',
+              'State Tax': 'bg-blue-100 text-blue-800',
+              'HOA/Assessment': 'bg-yellow-100 text-yellow-800',
+              'Municipal/Utility': 'bg-purple-100 text-purple-800',
+              'Multiple': 'bg-pink-100 text-pink-800'
+            };
+            const colorClass = categoryColors[value] || 'bg-gray-100 text-gray-800';
+            displayValue = `<span class="inline-flex items-center px-2 py-1 rounded text-sm font-medium ${colorClass}">${value}</span>`;
           }
         }
 
@@ -1539,12 +1812,126 @@
         }
       }
 
+      // ==========================================
+      // PROBATE FIDUCIARY GATE (SOFT - Phase 2)
+      // ==========================================
+
+      let fiduciaryNoticeAcknowledged = false;
+
+      function toggleFiduciaryTooltip() {
+        const tooltip = document.getElementById('fiduciary-tooltip');
+        if (tooltip) {
+          tooltip.classList.toggle('visible');
+          if (tooltip.classList.contains('visible')) {
+            console.log('SOFT GATE: Fiduciary notice displayed for lead:', itemId);
+          }
+        }
+      }
+
+      function acknowledgeFiduciaryNotice() {
+        fiduciaryNoticeAcknowledged = true;
+        const tooltip = document.getElementById('fiduciary-tooltip');
+        if (tooltip) {
+          tooltip.classList.remove('visible');
+        }
+        console.log('✅ Fiduciary notice acknowledged by agent for lead:', itemId);
+      }
+
+      // Close fiduciary tooltip when clicking outside
+      document.addEventListener('click', function(event) {
+        const badge = document.getElementById('fiduciary-badge');
+        const tooltip = document.getElementById('fiduciary-tooltip');
+        if (badge && tooltip && !badge.contains(event.target) && !tooltip.contains(event.target)) {
+          tooltip.classList.remove('visible');
+        }
+        // Also handle deadline tooltip
+        const deadlineBadge = document.getElementById('deadline-badge');
+        const deadlineTooltip = document.getElementById('deadline-tooltip');
+        if (deadlineBadge && deadlineTooltip && !deadlineBadge.contains(event.target) && !deadlineTooltip.contains(event.target)) {
+          deadlineTooltip.classList.remove('visible');
+        }
+      });
+
+      // ==========================================
+      // TAX LIEN REDEMPTION DEADLINE GATE (SOFT - Phase 2b)
+      // ==========================================
+
+      let deadlineNoticeAcknowledged = false;
+
+      function calculateDaysUntilDeadline(dateString) {
+        if (!dateString) return null;
+        try {
+          // Expected format: YYYY-MM-DD
+          const deadline = new Date(dateString + 'T00:00:00');
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const diffTime = deadline - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        } catch (e) {
+          console.error('Error calculating days until deadline:', e);
+          return null;
+        }
+      }
+
+      function checkRedemptionDeadlineGate() {
+        // Only check for Tax Lien lead types
+        if (leadData.lead_type !== 'Tax Lien') return;
+        
+        const redemptionDeadline = intelligenceData.redemption_deadline;
+        if (!redemptionDeadline) return;
+        
+        const daysRemaining = calculateDaysUntilDeadline(redemptionDeadline);
+        
+        if (daysRemaining !== null && daysRemaining <= 30 && daysRemaining >= 0) {
+          // Show the imminent deadline badge
+          const badgeContainer = document.getElementById('deadline-badge-container');
+          if (badgeContainer) {
+            badgeContainer.style.display = 'inline-block';
+          }
+          
+          // Update days remaining display
+          const daysDisplay = document.getElementById('days-remaining-display');
+          if (daysDisplay) {
+            if (daysRemaining === 0) {
+              daysDisplay.textContent = 'TODAY - Deadline Day!';
+            } else if (daysRemaining === 1) {
+              daysDisplay.textContent = '1 Day Remaining';
+            } else {
+              daysDisplay.textContent = `${daysRemaining} Days Remaining`;
+            }
+          }
+          
+          console.log(`SOFT GATE: Redemption deadline in ${daysRemaining} days for lead:`, itemId);
+        }
+      }
+
+      function toggleDeadlineTooltip() {
+        const tooltip = document.getElementById('deadline-tooltip');
+        if (tooltip) {
+          tooltip.classList.toggle('visible');
+          if (tooltip.classList.contains('visible')) {
+            console.log('SOFT GATE: Redemption deadline notice displayed for lead:', itemId);
+          }
+        }
+      }
+
+      function acknowledgeDeadlineNotice() {
+        deadlineNoticeAcknowledged = true;
+        const tooltip = document.getElementById('deadline-tooltip');
+        if (tooltip) {
+          tooltip.classList.remove('visible');
+        }
+        console.log('✅ Redemption deadline notice acknowledged by agent for lead:', itemId);
+      }
+
       // Initialize on page load
       window.addEventListener("DOMContentLoaded", () => {
         initializeTwilioClient();
         checkMailingAddress();
         initializeDialer();
         renderIntelligencePanel();
+        checkRedemptionDeadlineGate();
       });
     </script>
   </body>

@@ -1,0 +1,24 @@
+{
+  "created_date": "2025-11-30T03:16:41Z",
+  "contract_version": "2.0.0",
+  "phase": "2-PROBATE-ACCELERATED",
+  "authorization": "High-Level Advisor 2025-11-30",
+  "app_id": "30549135",
+  "success_count": 6,
+  "failure_count": 0,
+  "fields": {
+    "executor_name": 274950063,
+    "probate_case_number": 274950064,
+    "probate_filing_date": 274950065,
+    "estate_value": 274950066,
+    "decedent_name": 274950067,
+    "court_jurisdiction": 274950068
+  },
+  "blocked_fields": [
+    "tax_debt_amount",
+    "delinquency_start_date",
+    "redemption_deadline",
+    "lien_type"
+  ],
+  "blocked_reason": "Tax Lien fields pending Monday bilateral sync"
+}
