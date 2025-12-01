@@ -13,6 +13,9 @@
     
     <!-- Compliance Gates Module (Extracted for CFPB Reg X auditability) -->
     <script src="/static/js/workspace/compliance-gates.js"></script>
+    
+    <!-- Twilio VOIP Module (Extracted for SDK upgrade isolation) -->
+    <script src="/static/js/workspace/twilio-voip.js"></script>
 
     <!-- Custom Configuration -->
     <script>
@@ -1232,10 +1235,10 @@ ComplianceGates.init({
             throw new Error("Failed to initiate call");
           }
 
-          // Extract and store CallSid from response
+          // Extract and store CallSid via TwilioVOIP module
           const responseData = await response.json();
-          currentCallSid = responseData.call_sid;
-          console.log("CallSid captured:", currentCallSid);
+          TwilioVOIP.setCurrentCallSid(responseData.call_sid);
+          console.log("CallSid captured:", responseData.call_sid);
 
           // Show call status
           callStatus.classList.remove("hidden");
@@ -1250,9 +1253,8 @@ ComplianceGates.init({
 
       // Disconnect button click handler
       disconnectButton.addEventListener("click", () => {
-        if (currentConnection) {
-          currentConnection.disconnect();
-          console.log("📴 User manually disconnected call");
+        if (TwilioVOIP.disconnect()) {
+          console.log("📴 User manually disconnected call via TwilioVOIP");
 
           // Update UI
           disconnectButton.classList.add("hidden");
@@ -1341,10 +1343,13 @@ ComplianceGates.init({
             `;
 
         try {
+          // Get CallSid from TwilioVOIP module
+          const callSid = TwilioVOIP.getCurrentCallSid();
+          
           // Prepare form data
           const formData = {
             item_id: itemId,
-            call_sid: currentCallSid,
+            call_sid: callSid,
             disposition_code: dispositionCodeSelect.value,
             agent_notes: document.getElementById("agent-notes").value,
             motivation_level: document.getElementById("motivation-level").value,
@@ -1352,7 +1357,7 @@ ComplianceGates.init({
             asking_price: document.getElementById("asking-price").value,
           };
 
-          console.log("Submitting form data with CallSid:", currentCallSid);
+          console.log("Submitting form data with CallSid:", callSid);
 
           // Submit to backend
           const response = await fetch("/submit_call_data", {
@@ -1461,143 +1466,15 @@ ComplianceGates.init({
       }
 
       // ==========================================
-      // TWILIO VOICE SDK INITIALIZATION
+      // TWILIO VOIP (Extracted to /static/js/workspace/twilio-voip.js)
       // ==========================================
-
-      let twilioDevice = null;
-      let currentConnection = null;
-      let currentCallSid = null; // Store CallSid for mapping
-      // Store the random identity globally for reuse
-      let agentIdentity = "agent_" + Math.random().toString(36).substr(2, 9);
-
-      async function initializeTwilioClient() {
-        try {
-          // Wait for Twilio SDK to be loaded
-          if (typeof Twilio === "undefined") {
-            console.log("⏳ Waiting for Twilio SDK to load...");
-            updateDeviceStatus("Loading SDK...", "warning");
-            await waitForTwilioSDK();
-          }
-
-          console.log("✅ Twilio SDK loaded successfully");
-
-          // Fetch access token from backend using the stored identity
-          const response = await fetch("/token?identity=" + agentIdentity);
-          if (!response.ok) {
-            throw new Error("Failed to fetch Twilio token");
-          }
-
-          const data = await response.json();
-          console.log("Twilio token obtained for identity:", data.identity);
-
-          // Pre-fill the Agent Connection field with the identity used for registration
-          document.getElementById("agent-id").value = "client:" + agentIdentity;
-          console.log(
-            "✅ Agent Connection field pre-populated with:",
-            "client:" + agentIdentity
-          );
-
-          // Access Device from Twilio SDK v2 (Device is directly on Twilio object in v2.11.1)
-          const Device = Twilio.Device;
-
-          // Initialize Twilio Device (v2 API)
-          twilioDevice = new Device(data.token, {
-            logLevel: 1, // 1 = debug, 0 = trace
-            codecPreferences: [Twilio.Call.Codec.Opus, Twilio.Call.Codec.PCMU],
-          });
-
-          // Device registered event (v2: 'ready' → 'registered')
-          twilioDevice.on("registered", function () {
-            console.log("✅ Twilio Device is ready to receive calls");
-            updateDeviceStatus("Ready", "success");
-          });
-
-          // Incoming call event (v2: connection → call)
-          twilioDevice.on("incoming", function (call) {
-            console.log("📞 Incoming call from:", call.parameters.From);
-            currentConnection = call;
-
-            // Show disconnect button, hide dial button
-            dialButton.classList.add("hidden");
-            disconnectButton.classList.remove("hidden");
-
-            // Set up call event handlers BEFORE accepting
-            call.on("accept", function () {
-              console.log("✅ Call accepted and connected");
-              updateDeviceStatus("Active Call", "success");
-            });
-
-            call.on("disconnect", function () {
-              console.log("📴 Call ended");
-              currentConnection = null;
-              updateDeviceStatus("Ready", "success");
-
-              // Hide disconnect button, show dial button
-              disconnectButton.classList.add("hidden");
-              dialButton.classList.remove("hidden");
-              dialButton.disabled = false;
-              dialButton.classList.remove("opacity-50", "cursor-not-allowed");
-              callStatus.classList.add("hidden");
-            });
-
-            call.on("error", function (error) {
-              console.error("❌ Call error:", error);
-              updateDeviceStatus("Call Error", "error");
-            });
-
-            // Auto-accept the incoming call (agent initiated it via "Initiate Call" button)
-            call.accept();
-            updateDeviceStatus("Accepting...", "warning");
-          });
-
-          // Error handling (v2: error event still exists)
-          twilioDevice.on("error", function (error) {
-            console.error("❌ Twilio Device error:", error);
-            updateDeviceStatus("Error: " + error.message, "error");
-          });
-
-          // Register the device (v2: must explicitly register)
-          await twilioDevice.register();
-          console.log("Device registration initiated...");
-        } catch (error) {
-          console.error("Failed to initialize Twilio Client:", error);
-          updateDeviceStatus("SDK Error", "error");
-        }
-      }
-
-      function updateDeviceStatus(message, type) {
-        const statusEl = document.getElementById("twilio-device-status");
-        if (statusEl) {
-          statusEl.textContent = message;
-          if (type === "success") {
-            statusEl.className = "ml-1 text-green-600";
-          } else if (type === "warning") {
-            statusEl.className = "ml-1 text-yellow-600";
-          } else {
-            statusEl.className = "ml-1 text-red-600";
-          }
-        }
-      }
-
-      // Wait for Twilio SDK to be loaded (with timeout)
-      function waitForTwilioSDK() {
-        return new Promise((resolve, reject) => {
-          let attempts = 0;
-          const maxAttempts = 50; // 10 seconds max wait
-
-          const checkTwilio = setInterval(() => {
-            attempts++;
-
-            if (typeof Twilio !== "undefined") {
-              clearInterval(checkTwilio);
-              resolve();
-            } else if (attempts >= maxAttempts) {
-              clearInterval(checkTwilio);
-              reject(new Error("Twilio SDK failed to load after 10 seconds"));
-            }
-          }, 200); // Check every 200ms
-        });
-      }
+      // All Twilio Voice SDK initialization and call handling logic has been
+      // moved to the TwilioVOIP module for SDK upgrade isolation.
+      //
+      // Module is initialized below in DOMContentLoaded with TwilioVOIP.init()
+      // Functions available: getCurrentCallSid, setCurrentCallSid, disconnect,
+      //                      getAgentIdentity, getCurrentConnection, isReady,
+      //                      hasActiveCall, updateStatus
 
       // ==========================================
       // DYNAMIC INTELLIGENCE PANEL (V4.0 Phase 1)
@@ -1799,7 +1676,14 @@ ComplianceGates.init({
 
       // Initialize on page load
       window.addEventListener("DOMContentLoaded", () => {
-        initializeTwilioClient();
+        // Initialize TwilioVOIP module with DOM element references
+        TwilioVOIP.init({
+          dialButton: dialButton,
+          disconnectButton: disconnectButton,
+          callStatus: callStatus,
+          agentIdField: document.getElementById("agent-id")
+        });
+        
         checkMailingAddress();
         initializeDialer();
         renderIntelligencePanel();
