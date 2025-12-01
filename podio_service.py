@@ -1,15 +1,15 @@
 """
-Podio Service Module - Field Extraction, Intelligence, and Task Management
+Podio Service Module - Intelligence and Task Management
 
 This module handles:
-- Field value extraction and parsing
 - Lead intelligence extraction (V4.0)
 - Task creation (V3.3)
-- Data transformation utilities
+- Lead-type-specific field bundle definitions
 
 Extracted modules:
 - OAuth token management: services/podio/oauth.py
 - Item CRUD operations: services/podio/item_service.py
+- Field value extraction: services/podio/field_extraction.py
 
 For improved modularity and security auditing.
 """
@@ -94,6 +94,13 @@ from services.podio.item_service import (
     parse_currency,
 )
 
+# Import Field Extraction from extracted module (V4.0.8)
+# Backward compatibility: These functions are re-exported for existing imports
+from services.podio.field_extraction import (
+    extract_field_value,
+    extract_field_value_by_id,
+)
+
 # ============================================================================
 # LEAD-TYPE-SPECIFIC FIELD BUNDLES (Contract v2.0)
 # ============================================================================
@@ -153,130 +160,16 @@ FIELD_BUNDLES = {
 #   - update_call_activity_recording(...) - Update recording URL
 #   - generate_title(data, item_id) - Generate Call Activity title
 #   - convert_to_iso_date(date_string) - Date format conversion
-#   - parse_currency(value) - Currency string parsing
 # See services/podio/item_service.py for implementation details.
+
 # ============================================================================
 # FIELD VALUE EXTRACTION
 # ============================================================================
-
-def extract_field_value(item, field_label):
-    """
-    Extract field value from Podio item by field label
-    
-    Args:
-        item: Podio item dictionary
-        field_label: Label of the field to extract
-        
-    Returns:
-        str: Field value, or empty string if not found
-        
-    Note:
-        V3.6 Fix: Handles multiple field types:
-        - Text fields: {'value': '<p>Name</p>'} -> strips HTML
-        - Category fields: {'value': {'text': 'NED Listing', ...}} -> extracts 'text'
-        - Other fields: converts to string
-    """
-    for field in item.get('fields', []):
-        if field.get('label') == field_label:
-            values = field.get('values', [])
-            if values:
-                value = values[0]
-                
-                # Handle different field types
-                if isinstance(value, dict):
-                    inner_value = value.get('value', '')
-                    
-                    # V3.6 FIX: Handle category fields with nested {'text': '...'} structure
-                    if isinstance(inner_value, dict):
-                        # Category field - extract 'text' property
-                        text = inner_value.get('text', '')
-                    else:
-                        # Text field or other - convert to string
-                        text = str(inner_value) if inner_value is not None else ''
-                else:
-                    text = str(value)
-                
-                # Strip HTML tags (e.g., <p>Name</p> -> Name)
-                text = re.sub(r'<[^>]+>', '', text)
-                return text.strip()
-    return ''
-
-def extract_field_value_by_id(item, field_id, field_type=None):
-    """
-    Extract field value from Podio item by field ID (V4.0.5 Enhanced)
-    
-    Args:
-        item: Podio item dictionary
-        field_id: Numeric field ID to extract
-        field_type: Optional field type hint (number, category, money, text, date)
-                   If not provided, type is auto-detected from field metadata
-        
-    Returns:
-        Extracted value (type varies: int, float, str), or None if not found
-        
-    Note:
-        Handles all Podio field types: number, category, money, text, date.
-        Returns None for graceful degradation in UI.
-    """
-    if not item:
-        return None
-    
-    for field in item.get('fields', []):
-        if field.get('field_id') == int(field_id):
-            values = field.get('values', [])
-            if not values:
-                return None
-            
-            value = values[0]
-            # Use provided field_type or auto-detect from field metadata
-            detected_type = field.get('type')
-            field_type = field_type or detected_type
-            
-            # Handle different Podio field types
-            if field_type == 'category':
-                # Category fields: [{'value': {'text': 'WARM', ...}}]
-                # Extract nested 'value' dict first
-                if isinstance(value, dict) and 'value' in value:
-                    inner_value = value['value']
-                    return inner_value.get('text') if isinstance(inner_value, dict) else str(inner_value)
-                # Fallback for direct structure (shouldn't happen but defensive)
-                return value.get('text') if isinstance(value, dict) else str(value)
-            elif field_type == 'money':
-                # Money fields: [{'value': '323000.0000', 'currency': 'USD'}]
-                # Already handles nested 'value' correctly
-                return float(value.get('value')) if isinstance(value, dict) else None
-            elif field_type == 'number':
-                # Number fields: [{'value': '65.0000'}]
-                # Extract nested 'value' string first
-                if isinstance(value, dict) and 'value' in value:
-                    try:
-                        return float(value['value']) if value['value'] else None
-                    except (ValueError, TypeError):
-                        return None
-                # Fallback for direct value (old behavior)
-                try:
-                    return float(value) if value else None
-                except (ValueError, TypeError):
-                    return None
-            elif field_type == 'date':
-                # Date fields return dict with 'start' key (YYYY-MM-DD format)
-                return value.get('start') if isinstance(value, dict) else str(value)
-            elif field_type == 'text':
-                # Text fields: [{'value': '<p>R0090271</p>'}]
-                # Extract nested 'value' first
-                if isinstance(value, dict) and 'value' in value:
-                    text = value['value']
-                else:
-                    text = str(value) if value else None
-                
-                if text:
-                    text = re.sub(r'<[^>]+>', '', str(text))
-                    return text.strip()
-                return None
-            else:
-                # Default: return raw value
-                return value
-    return None
+# NOTE: Field extraction utilities have been extracted to services/podio/field_extraction.py
+# The following functions are imported above for backward compatibility:
+#   - extract_field_value(item, field_label) - Extract by field label
+#   - extract_field_value_by_id(item, field_id, field_type) - Extract by field ID
+# See services/podio/field_extraction.py for implementation details.
 
 def get_lead_intelligence(item_id):
     """
