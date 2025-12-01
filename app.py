@@ -663,16 +663,16 @@ def call_status():
 # ============================================================================
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
-    """Handle recording status callbacks from Twilio - V3.2.3 Complete"""
+    """Handle recording status callbacks from Twilio - V3.2.4 Parent CallSid Resolution"""
     recording_sid = request.form.get('RecordingSid')
     recording_url = request.form.get('RecordingUrl')
     call_sid = request.form.get('CallSid')
     recording_duration = request.form.get('RecordingDuration')
     
-    print(f"=== RECORDING STATUS CALLBACK (V3.2.3) ===")
+    print(f"=== RECORDING STATUS CALLBACK (V3.2.4) ===")
     print(f"Recording SID: {recording_sid}")
     print(f"Recording URL: {recording_url}")
-    print(f"Call SID: {call_sid}")
+    print(f"Call SID (from webhook): {call_sid}")
     print(f"Duration: {recording_duration} seconds")
     print(f"==========================================")
     
@@ -695,11 +695,34 @@ def recording_status():
             base_url=base_url
         )
         
-        # V3.2.3: Retrieve Podio Call Activity Item ID from mapping
+        # V3.2.4 FIX: Try direct lookup first, then resolve parent CallSid if needed
+        # The recording webhook receives the CHILD CallSid (prospect leg created by <Dial>)
+        # But the mapping stores the PARENT CallSid (agent leg from /dial endpoint)
         podio_item_id = get_podio_item_id_from_call_sid(call_sid)
         
+        if not podio_item_id:
+            # No direct mapping found - this is likely a child call from <Dial> TwiML
+            # Query Twilio API to find the parent CallSid
+            print(f"🔍 V3.2.4: No direct mapping for {call_sid}, checking for parent CallSid...")
+            try:
+                child_call = client.calls(call_sid).fetch()
+                parent_call_sid = child_call.parent_call_sid
+                
+                if parent_call_sid:
+                    print(f"🔗 V3.2.4: Found parent CallSid: {parent_call_sid}")
+                    # Now lookup using parent CallSid
+                    podio_item_id = get_podio_item_id_from_call_sid(parent_call_sid)
+                    if podio_item_id:
+                        print(f"✅ V3.2.4: Resolved via parent - Podio Item: {podio_item_id}")
+                    else:
+                        print(f"⚠️ V3.2.4: Parent CallSid {parent_call_sid} also has no mapping")
+                else:
+                    print(f"⚠️ V3.2.4: Call {call_sid} has no parent (is itself a parent call)")
+            except Exception as e:
+                print(f"❌ V3.2.4 ERROR: Failed to query Twilio for parent CallSid: {e}")
+        
         if podio_item_id:
-            print(f"V3.2.3: Found Podio mapping - Updating item {podio_item_id}")
+            print(f"V3.2.4: Found Podio mapping - Updating item {podio_item_id}")
             
             # Update Podio Call Activity with recording URL
             success, result = update_call_activity_recording(
@@ -708,11 +731,11 @@ def recording_status():
             )
             
             if success:
-                print(f"✅ V3.2.3 SUCCESS: Updated Podio Call Activity {podio_item_id} with recording URL")
+                print(f"✅ V3.2.4 SUCCESS: Updated Podio Call Activity {podio_item_id} with recording URL")
             else:
-                print(f"❌ V3.2.3 ERROR: Failed to update Podio: {result}")
+                print(f"❌ V3.2.4 ERROR: Failed to update Podio: {result}")
         else:
-            print("⚠️ V3.2.3 WARNING: No Podio mapping found for this CallSid - skipping Podio update")
+            print("⚠️ V3.2.4 WARNING: No Podio mapping found for this CallSid (even after parent resolution) - skipping Podio update")
     else:
         print("WARNING: Missing required recording parameters")
     
