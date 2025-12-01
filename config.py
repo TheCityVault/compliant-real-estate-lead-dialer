@@ -114,6 +114,13 @@ ESTATE_VALUE_FIELD_ID = 274950066
 DECEDENT_NAME_FIELD_ID = 274950067
 COURT_JURISDICTION_FIELD_ID = 274950068
 
+# V4.0 Phase 2b Fields - Tax Lien (Contract v2.0)
+# Authorization: High-Level Advisor 2025-11-30
+TAX_DEBT_AMOUNT_FIELD_ID = 274954741
+DELINQUENCY_START_DATE_FIELD_ID = 274954742
+REDEMPTION_DEADLINE_FIELD_ID = 274954743  # CRITICAL: Triggers SOFT Gate when within 30 days
+LIEN_TYPE_FIELD_ID = 274954744
+
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
 MASTER_LEAD_APP_ID = '30549135'  # Master Lead app for item filtering
@@ -213,9 +220,8 @@ else:
 # ============================================================================
 # CONFIGURATION VALIDATION
 # ============================================================================
-
 def validate_enriched_fields():
-    """Validate V4.0 enriched field IDs + V3.6 contact fields + V4.0 Phase 1 fields at startup"""
+    """Validate V4.0 enriched field IDs + V3.6 contact fields + V4.0 Phase 1/2 fields at startup"""
     enriched_fields = {
         # V4.0 Enriched Fields (11 fields)
         'LEAD_SCORE_FIELD_ID': LEAD_SCORE_FIELD_ID,
@@ -252,17 +258,22 @@ def validate_enriched_fields():
         'OWNER_NAME_SECONDARY_FIELD_ID': OWNER_NAME_SECONDARY_FIELD_ID,
         'OWNER_PHONE_SECONDARY_FIELD_ID': OWNER_PHONE_SECONDARY_FIELD_ID,
         'OWNER_EMAIL_SECONDARY_FIELD_ID': OWNER_EMAIL_SECONDARY_FIELD_ID,
-        # V4.0 Phase 2 Fields - Probate/Estate (6 fields - Contract v2.0 Accelerated)
+        # V4.0 Phase 2a Fields - Probate/Estate (6 fields - Contract v2.0 Accelerated)
         'EXECUTOR_NAME_FIELD_ID': EXECUTOR_NAME_FIELD_ID,
         'PROBATE_CASE_NUMBER_FIELD_ID': PROBATE_CASE_NUMBER_FIELD_ID,
         'PROBATE_FILING_DATE_FIELD_ID': PROBATE_FILING_DATE_FIELD_ID,
         'ESTATE_VALUE_FIELD_ID': ESTATE_VALUE_FIELD_ID,
         'DECEDENT_NAME_FIELD_ID': DECEDENT_NAME_FIELD_ID,
         'COURT_JURISDICTION_FIELD_ID': COURT_JURISDICTION_FIELD_ID,
+        # V4.0 Phase 2b Fields - Tax Lien (4 fields - Contract v2.0)
+        'TAX_DEBT_AMOUNT_FIELD_ID': TAX_DEBT_AMOUNT_FIELD_ID,
+        'DELINQUENCY_START_DATE_FIELD_ID': DELINQUENCY_START_DATE_FIELD_ID,
+        'REDEMPTION_DEADLINE_FIELD_ID': REDEMPTION_DEADLINE_FIELD_ID,
+        'LIEN_TYPE_FIELD_ID': LIEN_TYPE_FIELD_ID,
     }
     
     print(f"\n{'='*50}")
-    print(f"=== V4.0 PHASE 2 FIELD VALIDATION (34 FIELDS) ===")
+    print(f"=== V4.0 PHASE 2 FIELD VALIDATION (38 FIELDS) ===")
     all_valid = True
     for field_name, field_id in enriched_fields.items():
         if field_id is not None:
@@ -272,11 +283,12 @@ def validate_enriched_fields():
             all_valid = False
     
     if all_valid:
-        print(f"✅ All 34 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate)")
+        print(f"✅ All 38 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate + 4 Tax Lien)")
     else:
         print(f"⚠️ WARNING: Some field IDs are missing")
     print(f"{'='*50}\n")
     
+    return all_valid
     return all_valid
 
 def validate_environment():

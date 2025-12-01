@@ -71,6 +71,11 @@ from config import (
     ESTATE_VALUE_FIELD_ID,
     DECEDENT_NAME_FIELD_ID,
     COURT_JURISDICTION_FIELD_ID,
+    # V4.0 Phase 2b Fields (Contract v2.0 - Tax Lien)
+    TAX_DEBT_AMOUNT_FIELD_ID,
+    DELINQUENCY_START_DATE_FIELD_ID,
+    REDEMPTION_DEADLINE_FIELD_ID,
+    LIEN_TYPE_FIELD_ID,
     podio_access_token
 )
 
@@ -98,7 +103,7 @@ FIELD_BUNDLES = {
         "auction_location",      # Physical or online location
         "registration_deadline"  # Deadline to register for auction
     ],
-    # V4.0 Phase 2 - Probate/Estate Bundle (6 fields)
+    # V4.0 Phase 2a - Probate/Estate Bundle (6 fields)
     "Probate/Estate": [
         "executor_name",        # Personal Representative (Executor/Administrator)
         "probate_case_number",  # Court case identifier for deduplication
@@ -107,7 +112,14 @@ FIELD_BUNDLES = {
         "decedent_name",        # Original property owner (deceased)
         "court_jurisdiction"    # County/district court handling probate
     ],
-    # Tax Lien, Code Violation - Phase 2 (pending Monday sync)
+    # V4.0 Phase 2b - Tax Lien Bundle (4 fields)
+    "Tax Lien": [
+        "tax_debt_amount",         # Total tax debt/lien amount owed
+        "delinquency_start_date",  # Date when tax delinquency began
+        "redemption_deadline",     # CRITICAL: Last date owner can redeem property
+        "lien_type"                # Type of tax lien (Property Tax, IRS Federal, etc.)
+    ],
+    # Code Violation - Phase 2 (future)
     # Absentee Owner, Tired Landlord - Phase 3
 }
 
@@ -442,7 +454,7 @@ def get_lead_intelligence(item_id):
         print(f"V4.0 Phase 1: Extracted Foreclosure Auction bundle for item {item_id}")
         
     elif lead_type == "Probate/Estate":
-        # V4.0 Phase 2 - Probate/Estate Bundle (6 fields)
+        # V4.0 Phase 2a - Probate/Estate Bundle (6 fields)
         intelligence.update({
             'executor_name': extract_field_value_by_id(item, EXECUTOR_NAME_FIELD_ID),
             'probate_case_number': extract_field_value_by_id(item, PROBATE_CASE_NUMBER_FIELD_ID),
@@ -451,7 +463,17 @@ def get_lead_intelligence(item_id):
             'decedent_name': extract_field_value_by_id(item, DECEDENT_NAME_FIELD_ID),
             'court_jurisdiction': extract_field_value_by_id(item, COURT_JURISDICTION_FIELD_ID),
         })
-        print(f"V4.0 Phase 2: Extracted Probate/Estate bundle for item {item_id}")
+        print(f"V4.0 Phase 2a: Extracted Probate/Estate bundle for item {item_id}")
+        
+    elif lead_type == "Tax Lien":
+        # V4.0 Phase 2b - Tax Lien Bundle (4 fields)
+        intelligence.update({
+            'tax_debt_amount': extract_field_value_by_id(item, TAX_DEBT_AMOUNT_FIELD_ID),
+            'delinquency_start_date': extract_field_value_by_id(item, DELINQUENCY_START_DATE_FIELD_ID),
+            'redemption_deadline': extract_field_value_by_id(item, REDEMPTION_DEADLINE_FIELD_ID),
+            'lien_type': extract_field_value_by_id(item, LIEN_TYPE_FIELD_ID),
+        })
+        print(f"V4.0 Phase 2b: Extracted Tax Lien bundle for item {item_id}")
         
     else:
         # Unknown or unsupported lead type - log for Phase 2/3 development
