@@ -10,6 +10,9 @@
 
     <!-- Twilio Voice JavaScript SDK v2.11.1 (Self-hosted - v2.x not available on CDN) -->
     <script src="/static/twilio.min.js"></script>
+    
+    <!-- Compliance Gates Module (Extracted for CFPB Reg X auditability) -->
+    <script src="/static/js/workspace/compliance-gates.js"></script>
 
     <!-- Custom Configuration -->
     <script>
@@ -317,7 +320,7 @@
             <!-- Probate Fiduciary Gate Badge (SOFT Gate - Phase 2) -->
             {% if lead_data.lead_type == 'Probate/Estate' %}
             <div class="relative inline-block" id="fiduciary-badge-container">
-              <span class="compliance-badge fiduciary-contact" id="fiduciary-badge" onclick="toggleFiduciaryTooltip()">
+              <span class="compliance-badge fiduciary-contact" id="fiduciary-badge" onclick="ComplianceGates.toggleFiduciaryTooltip()">
                 🔶 Fiduciary Contact
               </span>
               <div class="fiduciary-tooltip" id="fiduciary-tooltip">
@@ -334,7 +337,7 @@
                     <li>Avoid phrases implying the PR is "in trouble"</li>
                   </ul>
                 </div>
-                <button class="btn-acknowledge" onclick="acknowledgeFiduciaryNotice()">I Understand</button>
+                <button class="btn-acknowledge" onclick="ComplianceGates.acknowledgeFiduciaryNotice()">I Understand</button>
               </div>
             </div>
             {% endif %}
@@ -342,7 +345,7 @@
             <!-- Tax Lien Redemption Deadline Gate Badge (SOFT Gate - Phase 2b) -->
             {% if lead_data.lead_type == 'Tax Lien' %}
             <div class="relative inline-block" id="deadline-badge-container" style="display: none;">
-              <span class="compliance-badge imminent-deadline" id="deadline-badge" onclick="toggleDeadlineTooltip()">
+              <span class="compliance-badge imminent-deadline" id="deadline-badge" onclick="ComplianceGates.toggleDeadlineTooltip()">
                 🔴 Imminent Deadline
               </span>
               <div class="deadline-tooltip" id="deadline-tooltip">
@@ -363,7 +366,7 @@
                   </ul>
                   <p class="text-sm text-gray-600 mt-2">⚠️ Compliance: Ethical outreach required regardless of timeline urgency.</p>
                 </div>
-                <button class="btn-acknowledge" onclick="acknowledgeDeadlineNotice()">I Understand - Proceed Ethically</button>
+                <button class="btn-acknowledge" onclick="ComplianceGates.acknowledgeDeadlineNotice()">I Understand - Proceed Ethically</button>
               </div>
             </div>
             {% endif %}
@@ -1173,64 +1176,33 @@
       const successMessage = document.getElementById("success-message");
       const errorMessage = document.getElementById("error-message");
       const errorMessageText = document.getElementById("error-message-text");
-
-      // Compliance Modal Elements
-      const complianceModal = document.getElementById('compliance-modal');
-      const unlockDialerBtn = document.getElementById('unlock-dialer-btn');
-      const cancelComplianceBtn = document.getElementById('cancel-compliance-btn');
-      const complianceAcknowledge = document.getElementById('compliance-acknowledge');
-      const dialButtonText = document.getElementById('dial-button-text');
-
-      // Hard Gate Logic
-      let isDialerLocked = (ownerOccupiedStatus === 'Yes' || ownerOccupiedStatus === 'Unknown');
-
-      function updateDialButtonState() {
-        if (isDialerLocked) {
-          dialButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-          dialButton.classList.remove('bg-primary', 'hover:bg-primary-dark');
-          dialButtonText.textContent = "⚠️ Compliance Check Required";
-          // Note: We don't set disabled=true here because we need the click event to trigger the modal
-          // Instead, we handle the click logic
-        } else {
-          dialButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-          dialButton.classList.add('bg-primary', 'hover:bg-primary-dark');
-          dialButtonText.textContent = "Initiate Call";
-          dialButton.disabled = false;
-        }
-      }
-
-      // Initialize Button State
-      updateDialButtonState();
-
-      // Compliance Modal Logic
-      complianceAcknowledge.addEventListener('change', function() {
-        unlockDialerBtn.disabled = !this.checked;
-      });
-
-      cancelComplianceBtn.addEventListener('click', function() {
-        complianceModal.classList.add('hidden');
-        complianceAcknowledge.checked = false;
-        unlockDialerBtn.disabled = true;
-      });
-
-      unlockDialerBtn.addEventListener('click', function() {
-        isDialerLocked = false;
-        complianceModal.classList.add('hidden');
-        updateDialButtonState();
-        
-        // Change button text to indicate ready state
-        dialButtonText.textContent = "Initiate Compliant Call";
-        
-        // Optional: Log the unlock event (Phase 2)
-        console.log("✅ Compliance Gate Unlocked by Agent");
-      });
+// Initialize Compliance Gates Module
+ComplianceGates.init({
+  ownerOccupiedStatus: ownerOccupiedStatus,
+  itemId: itemId,
+  leadType: leadData.lead_type,
+  intelligenceData: intelligenceData,
+  elements: {
+    dialButton: dialButton,
+    dialButtonText: document.getElementById('dial-button-text'),
+    complianceModal: document.getElementById('compliance-modal'),
+    unlockDialerBtn: document.getElementById('unlock-dialer-btn'),
+    cancelComplianceBtn: document.getElementById('cancel-compliance-btn'),
+    complianceAcknowledge: document.getElementById('compliance-acknowledge'),
+    fiduciaryTooltip: document.getElementById('fiduciary-tooltip'),
+    fiduciaryBadge: document.getElementById('fiduciary-badge'),
+    deadlineTooltip: document.getElementById('deadline-tooltip'),
+    deadlineBadge: document.getElementById('deadline-badge'),
+    deadlineBadgeContainer: document.getElementById('deadline-badge-container'),
+    daysRemainingDisplay: document.getElementById('days-remaining-display')
+  }
+});
 
       // Dial button click handler
       dialButton.addEventListener("click", async () => {
-        // Check Hard Gate
-        if (isDialerLocked) {
-          complianceModal.classList.remove('hidden');
-          return; // Stop execution
+        // Check Hard Gate via ComplianceGates module
+        if (ComplianceGates.checkDialerGate()) {
+          return; // Stop execution - modal shown by module
         }
 
         dialButton.disabled = true;
@@ -1733,7 +1705,7 @@
             `;
           } else if (meta.type === 'deadline') {
             // V4.0 Phase 2b: Redemption deadline with urgency indicator
-            const daysRemaining = calculateDaysUntilDeadline(value);
+            const daysRemaining = ComplianceGates.calculateDaysUntilDeadline(value);
             if (daysRemaining !== null && daysRemaining <= 30) {
               valueClass = "text-base font-bold text-red-700";
               extraHtml = `
@@ -1813,117 +1785,17 @@
       }
 
       // ==========================================
-      // PROBATE FIDUCIARY GATE (SOFT - Phase 2)
+      // COMPLIANCE GATES (Extracted to /static/js/workspace/compliance-gates.js)
       // ==========================================
-
-      let fiduciaryNoticeAcknowledged = false;
-
-      function toggleFiduciaryTooltip() {
-        const tooltip = document.getElementById('fiduciary-tooltip');
-        if (tooltip) {
-          tooltip.classList.toggle('visible');
-          if (tooltip.classList.contains('visible')) {
-            console.log('SOFT GATE: Fiduciary notice displayed for lead:', itemId);
-          }
-        }
-      }
-
-      function acknowledgeFiduciaryNotice() {
-        fiduciaryNoticeAcknowledged = true;
-        const tooltip = document.getElementById('fiduciary-tooltip');
-        if (tooltip) {
-          tooltip.classList.remove('visible');
-        }
-        console.log('✅ Fiduciary notice acknowledged by agent for lead:', itemId);
-      }
-
-      // Close fiduciary tooltip when clicking outside
-      document.addEventListener('click', function(event) {
-        const badge = document.getElementById('fiduciary-badge');
-        const tooltip = document.getElementById('fiduciary-tooltip');
-        if (badge && tooltip && !badge.contains(event.target) && !tooltip.contains(event.target)) {
-          tooltip.classList.remove('visible');
-        }
-        // Also handle deadline tooltip
-        const deadlineBadge = document.getElementById('deadline-badge');
-        const deadlineTooltip = document.getElementById('deadline-tooltip');
-        if (deadlineBadge && deadlineTooltip && !deadlineBadge.contains(event.target) && !deadlineTooltip.contains(event.target)) {
-          deadlineTooltip.classList.remove('visible');
-        }
-      });
-
-      // ==========================================
-      // TAX LIEN REDEMPTION DEADLINE GATE (SOFT - Phase 2b)
-      // ==========================================
-
-      let deadlineNoticeAcknowledged = false;
-
-      function calculateDaysUntilDeadline(dateString) {
-        if (!dateString) return null;
-        try {
-          // Expected format: YYYY-MM-DD
-          const deadline = new Date(dateString + 'T00:00:00');
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const diffTime = deadline - today;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays;
-        } catch (e) {
-          console.error('Error calculating days until deadline:', e);
-          return null;
-        }
-      }
-
-      function checkRedemptionDeadlineGate() {
-        // Only check for Tax Lien lead types
-        if (leadData.lead_type !== 'Tax Lien') return;
-        
-        const redemptionDeadline = intelligenceData.redemption_deadline;
-        if (!redemptionDeadline) return;
-        
-        const daysRemaining = calculateDaysUntilDeadline(redemptionDeadline);
-        
-        if (daysRemaining !== null && daysRemaining <= 30 && daysRemaining >= 0) {
-          // Show the imminent deadline badge
-          const badgeContainer = document.getElementById('deadline-badge-container');
-          if (badgeContainer) {
-            badgeContainer.style.display = 'inline-block';
-          }
-          
-          // Update days remaining display
-          const daysDisplay = document.getElementById('days-remaining-display');
-          if (daysDisplay) {
-            if (daysRemaining === 0) {
-              daysDisplay.textContent = 'TODAY - Deadline Day!';
-            } else if (daysRemaining === 1) {
-              daysDisplay.textContent = '1 Day Remaining';
-            } else {
-              daysDisplay.textContent = `${daysRemaining} Days Remaining`;
-            }
-          }
-          
-          console.log(`SOFT GATE: Redemption deadline in ${daysRemaining} days for lead:`, itemId);
-        }
-      }
-
-      function toggleDeadlineTooltip() {
-        const tooltip = document.getElementById('deadline-tooltip');
-        if (tooltip) {
-          tooltip.classList.toggle('visible');
-          if (tooltip.classList.contains('visible')) {
-            console.log('SOFT GATE: Redemption deadline notice displayed for lead:', itemId);
-          }
-        }
-      }
-
-      function acknowledgeDeadlineNotice() {
-        deadlineNoticeAcknowledged = true;
-        const tooltip = document.getElementById('deadline-tooltip');
-        if (tooltip) {
-          tooltip.classList.remove('visible');
-        }
-        console.log('✅ Redemption deadline notice acknowledged by agent for lead:', itemId);
-      }
+      // All compliance gate logic has been moved to the ComplianceGates module:
+      // - Owner Occupied HARD Gate (CFPA/Dodd-Frank)
+      // - Probate Fiduciary SOFT Gate (Phase 2a)
+      // - Tax Lien Redemption Deadline SOFT Gate (Phase 2b)
+      //
+      // Module is initialized above with ComplianceGates.init()
+      // Functions available: toggleFiduciaryTooltip, acknowledgeFiduciaryNotice,
+      //                      toggleDeadlineTooltip, acknowledgeDeadlineNotice,
+      //                      checkDialerGate, calculateDaysUntilDeadline
 
       // Initialize on page load
       window.addEventListener("DOMContentLoaded", () => {
@@ -1931,7 +1803,7 @@
         checkMailingAddress();
         initializeDialer();
         renderIntelligencePanel();
-        checkRedemptionDeadlineGate();
+        // Note: checkRedemptionDeadlineGate() is now called within ComplianceGates.init()
       });
     </script>
   </body>
