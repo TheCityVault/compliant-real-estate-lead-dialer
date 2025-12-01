@@ -1,21 +1,20 @@
 """
-Podio Service Module - OAuth, Item Management, and Relationship Handling
+Podio Service Module - Item Management, Field Extraction, and Relationship Handling
 
 This module handles:
-- OAuth token refresh and management
 - Podio item retrieval and filtering
 - Call Activity item creation
 - Field value extraction and parsing
 - Data transformation utilities
+- Task creation
+
+OAuth token management has been extracted to services/podio/oauth.py
+for improved modularity and security auditing.
 """
 import re
 import requests
 from datetime import datetime, timedelta
 from config import (
-    PODIO_CLIENT_ID,
-    PODIO_CLIENT_SECRET,
-    PODIO_USERNAME,
-    PODIO_PASSWORD,
     MASTER_LEAD_APP_ID,
     CALL_ACTIVITY_APP_ID,
     TASK_APP_ID,
@@ -76,11 +75,11 @@ from config import (
     DELINQUENCY_START_DATE_FIELD_ID,
     REDEMPTION_DEADLINE_FIELD_ID,
     LIEN_TYPE_FIELD_ID,
-    podio_access_token
 )
 
-# Global variable to hold the access token
-_podio_token = podio_access_token
+# Import OAuth token management from extracted module
+# Backward compatibility: refresh_podio_token is re-exported for existing imports
+from services.podio.oauth import refresh_podio_token, _podio_token
 
 # ============================================================================
 # LEAD-TYPE-SPECIFIC FIELD BUNDLES (Contract v2.0)
@@ -126,66 +125,9 @@ FIELD_BUNDLES = {
 # ============================================================================
 # OAUTH TOKEN MANAGEMENT
 # ============================================================================
-
-def refresh_podio_token():
-    """
-    Get or refresh Podio OAuth access token
-    
-    Returns:
-        str: Access token, or None if authentication fails
-    """
-    global _podio_token
-    
-    # Enhanced credential diagnostics
-    print("="*50)
-    print("PODIO TOKEN REFRESH ATTEMPT")
-    print(f"CLIENT_ID present: {bool(PODIO_CLIENT_ID)} (length: {len(PODIO_CLIENT_ID) if PODIO_CLIENT_ID else 0})")
-    print(f"CLIENT_SECRET present: {bool(PODIO_CLIENT_SECRET)} (length: {len(PODIO_CLIENT_SECRET) if PODIO_CLIENT_SECRET else 0})")
-    print(f"USERNAME present: {bool(PODIO_USERNAME)} (value: {PODIO_USERNAME[:3] + '***' if PODIO_USERNAME and len(PODIO_USERNAME) > 3 else 'None'})")
-    print(f"PASSWORD present: {bool(PODIO_PASSWORD)} (length: {len(PODIO_PASSWORD) if PODIO_PASSWORD else 0})")
-    print("="*50)
-    
-    if not all([PODIO_CLIENT_ID, PODIO_CLIENT_SECRET, PODIO_USERNAME, PODIO_PASSWORD]):
-        print("❌ CRITICAL: Podio credentials not fully configured. Podio integration will be disabled.")
-        print(f"Missing credentials:")
-        if not PODIO_CLIENT_ID:
-            print("  - PODIO_CLIENT_ID")
-        if not PODIO_CLIENT_SECRET:
-            print("  - PODIO_CLIENT_SECRET")
-        if not PODIO_USERNAME:
-            print("  - PODIO_USERNAME")
-        if not PODIO_PASSWORD:
-            print("  - PODIO_PASSWORD")
-        return None
-    
-    try:
-        # Get OAuth token from Podio
-        response = requests.post(
-            'https://podio.com/oauth/token',
-            data={
-                'grant_type': 'password',
-                'client_id': PODIO_CLIENT_ID,
-                'client_secret': PODIO_CLIENT_SECRET,
-                'username': PODIO_USERNAME,
-                'password': PODIO_PASSWORD
-            }
-        )
-        
-        if response.status_code == 200:
-            token_data = response.json()
-            _podio_token = token_data.get('access_token')
-            print("Podio token obtained successfully.")
-            return _podio_token
-        else:
-            print(f"="*50)
-            print(f"ERROR getting Podio token: {response.status_code}")
-            print(f"Response headers: {dict(response.headers)}")
-            print(f"Response text: {response.text}")
-            print(f"="*50)
-            return None
-    except Exception as e:
-        print(f"Error initializing Podio authentication: {e}")
-        return None
+# NOTE: OAuth token management has been extracted to services/podio/oauth.py
+# The refresh_podio_token function is imported above for backward compatibility.
+# See services/podio/oauth.py for implementation details.
 
 # ============================================================================
 # ITEM RETRIEVAL
@@ -573,10 +515,7 @@ def create_call_activity_item(data, item_id, call_sid, call_duration=None, recor
     if not token:
         print("="*50)
         print("CRITICAL: Podio token refresh failed")
-        print(f"PODIO_CLIENT_ID present: {bool(PODIO_CLIENT_ID)}")
-        print(f"PODIO_CLIENT_SECRET present: {bool(PODIO_CLIENT_SECRET)}")
-        print(f"PODIO_USERNAME present: {bool(PODIO_USERNAME)}")
-        print(f"PODIO_PASSWORD present: {bool(PODIO_PASSWORD)}")
+        print("See services/podio/oauth.py for credential diagnostics")
         print("="*50)
         return False, 'Podio authentication failed'
     
