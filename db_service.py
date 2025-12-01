@@ -158,6 +158,55 @@ def log_call_status_to_firestore(call_sid, call_status, direction, from_number, 
         return False
 
 # ============================================================================
+# RECORDING LOOKUP BY CALLSID (V3.2.5)
+# ============================================================================
+
+def get_recording_by_call_sid(call_sid):
+    """
+    Retrieve recording info from Firestore by CallSid
+    
+    This function supports the race condition fix where the recording webhook
+    may arrive before the disposition form is submitted. When creating the
+    Podio Call Activity, we check if a recording already exists.
+    
+    Args:
+        call_sid: Twilio Call SID
+        
+    Returns:
+        dict: Recording metadata if found, None otherwise
+        Contains: recording_sid, recording_url, recording_duration
+    """
+    if not db:
+        print("Firestore not available, cannot retrieve recording")
+        return None
+    
+    try:
+        # Query for call log entry with matching CallSid
+        call_logs_ref = db.collection('call_logs')
+        query = call_logs_ref.where('CallSid', '==', call_sid).limit(1)
+        docs = query.stream()
+        
+        for doc in docs:
+            data = doc.to_dict()
+            recording_sid = data.get('RecordingSid')
+            recording_url = data.get('RecordingUrl')
+            
+            if recording_sid and recording_url:
+                print(f"V3.2.5: Found existing recording for CallSid {call_sid}")
+                return {
+                    'recording_sid': recording_sid,
+                    'recording_url': recording_url,
+                    'recording_duration': data.get('RecordingDuration', 0)
+                }
+        
+        print(f"V3.2.5: No recording found yet for CallSid {call_sid}")
+        return None
+        
+    except Exception as e:
+        print(f"Error retrieving recording by CallSid: {e}")
+        return None
+
+# ============================================================================
 # RECORDING METADATA UPDATE
 # ============================================================================
 

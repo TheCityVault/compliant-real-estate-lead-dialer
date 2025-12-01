@@ -51,7 +51,8 @@ from db_service import (
     log_call_status_to_firestore,
     update_call_recording_metadata,  # Step 3.3c: Add recording metadata update
     store_call_sid_mapping,  # V3.2.2: Store CallSid to PodioItemId mapping
-    get_podio_item_id_from_call_sid  # NEW: V3.2.3
+    get_podio_item_id_from_call_sid,  # V3.2.3
+    get_recording_by_call_sid  # V3.2.5: Race condition fix - check for existing recording
 )
 
 # Import Twilio client for call initiation
@@ -184,7 +185,7 @@ def submit_call_data():
         item_id = data.get('item_id')
         call_sid = data.get('call_sid')
         
-        print(f"=== SUBMIT CALL DATA ===")
+        print(f"=== SUBMIT CALL DATA (V3.2.5) ===")
         print(f"Master Lead item_id: {item_id}")
         print(f"Call SID: {call_sid}")
         
@@ -193,7 +194,18 @@ def submit_call_data():
         recording_url = None
         if call_sid:
             call_duration = get_call_duration(call_sid)
-            recording_url = get_recording_url(call_sid)
+            
+            # V3.2.5 FIX: Check if recording already arrived via webhook (race condition fix)
+            # The recording_status webhook may arrive BEFORE the user submits the form
+            # If so, the recording is already in Firestore and we can use it
+            existing_recording = get_recording_by_call_sid(call_sid)
+            if existing_recording:
+                recording_url = existing_recording.get('recording_url')
+                print(f"✅ V3.2.5: Found existing recording in Firestore: {recording_url}")
+            else:
+                # Fall back to original behavior (try Twilio API, returns None per V3.2.3 design)
+                recording_url = get_recording_url(call_sid)
+                print(f"V3.2.5: No existing recording found, will be added via webhook later")
         
         # Create Call Activity item in Podio
         success, result = create_call_activity_item(
