@@ -8,11 +8,12 @@ Modules:
     oauth: OAuth token refresh and credential management
     item_service: Item retrieval and CRUD operations for Podio items
     field_extraction: Field value extraction and parsing utilities
-    intelligence: Lead intelligence extraction (future)
+    intelligence: Lead intelligence extraction (V4.0 Phase 1/2)
     task_service: Task creation and management (future)
 
 Business Justification:
     Pillar 1 (Compliance): OAuth logic isolation enables security audits
+    Pillar 2 (Conversion Analytics): Intelligence extraction isolated enables caching and A/B testing
     Pillar 3 (Data Pipeline): Field extraction isolated enables caching and validation
     Pillar 5 (Scalability): Foundation for subsequent Podio service extractions
 """
@@ -41,6 +42,12 @@ from services.podio.field_extraction import (
     extract_field_value_by_id,
 )
 
+# Re-export Intelligence functions for backward compatibility (V4.0.8)
+from services.podio.intelligence import (
+    FIELD_BUNDLES,
+    get_lead_intelligence,
+)
+
 # Public API
 __all__ = [
     # OAuth functions
@@ -56,4 +63,7 @@ __all__ = [
     # Field Extraction functions
     'extract_field_value',
     'extract_field_value_by_id',
+    # Intelligence functions
+    'FIELD_BUNDLES',
+    'get_lead_intelligence',
 ]
