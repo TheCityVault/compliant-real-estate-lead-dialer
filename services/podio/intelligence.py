@@ -61,6 +61,9 @@ from config import (
     DELINQUENCY_START_DATE_FIELD_ID,
     REDEMPTION_DEADLINE_FIELD_ID,
     LIEN_TYPE_FIELD_ID,
+    # V4.0 Phase 2c Fields (Contract v2.1 - Tax Lien Multi-Year)
+    TAX_DELINQUENCY_SUMMARY_FIELD_ID,
+    DELINQUENT_YEARS_COUNT_FIELD_ID,
 )
 
 # ============================================================================
@@ -93,12 +96,14 @@ FIELD_BUNDLES = {
         "decedent_name",        # Original property owner (deceased)
         "court_jurisdiction"    # County/district court handling probate
     ],
-    # V4.0 Phase 2b - Tax Lien Bundle (4 fields)
+    # V4.0 Phase 2b/2c - Tax Lien Bundle (6 fields, including Multi-Year)
     "Tax Lien": [
-        "tax_debt_amount",         # Total tax debt/lien amount owed
-        "delinquency_start_date",  # Date when tax delinquency began
-        "redemption_deadline",     # CRITICAL: Last date owner can redeem property
-        "lien_type"                # Type of tax lien (Property Tax, IRS Federal, etc.)
+        "tax_debt_amount",            # Total tax debt/lien amount owed
+        "delinquency_start_date",     # Date when tax delinquency began
+        "redemption_deadline",        # CRITICAL: Last date owner can redeem property
+        "lien_type",                  # Type of tax lien (Property Tax, IRS Federal, etc.)
+        "tax_delinquency_summary",    # Multi-year summary e.g. "$12,740 total (2023: $6,501, 2024: $6,239)"
+        "delinquent_years_count"      # Number of years with delinquent taxes
     ],
     # Code Violation - Phase 2 (future)
     # Absentee Owner, Tired Landlord - Phase 3
@@ -207,14 +212,16 @@ def get_lead_intelligence(item_id):
         print(f"V4.0 Phase 2a: Extracted Probate/Estate bundle for item {item_id}")
         
     elif lead_type == "Tax Lien":
-        # V4.0 Phase 2b - Tax Lien Bundle (4 fields)
+        # V4.0 Phase 2b/2c - Tax Lien Bundle (6 fields, including Multi-Year)
         intelligence.update({
             'tax_debt_amount': extract_field_value_by_id(item, TAX_DEBT_AMOUNT_FIELD_ID),
             'delinquency_start_date': extract_field_value_by_id(item, DELINQUENCY_START_DATE_FIELD_ID),
             'redemption_deadline': extract_field_value_by_id(item, REDEMPTION_DEADLINE_FIELD_ID),
             'lien_type': extract_field_value_by_id(item, LIEN_TYPE_FIELD_ID),
+            'tax_delinquency_summary': extract_field_value_by_id(item, TAX_DELINQUENCY_SUMMARY_FIELD_ID),
+            'delinquent_years_count': extract_field_value_by_id(item, DELINQUENT_YEARS_COUNT_FIELD_ID),
         })
-        print(f"V4.0 Phase 2b: Extracted Tax Lien bundle for item {item_id}")
+        print(f"V4.0 Phase 2b/2c: Extracted Tax Lien bundle (6 fields) for item {item_id}")
         
     else:
         # Unknown or unsupported lead type - log for Phase 2/3 development

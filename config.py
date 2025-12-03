@@ -121,6 +121,11 @@ DELINQUENCY_START_DATE_FIELD_ID = 274954742
 REDEMPTION_DEADLINE_FIELD_ID = 274954743  # CRITICAL: Triggers SOFT Gate when within 30 days
 LIEN_TYPE_FIELD_ID = 274954744
 
+# V4.0 Phase 2c Fields - Tax Lien Multi-Year (Contract v2.1)
+# Authorization: Data Team PR #6 approved
+TAX_DELINQUENCY_SUMMARY_FIELD_ID = 274994882  # Multi-year summary e.g. "$12,740 total (2023: $6,501, 2024: $6,239)"
+DELINQUENT_YEARS_COUNT_FIELD_ID = 274994883  # Number of years with delinquent taxes
+
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
 MASTER_LEAD_APP_ID = '30549135'  # Master Lead app for item filtering
@@ -270,10 +275,13 @@ def validate_enriched_fields():
         'DELINQUENCY_START_DATE_FIELD_ID': DELINQUENCY_START_DATE_FIELD_ID,
         'REDEMPTION_DEADLINE_FIELD_ID': REDEMPTION_DEADLINE_FIELD_ID,
         'LIEN_TYPE_FIELD_ID': LIEN_TYPE_FIELD_ID,
+        # V4.0 Phase 2c Fields - Tax Lien Multi-Year (2 fields - Contract v2.1)
+        'TAX_DELINQUENCY_SUMMARY_FIELD_ID': TAX_DELINQUENCY_SUMMARY_FIELD_ID,
+        'DELINQUENT_YEARS_COUNT_FIELD_ID': DELINQUENT_YEARS_COUNT_FIELD_ID,
     }
     
     print(f"\n{'='*50}")
-    print(f"=== V4.0 PHASE 2 FIELD VALIDATION (38 FIELDS) ===")
+    print(f"=== V4.0 PHASE 2c FIELD VALIDATION (40 FIELDS) ===")
     all_valid = True
     for field_name, field_id in enriched_fields.items():
         if field_id is not None:
@@ -283,12 +291,11 @@ def validate_enriched_fields():
             all_valid = False
     
     if all_valid:
-        print(f"✅ All 38 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate + 4 Tax Lien)")
+        print(f"✅ All 40 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate + 4 Tax Lien + 2 Multi-Year)")
     else:
         print(f"⚠️ WARNING: Some field IDs are missing")
     print(f"{'='*50}\n")
     
-    return all_valid
     return all_valid
 
 def validate_environment():

@@ -54,9 +54,10 @@ var IntelligencePanel = (function() {
             "Probate Details": ["probate_case_number", "probate_filing_date", "court_jurisdiction"],
             "Estate Information": ["executor_name", "decedent_name", "estate_value"]
         },
-        // V4.0 Phase 2b - Tax Lien Bundle
+        // V4.0 Phase 2b/2c - Tax Lien Bundle (including Multi-Year)
         "Tax Lien": {
             "Tax Lien Details": ["lien_type", "tax_debt_amount"],
+            "Multi-Year Breakdown": ["tax_delinquency_summary", "delinquent_years_count"],
             "Timeline & Urgency": ["delinquency_start_date", "redemption_deadline"]
         }
     };
@@ -95,7 +96,10 @@ var IntelligencePanel = (function() {
         "tax_debt_amount": { label: "Tax Debt Amount", type: "money" },
         "delinquency_start_date": { label: "Delinquency Start Date", type: "date" },
         "redemption_deadline": { label: "Redemption Deadline", type: "deadline" },
-        "lien_type": { label: "Lien Type", type: "category" }
+        "lien_type": { label: "Lien Type", type: "category" },
+        // V4.0 Phase 2c - Tax Lien Multi-Year Fields
+        "tax_delinquency_summary": { label: "Tax Delinquency Summary", type: "multi_year_summary" },
+        "delinquent_years_count": { label: "Delinquent Years", type: "years_count" }
     };
 
     // ==========================================
@@ -247,6 +251,35 @@ var IntelligencePanel = (function() {
                 };
                 const colorClass = categoryColors[value] || 'bg-gray-100 text-gray-800';
                 displayValue = `<span class="inline-flex items-center px-2 py-1 rounded text-sm font-medium ${colorClass}">${value}</span>`;
+            } else if (meta.type === 'multi_year_summary') {
+                // V4.0 Phase 2c: Multi-year tax delinquency summary
+                // Example: "$12,740 total (2023: $6,501, 2024: $6,239)"
+                valueClass = "text-base font-semibold text-gray-900";
+                extraHtml = `
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-800 ml-2">
+                        📊 Multi-Year Data
+                    </span>
+                `;
+            } else if (meta.type === 'years_count') {
+                // V4.0 Phase 2c: Number of delinquent years
+                const count = parseInt(value);
+                if (count >= 3) {
+                    valueClass = "text-base font-bold text-red-700";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
+                            🔴 ${count} Years - High Risk
+                        </span>
+                    `;
+                } else if (count === 2) {
+                    valueClass = "text-base font-semibold text-orange-600";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 ml-2">
+                            🟠 ${count} Years
+                        </span>
+                    `;
+                } else {
+                    displayValue = count + " year" + (count !== 1 ? "s" : "");
+                }
             }
         }
 

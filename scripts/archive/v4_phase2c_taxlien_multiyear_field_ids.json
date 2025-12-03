@@ -1,0 +1,18 @@
+{
+  "created_date": "2025-12-03T18:15:01Z",
+  "contract_version": "2.1",
+  "phase": "2c-TAXLIEN-MULTIYEAR",
+  "authorization": "Data Team PR #6 approved",
+  "business_context": "Douglas County Tax Lien API multi-year data support",
+  "app_id": "30549135",
+  "success_count": 2,
+  "failure_count": 0,
+  "fields": {
+    "tax_delinquency_summary": 274994882,
+    "delinquent_years_count": 274994883
+  },
+  "example_data": {
+    "tax_delinquency_summary": "$12,740 total (2023: $6,501, 2024: $6,239)",
+    "delinquent_years_count": 2
+  }
+}

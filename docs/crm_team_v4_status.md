@@ -1,32 +1,35 @@
 # **CRM Team - V4.0+ Multi-Source Integration Status**
 
 **Document Type:** Living Project Status (CRM Team Perspective)
-**Last Updated:** 2025-12-01
+**Last Updated:** 2025-12-03
 **Document Owner:** CRM PM Mode
-**Current Phase:** Phase 3 Planning (Absentee Owner + Code Violation)
+**Current Phase:** Phase 3 Planning (Absentee Owner - Code Violation MVP handled by Data Team)
 
 ---
 
 ## **📊 Executive Summary**
 
-| Metric                 | Status                                               |
-| ---------------------- | ---------------------------------------------------- |
-| **Current Phase**      | Phase 3 Planning                                     |
-| **Last Milestone**     | Phase 2 Complete (Probate + Tax Lien) - 2025-12-01   |
-| **Fields Implemented** | 22/47                                                |
-| **Compliance Gates**   | 3 operational (Owner Occupied, Fiduciary, Deadline)  |
-| **Production URL**     | https://compliant-real-estate-lead-dialer.vercel.app |
+| Metric                 | Status                                                                      |
+| ---------------------- | --------------------------------------------------------------------------- |
+| **Current Phase**      | Phase 3 Planning (Absentee Owner - Code Violation MVP handled by Data Team) |
+| **Last Milestone**     | v2.1 Amendment Complete (Multi-Year Tax Delinquency) - 2025-12-03           |
+| **Fields Implemented** | 24/49                                                                       |
+| **Compliance Gates**   | 3 operational (Owner Occupied, Fiduciary, Deadline)                         |
+| **Production URL**     | https://compliant-real-estate-lead-dialer.vercel.app                        |
 
 ### **Completed Phases (Archived)**
 
 For detailed implementation records, test matrices, and authorization records, see:
 [`docs/archive/crm_team_v4_phases_0-2_complete.md`](archive/crm_team_v4_phases_0-2_complete.md:1)
 
-| Phase   | Scope                         | Fields | Completion Date |
-| ------- | ----------------------------- | ------ | --------------- |
-| Phase 0 | V3.6 Schema Updates           | 5      | 2025-11-29      |
-| Phase 1 | Universal + NED + Foreclosure | 12     | 2025-11-29      |
-| Phase 2 | Probate + Tax Lien            | 10     | 2025-12-01      |
+| Phase    | Scope                         | Fields | Completion Date |
+| -------- | ----------------------------- | ------ | --------------- |
+| Phase 0  | V3.6 Schema Updates           | 5      | 2025-11-29      |
+| Phase 1  | Universal + NED + Foreclosure | 12     | 2025-11-29      |
+| Phase 2  | Probate + Tax Lien            | 10     | 2025-12-01      |
+| Phase 2c | Contract v2.1 Multi-Year Tax  | 2      | 2025-12-03      |
+
+**Note:** Code Violation MVP (2025-12-01) - Handled by Data Team via PR #5. No new CRM fields required for MVP. Post-launch workspace enhancements tracked as Phase 3b.
 
 ---
 
@@ -123,9 +126,42 @@ from services.podio import *  # Re-export all public functions
 
 ---
 
-## **📋 Phase 3: Absentee Owner + Code Violation** ⏸️ PENDING
+## **📋 Phase 2c: Contract v2.1 - Multi-Year Tax Delinquency** ✅ COMPLETE
 
-### **Status:** Awaiting Data Team confirmation (scrapers operational)
+### **Status:** Complete (2025-12-03)
+
+### **Scope:** Tax Lien Multi-Year Enhancement (Contract Amendment v2.1)
+
+| Field # | Name                    | Type   | Podio Field ID |
+| ------- | ----------------------- | ------ | -------------- |
+| 48      | Tax Delinquency Summary | text   | 274994882      |
+| 49      | Delinquent Years Count  | number | 274994883      |
+
+### **Implementation Completed:**
+
+- [x] Data Team PR #6 reviewed and approved
+- [x] 2 Podio fields created in Master Lead App
+- [x] `config.py` updated with field ID constants
+- [x] `services/podio/intelligence.py` FIELD_BUNDLES updated (Tax Lien: 6 fields)
+- [x] `intelligence-panel.js` "Multi-Year Breakdown" section added
+- [x] Field IDs delivered to Data Team via PR comment
+
+### **Display Features:**
+
+- Tax Delinquency Summary: Shows year-by-year breakdown (e.g., "$12,740 total (2023: $6,501, 2024: $6,239)")
+- Delinquent Years Count: Color-coded badge (1 yr default, 2 yr 🟠, 3+ yr 🔴)
+
+### **Next Steps (v2.2 Discussion):**
+
+- Monday sync: Discuss "Stacked Distress Signals" enhancement
+- Data Team confirmed `stacking-bonus.ts` already calculates cross-source signals
+- Proposed Fields 50-51: Distress Signal Count, Distress Signal Summary
+
+---
+
+## **📋 Phase 3: Absentee Owner** ⏸️ PENDING
+
+### **Status:** Awaiting Data Team confirmation (Absentee Owner scrapers only - Code Violation MVP complete)
 
 ### **Scope**
 
@@ -133,14 +169,13 @@ from services.podio import *  # Re-export all public functions
 | -------------- | -------------------------------------------------------------------------------------- | -------- |
 | Absentee Owner | Portfolio Count, Ownership Tenure, Out-of-State Flag, Last Sale Date, Vacancy Duration | HIGH     |
 | Tired Landlord | (Shares Absentee fields)                                                               | HIGH     |
-| Code Violation | Violation Type, Violation Date, Fine Amount, Compliance Deadline                       | MEDIUM   |
 
-**Estimated Total:** ~13 new Podio fields
+**Estimated Total:** ~9 new Podio fields (Absentee bundle only)
 
 ### **Dependencies**
 
+- [x] Code Violation MVP handled by Data Team (PR #5 acknowledged)
 - [ ] Data Team confirms Absentee Owner scrapers operational
-- [ ] Data Team confirms Code Violation data source available
 - [ ] Bilateral sync meeting (Monday 10 AM MT)
 
 ### **Pre-Implementation Tasks**
@@ -149,10 +184,25 @@ from services.podio import *  # Re-export all public functions
 | ---- | ------------------------------------------- | ---------- | ---------- |
 | 3.0  | Coordinate with Data Team on scraper status | CRM PM     | ⏸️ PENDING |
 | 3.1  | Create Podio fields (Absentee bundle)       | Code Mode  | ⏸️ BLOCKED |
-| 3.2  | Create Podio fields (Code Violation bundle) | Code Mode  | ⏸️ BLOCKED |
-| 3.3  | Update `FIELD_BUNDLES` in intelligence.py   | Code Mode  | ⏸️ BLOCKED |
-| 3.4  | Add `FIELD_DISPLAY_CONFIG` entries          | Code Mode  | ⏸️ BLOCKED |
-| 3.5  | Integration testing with test leads         | Debug Mode | ⏸️ BLOCKED |
+| 3.2  | Update `FIELD_BUNDLES` in intelligence.py   | Code Mode  | ⏸️ BLOCKED |
+| 3.3  | Add `FIELD_DISPLAY_CONFIG` entries          | Code Mode  | ⏸️ BLOCKED |
+| 3.4  | Integration testing with test leads         | Debug Mode | ⏸️ BLOCKED |
+
+---
+
+## **📋 Phase 3b: Code Violation Workspace Enhancements** ⏸️ DEFERRED
+
+### **Status:** Deferred until post-launch assessment
+
+### **Scope (Post-Launch)**
+
+| Enhancement              | Description                                   | Trigger         |
+| ------------------------ | --------------------------------------------- | --------------- |
+| violation_type display   | Show violation category in Intelligence Panel | Agent feedback  |
+| Fine Amount badge        | Visual indicator for fine severity            | Usage metrics   |
+| Compliance Deadline gate | SOFT gate for deadline proximity              | Business review |
+
+**Trigger:** Data Team confirms Code Violation leads flowing to Podio, then assess UI needs based on agent feedback.
 
 ---
 
@@ -250,5 +300,5 @@ V4.0+ will be considered **COMPLETE** when:
 ---
 
 **Document Owner:** CRM PM Mode
-**Last Updated:** 2025-12-01
+**Last Updated:** 2025-12-03
 **Next Review:** Phase 3 planning meeting (Monday bilateral sync)
