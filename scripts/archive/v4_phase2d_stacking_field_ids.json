@@ -1,0 +1,21 @@
+{
+  "created_date": "2025-12-04T16:21:10Z",
+  "contract_version": "2.2",
+  "phase": "2d-STACKING",
+  "authorization": "High-Level Advisor approved v2.2 with modification (3 fields, not 4)",
+  "business_context": "Enables lead prioritization based on multiple distress indicators",
+  "app_id": "30549135",
+  "success_count": 3,
+  "failure_count": 0,
+  "fields": {
+    "active_distress_signals": 275005561,
+    "distress_signal_count": 275005562,
+    "multi_signal_lead": 275005563
+  },
+  "example_data": {
+    "active_distress_signals": "Tax Lien + Absentee Owner",
+    "distress_signal_count": 2,
+    "multi_signal_lead": "Yes"
+  },
+  "note": "Field 53 (Stacking Bonus Points) was REMOVED by Advisor as redundant with existing lead_score"
+}

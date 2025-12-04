@@ -1,7 +1,7 @@
 # **CRM Team - V4.0+ Multi-Source Integration Status**
 
 **Document Type:** Living Project Status (CRM Team Perspective)
-**Last Updated:** 2025-12-03
+**Last Updated:** 2025-12-04
 **Document Owner:** CRM PM Mode
 **Current Phase:** Phase 3 Planning (Absentee Owner - Code Violation MVP handled by Data Team)
 
@@ -12,8 +12,8 @@
 | Metric                 | Status                                                                      |
 | ---------------------- | --------------------------------------------------------------------------- |
 | **Current Phase**      | Phase 3 Planning (Absentee Owner - Code Violation MVP handled by Data Team) |
-| **Last Milestone**     | v2.1 Amendment Complete (Multi-Year Tax Delinquency) - 2025-12-03           |
-| **Fields Implemented** | 24/49                                                                       |
+| **Last Milestone**     | v2.2 Amendment Complete (Stacked Distress Signals) - 2025-12-04             |
+| **Fields Implemented** | 27/52                                                                       |
 | **Compliance Gates**   | 3 operational (Owner Occupied, Fiduciary, Deadline)                         |
 | **Production URL**     | https://compliant-real-estate-lead-dialer.vercel.app                        |
 
@@ -22,12 +22,13 @@
 For detailed implementation records, test matrices, and authorization records, see:
 [`docs/archive/crm_team_v4_phases_0-2_complete.md`](archive/crm_team_v4_phases_0-2_complete.md:1)
 
-| Phase    | Scope                         | Fields | Completion Date |
-| -------- | ----------------------------- | ------ | --------------- |
-| Phase 0  | V3.6 Schema Updates           | 5      | 2025-11-29      |
-| Phase 1  | Universal + NED + Foreclosure | 12     | 2025-11-29      |
-| Phase 2  | Probate + Tax Lien            | 10     | 2025-12-01      |
-| Phase 2c | Contract v2.1 Multi-Year Tax  | 2      | 2025-12-03      |
+| Phase    | Scope                          | Fields | Completion Date |
+| -------- | ------------------------------ | ------ | --------------- |
+| Phase 0  | V3.6 Schema Updates            | 5      | 2025-11-29      |
+| Phase 1  | Universal + NED + Foreclosure  | 12     | 2025-11-29      |
+| Phase 2  | Probate + Tax Lien             | 10     | 2025-12-01      |
+| Phase 2c | Contract v2.1 Multi-Year Tax   | 2      | 2025-12-03      |
+| Phase 2d | Contract v2.2 Stacked Distress | 3      | 2025-12-04      |
 
 **Note:** Code Violation MVP (2025-12-01) - Handled by Data Team via PR #5. No new CRM fields required for MVP. Post-launch workspace enhancements tracked as Phase 3b.
 
@@ -151,11 +152,48 @@ from services.podio import *  # Re-export all public functions
 - Tax Delinquency Summary: Shows year-by-year breakdown (e.g., "$12,740 total (2023: $6,501, 2024: $6,239)")
 - Delinquent Years Count: Color-coded badge (1 yr default, 2 yr 🟠, 3+ yr 🔴)
 
-### **Next Steps (v2.2 Discussion):**
+### **Related Amendment:**
 
-- Monday sync: Discuss "Stacked Distress Signals" enhancement
-- Data Team confirmed `stacking-bonus.ts` already calculates cross-source signals
-- Proposed Fields 50-51: Distress Signal Count, Distress Signal Summary
+- v2.2 Stacked Distress Signals - See Phase 2d below
+
+---
+
+## **📋 Phase 2d: Contract v2.2 - Stacked Distress Signals** ✅ COMPLETE
+
+### **Status:** Complete (2025-12-04)
+
+### **Scope:** Cross-Source Signal Stacking (Contract Amendment v2.2)
+
+| Field # | Name                    | Type     | Podio Field ID |
+| ------- | ----------------------- | -------- | -------------- |
+| 50      | Active Distress Signals | text     | 275005561      |
+| 51      | Distress Signal Count   | number   | 275005562      |
+| 52      | Multi-Signal Lead       | category | 275005563      |
+
+**Note:** Original v2.2 proposal had 4 fields. High-Level Advisor removed Field 53 (Stacking Bonus Points) as redundant with existing `lead_score` field.
+
+### **Implementation Completed:**
+
+- [x] Data Team PR #6 reviewed and v2.2 bundled amendment approved
+- [x] High-Level Advisor reviewed and approved 3 of 4 fields
+- [x] 3 Podio fields created in Master Lead App
+- [x] `config.py` updated with field ID constants
+- [x] `services/podio/intelligence.py` FIELD_BUNDLES updated (stacking_signals bundle)
+- [x] `intelligence-panel.js` "Stacked Distress Signals" section added
+- [x] Field IDs delivered to Data Team via PR comment
+
+### **Display Features:**
+
+- Active Distress Signals: Human-readable summary (e.g., "Tax Lien + Absentee Owner")
+- Distress Signal Count: Color-coded badge (1 signal default, 2 🟡, 3+ 🔥)
+- Multi-Signal Lead: Yes = ✅, No = gray
+
+### **Business Value:**
+
+- Agents can instantly identify high-priority leads with multiple distress signals
+- Enables sorting/filtering by signal density in Podio
+- Cross-source property matching via APN (parcel number)
+- Data Team's `stacking-bonus.ts` V4.6 already calculates all stacking data
 
 ---
 
@@ -222,7 +260,7 @@ from services.podio import *  # Re-export all public functions
 **Objective:** System-wide consistency and performance optimization
 
 - [ ] Standardize field layouts across all 7 lead types
-- [ ] Performance audit (<3 second workspace load with 47 fields)
+- [ ] Performance audit (<3 second workspace load with 52 fields)
 - [ ] Agent training materials
 - [ ] A/B test Intelligence Panel layouts
 
@@ -232,7 +270,7 @@ from services.podio import *  # Re-export all public functions
 
 V4.0+ will be considered **COMPLETE** when:
 
-- [ ] All 47 Podio fields created and operational
+- [ ] All 52 Podio fields created and operational
 - [ ] Workspace correctly displays all 7 lead types
 - [ ] Agent workspace load time <3 seconds
 - [ ] Agent feedback survey: >80% satisfaction
@@ -300,5 +338,5 @@ V4.0+ will be considered **COMPLETE** when:
 ---
 
 **Document Owner:** CRM PM Mode
-**Last Updated:** 2025-12-03
+**Last Updated:** 2025-12-04
 **Next Review:** Phase 3 planning meeting (Monday bilateral sync)

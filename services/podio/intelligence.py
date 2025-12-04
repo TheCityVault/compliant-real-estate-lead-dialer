@@ -64,6 +64,10 @@ from config import (
     # V4.0 Phase 2c Fields (Contract v2.1 - Tax Lien Multi-Year)
     TAX_DELINQUENCY_SUMMARY_FIELD_ID,
     DELINQUENT_YEARS_COUNT_FIELD_ID,
+    # V4.0 Phase 2d Fields (Contract v2.2 - Stacked Distress Signals)
+    ACTIVE_DISTRESS_SIGNALS_FIELD_ID,
+    DISTRESS_SIGNAL_COUNT_FIELD_ID,
+    MULTI_SIGNAL_LEAD_FIELD_ID,
 )
 
 # ============================================================================
@@ -104,6 +108,13 @@ FIELD_BUNDLES = {
         "lien_type",                  # Type of tax lien (Property Tax, IRS Federal, etc.)
         "tax_delinquency_summary",    # Multi-year summary e.g. "$12,740 total (2023: $6,501, 2024: $6,239)"
         "delinquent_years_count"      # Number of years with delinquent taxes
+    ],
+    # V4.0 Phase 2d - Stacked Distress Signals Bundle (3 fields - Contract v2.2)
+    # NOTE: These are UNIVERSAL fields - apply to ALL lead types with stacked signals
+    "stacking_signals": [
+        "active_distress_signals",    # Combined signals e.g. "Tax Lien + Absentee Owner"
+        "distress_signal_count",      # Number of active distress signals (1, 2, 3+)
+        "multi_signal_lead"           # Yes/No indicator for multi-signal prioritization
     ],
     # Code Violation - Phase 2 (future)
     # Absentee Owner, Tired Landlord - Phase 3
@@ -241,5 +252,16 @@ def get_lead_intelligence(item_id):
         'owner_phone_secondary': extract_field_value_by_id(item, OWNER_PHONE_SECONDARY_FIELD_ID),
         'owner_email_secondary': extract_field_value_by_id(item, OWNER_EMAIL_SECONDARY_FIELD_ID),
     })
+    
+    # STEP 5: Extract Stacked Distress Signals (Contract v2.2 - UNIVERSAL)
+    # These fields apply to ALL lead types that have multiple distress signals
+    # Field IDs may be None until script runs - graceful degradation via extract function
+    if ACTIVE_DISTRESS_SIGNALS_FIELD_ID is not None:
+        intelligence.update({
+            'active_distress_signals': extract_field_value_by_id(item, ACTIVE_DISTRESS_SIGNALS_FIELD_ID),
+            'distress_signal_count': extract_field_value_by_id(item, DISTRESS_SIGNAL_COUNT_FIELD_ID),
+            'multi_signal_lead': extract_field_value_by_id(item, MULTI_SIGNAL_LEAD_FIELD_ID),
+        })
+        print(f"V4.0 Phase 2d: Extracted Stacking Signals bundle for item {item_id}")
     
     return intelligence

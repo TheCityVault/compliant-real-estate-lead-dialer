@@ -62,6 +62,17 @@ var IntelligencePanel = (function() {
         }
     };
 
+    /**
+     * Stacked Distress Signals Configuration (Contract v2.2)
+     *
+     * @constant {Object}
+     * @description Universal section displayed for leads with multiple distress signals.
+     * This is rendered separately from lead-type sections since stacking applies to ALL types.
+     */
+    const STACKING_SIGNALS_CONFIG = {
+        "Stacked Distress Signals": ["active_distress_signals", "distress_signal_count", "multi_signal_lead"]
+    };
+
     // ==========================================
     // STATIC CONFIGURATION: FIELD METADATA
     // ==========================================
@@ -99,7 +110,11 @@ var IntelligencePanel = (function() {
         "lien_type": { label: "Lien Type", type: "category" },
         // V4.0 Phase 2c - Tax Lien Multi-Year Fields
         "tax_delinquency_summary": { label: "Tax Delinquency Summary", type: "multi_year_summary" },
-        "delinquent_years_count": { label: "Delinquent Years", type: "years_count" }
+        "delinquent_years_count": { label: "Delinquent Years", type: "years_count" },
+        // V4.0 Phase 2d - Stacked Distress Signals Fields (Contract v2.2)
+        "active_distress_signals": { label: "Active Distress Signals", type: "distress_signals" },
+        "distress_signal_count": { label: "Distress Signal Count", type: "signal_count" },
+        "multi_signal_lead": { label: "Multi-Signal Lead", type: "multi_signal" }
     };
 
     // ==========================================
@@ -280,6 +295,61 @@ var IntelligencePanel = (function() {
                 } else {
                     displayValue = count + " year" + (count !== 1 ? "s" : "");
                 }
+            } else if (meta.type === 'distress_signals') {
+                // V4.0 Phase 2d: Active distress signals display
+                // Example: "Tax Lien + Absentee Owner"
+                valueClass = "text-base font-semibold text-gray-900";
+                // Parse signal count from text if multiple signals
+                const signalCount = (value.split('+').length);
+                if (signalCount >= 3) {
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
+                            🔥 High Priority Stack
+                        </span>
+                    `;
+                } else if (signalCount === 2) {
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">
+                            🟡 Stacked Lead
+                        </span>
+                    `;
+                }
+            } else if (meta.type === 'signal_count') {
+                // V4.0 Phase 2d: Distress signal count with priority badge
+                const count = parseInt(value);
+                if (count >= 3) {
+                    valueClass = "text-base font-bold text-red-700";
+                    displayValue = count;
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
+                            🔥 ${count} Signals - High Priority
+                        </span>
+                    `;
+                } else if (count === 2) {
+                    valueClass = "text-base font-semibold text-orange-600";
+                    displayValue = count;
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">
+                            🟡 ${count} Signals
+                        </span>
+                    `;
+                } else {
+                    displayValue = count + " signal" + (count !== 1 ? "s" : "");
+                }
+            } else if (meta.type === 'multi_signal') {
+                // V4.0 Phase 2d: Multi-signal lead Yes/No indicator
+                if (value === "Yes" || value === "yes") {
+                    valueClass = "text-base font-semibold text-green-700";
+                    displayValue = "✅ Yes";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
+                            Priority Lead
+                        </span>
+                    `;
+                } else {
+                    valueClass = "text-base font-semibold text-gray-500";
+                    displayValue = "No";
+                }
             }
         }
 
@@ -364,6 +434,17 @@ var IntelligencePanel = (function() {
                 console.log('IntelligencePanel: Rendered sections for lead type:', leadType);
             } else {
                 console.log('IntelligencePanel: No field config for lead type:', leadType);
+            }
+
+            // V4.0 Phase 2d: Render Stacked Distress Signals section (UNIVERSAL)
+            // This section is displayed for ALL leads that have stacking data
+            if (intelligenceData.multi_signal_lead === "Yes" ||
+                (intelligenceData.distress_signal_count && parseInt(intelligenceData.distress_signal_count) >= 2)) {
+                Object.entries(STACKING_SIGNALS_CONFIG).forEach(([sectionTitle, fields]) => {
+                    const sectionHtml = renderDynamicSection(sectionTitle, fields, intelligenceData);
+                    container.insertAdjacentHTML('beforeend', sectionHtml);
+                });
+                console.log('IntelligencePanel: Rendered Stacked Distress Signals section');
             }
         },
 

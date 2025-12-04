@@ -126,6 +126,12 @@ LIEN_TYPE_FIELD_ID = 274954744
 TAX_DELINQUENCY_SUMMARY_FIELD_ID = 274994882  # Multi-year summary e.g. "$12,740 total (2023: $6,501, 2024: $6,239)"
 DELINQUENT_YEARS_COUNT_FIELD_ID = 274994883  # Number of years with delinquent taxes
 
+# V4.0 Phase 2d Fields - Stacked Distress Signals (Contract v2.2)
+# Authorization: High-Level Advisor approved v2.2 with modification (3 fields, not 4)
+ACTIVE_DISTRESS_SIGNALS_FIELD_ID = 275005561  # Combined signals e.g. "Tax Lien + Absentee Owner"
+DISTRESS_SIGNAL_COUNT_FIELD_ID = 275005562  # Number of distress signals present
+MULTI_SIGNAL_LEAD_FIELD_ID = 275005563  # Yes/No indicator for stacked leads
+
 # Podio App IDs
 CALL_ACTIVITY_APP_ID = os.environ.get('PODIO_CALL_ACTIVITY_APP_ID', '30549170')
 MASTER_LEAD_APP_ID = '30549135'  # Master Lead app for item filtering
@@ -280,8 +286,16 @@ def validate_enriched_fields():
         'DELINQUENT_YEARS_COUNT_FIELD_ID': DELINQUENT_YEARS_COUNT_FIELD_ID,
     }
     
+    # V4.0 Phase 2d Fields - Stacked Distress Signals (3 fields - Contract v2.2)
+    # These fields are optional until script runs - separate validation
+    phase2d_fields = {
+        'ACTIVE_DISTRESS_SIGNALS_FIELD_ID': ACTIVE_DISTRESS_SIGNALS_FIELD_ID,
+        'DISTRESS_SIGNAL_COUNT_FIELD_ID': DISTRESS_SIGNAL_COUNT_FIELD_ID,
+        'MULTI_SIGNAL_LEAD_FIELD_ID': MULTI_SIGNAL_LEAD_FIELD_ID,
+    }
+    
     print(f"\n{'='*50}")
-    print(f"=== V4.0 PHASE 2c FIELD VALIDATION (40 FIELDS) ===")
+    print(f"=== V4.0 PHASE 2d FIELD VALIDATION (43 FIELDS) ===")
     all_valid = True
     for field_name, field_id in enriched_fields.items():
         if field_id is not None:
@@ -290,8 +304,20 @@ def validate_enriched_fields():
             print(f"❌ {field_name}: NOT SET")
             all_valid = False
     
+    # Phase 2d fields - show as pending if None (expected until script runs)
+    phase2d_pending = 0
+    for field_name, field_id in phase2d_fields.items():
+        if field_id is not None:
+            print(f"✅ {field_name}: {field_id}")
+        else:
+            print(f"⏳ {field_name}: PENDING (run scripts/add_v4_phase2d_stacking_fields.py)")
+            phase2d_pending += 1
+    
     if all_valid:
-        print(f"✅ All 40 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate + 4 Tax Lien + 2 Multi-Year)")
+        if phase2d_pending == 0:
+            print(f"✅ All 43 field IDs validated successfully (11 enriched + 5 contact + 12 Phase 1 + 6 Probate + 4 Tax Lien + 2 Multi-Year + 3 Stacking)")
+        else:
+            print(f"✅ 40/43 field IDs validated (3 Phase 2d Stacking fields pending creation)")
     else:
         print(f"⚠️ WARNING: Some field IDs are missing")
     print(f"{'='*50}\n")
