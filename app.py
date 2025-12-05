@@ -119,9 +119,10 @@ def workspace():
             'owner_mailing_address': extract_field_value(lead_item, 'Owner Mailing Address'),
             'owner_occupied': extract_field_value(lead_item, 'Owner Occupied'),
             # V4.0.9: Secondary contact fields for multi-phone support
+            # V4.0.10 FIX: Use consistent parentheses in field labels (Owner Name (Secondary) not Owner Name Secondary)
             'owner_phone_secondary': extract_field_value(lead_item, 'Owner Phone (Secondary)'),
-            'owner_name_secondary': extract_field_value(lead_item, 'Owner Name Secondary'),
-            'owner_email_secondary': extract_field_value(lead_item, 'Owner Email Secondary')
+            'owner_name_secondary': extract_field_value(lead_item, 'Owner Name (Secondary)'),
+            'owner_email_secondary': extract_field_value(lead_item, 'Owner Email (Secondary)')
         }
         
         # V4.0.5: Extract enriched intelligence data from Data Pipeline

@@ -160,15 +160,31 @@ def get_lead_intelligence(item_id):
     lead_type = extract_field_value_by_id(item, LEAD_TYPE_FIELD_ID)
     
     # STEP 2: Extract Universal Fields (always included - 16 fields from v1.1.2/v1.1.3)
+    
+    # Deal Qualification fields (extracted first for fallback calculation)
+    estimated_property_value = extract_field_value_by_id(item, ESTIMATED_PROPERTY_VALUE_FIELD_ID)
+    equity_percentage = extract_field_value_by_id(item, EQUITY_PERCENTAGE_FIELD_ID)
+    estimated_equity = extract_field_value_by_id(item, ESTIMATED_EQUITY_FIELD_ID)
+    
+    # V4.0.10 FIX: Calculate estimated_equity if not populated in Podio
+    # Fallback: estimated_equity = estimated_property_value * (equity_percentage / 100)
+    if estimated_equity is None and estimated_property_value is not None and equity_percentage is not None:
+        try:
+            estimated_equity = estimated_property_value * (equity_percentage / 100.0)
+            print(f"V4.0.10: Calculated estimated_equity via fallback: ${estimated_equity:,.0f} (${estimated_property_value:,.0f} × {equity_percentage:.1f}%)")
+        except (TypeError, ValueError) as e:
+            print(f"V4.0.10: Could not calculate estimated_equity fallback: {e}")
+            estimated_equity = None
+    
     intelligence = {
         # Priority Metrics (ui_priority 1-2) - MOST IMPORTANT
         'lead_score': extract_field_value_by_id(item, LEAD_SCORE_FIELD_ID),
         'lead_tier': extract_field_value_by_id(item, LEAD_TIER_FIELD_ID),
         
         # Deal Qualification (ui_priority 3-5) - FINANCIAL INTELLIGENCE
-        'estimated_property_value': extract_field_value_by_id(item, ESTIMATED_PROPERTY_VALUE_FIELD_ID),
-        'equity_percentage': extract_field_value_by_id(item, EQUITY_PERCENTAGE_FIELD_ID),
-        'estimated_equity': extract_field_value_by_id(item, ESTIMATED_EQUITY_FIELD_ID),
+        'estimated_property_value': estimated_property_value,
+        'equity_percentage': equity_percentage,
+        'estimated_equity': estimated_equity,  # May be calculated via V4.0.10 fallback
         
         # Property Details (ui_priority 6-7) - CONTEXT
         'year_built': extract_field_value_by_id(item, YEAR_BUILT_FIELD_ID),

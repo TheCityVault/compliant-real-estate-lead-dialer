@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.10] - 2025-12-05
+
+### 🔧 HOTFIX: Secondary Owner Name + Estimated Equity Display
+
+**Priority:** P2 - Data display issues affecting agent intelligence
+
+#### Bug Fix 1: Secondary Owner Name Missing
+
+**Test Case:** item_id=3211770072
+
+- Secondary phone "5173126678" displays ✅
+- Secondary owner name NOT displaying ❌
+
+**Root Cause:**
+
+- Field label mismatch in [`app.py`](app.py:123)
+- Used `'Owner Name Secondary'` instead of `'Owner Name (Secondary)'`
+
+**Fix:**
+
+- Corrected field labels to use consistent parentheses format:
+  - `'Owner Name (Secondary)'`
+  - `'Owner Email (Secondary)'`
+
+#### Bug Fix 2: Estimated Equity Shows "Unknown"
+
+**Test Case:** item_id=3211762753
+
+- Estimated Property Value: $661,000 ✅
+- Equity %: 100.0% ✅
+- Estimated Equity: Unknown ❌ (should be $661,000)
+
+**Root Cause:**
+
+- `estimated_equity` field (274896127) not populated in Podio by Data Pipeline
+- Field exists but Data Team hasn't populated it yet
+
+**Fix:**
+
+- Added server-side fallback calculation in [`intelligence.py`](services/podio/intelligence.py:170)
+- Formula: `estimated_equity = estimated_property_value × (equity_percentage / 100)`
+- Calculation only triggers when:
+  - `estimated_equity` is NULL in Podio
+  - Both `estimated_property_value` and `equity_percentage` are available
+- Logged with `V4.0.10:` prefix for debugging
+
+#### Files Modified
+
+- `app.py` - Correct secondary owner field labels (line 123-125)
+- `services/podio/intelligence.py` - Add estimated_equity fallback calculation (lines 164-177)
+
+#### Test Cases
+
+1. **Secondary Owner Name:** item_id=3211770072
+   - Expected: Owner Name Secondary displays if populated
+2. **Estimated Equity Calculation:** item_id=3211762753
+   - Property Value: $661,000
+   - Equity %: 100.0%
+   - Expected Estimated Equity: $661,000 (calculated)
+
+---
+
 ## [4.0.9] - 2025-12-05
 
 ### 🚨 HOTFIX: Phone Extraction and Multi-Phone Support
