@@ -297,15 +297,106 @@ var TwilioVOIP = (function() {
         hasActiveCall: function() {
             return currentConnection !== null;
         },
+/**
+ * Update the device status display (public wrapper)
+ * @param {string} message - Status message
+ * @param {string} type - Status type: 'success', 'warning', 'error'
+ */
+updateStatus: function(message, type) {
+    updateDeviceStatus(message, type);
+},
 
-        /**
-         * Update the device status display (public wrapper)
-         * @param {string} message - Status message
-         * @param {string} type - Status type: 'success', 'warning', 'error'
-         */
-        updateStatus: function(message, type) {
-            updateDeviceStatus(message, type);
+/**
+ * Dial a specific phone (primary or secondary) - V4.0.9 Multi-Phone Support
+ * @param {string} phoneType - Either 'primary' or 'secondary'
+ */
+dialPhone: async function(phoneType) {
+    const phoneElement = phoneType === 'primary'
+        ? document.getElementById('primary-phone')
+        : document.getElementById('secondary-phone');
+    
+    if (!phoneElement) {
+        console.error('TwilioVOIP: Phone element not found for type:', phoneType);
+        return;
+    }
+    
+    const phoneNumber = phoneElement.textContent.trim();
+    
+    if (!phoneNumber || phoneNumber.includes('No phone available')) {
+        console.warn('TwilioVOIP: No valid phone number for', phoneType);
+        alert('No phone number available to dial.');
+        return;
+    }
+    
+    console.log('TwilioVOIP: Initiating call to', phoneType, 'phone:', phoneNumber);
+    
+    // Get item ID from the page
+    const itemId = document.querySelector('[data-item-id]')?.dataset.itemId ||
+                  window.itemId ||
+                  new URLSearchParams(window.location.search).get('item_id');
+    
+    if (!itemId) {
+        console.error('TwilioVOIP: Could not determine item_id');
+        return;
+    }
+    
+    // Disable dial buttons during call initiation
+    const dialButtons = document.querySelectorAll('[onclick^="TwilioVOIP.dialPhone"]');
+    dialButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+    
+    try {
+        const agentId = document.getElementById('agent-id')?.value.trim();
+        const payload = {
+            item_id: itemId,
+            phone: phoneNumber,
+            agent_id: agentId || ('client:' + agentIdentity)
+        };
+        
+        console.log('TwilioVOIP: Calling /dial with payload:', payload);
+        
+        const response = await fetch('/dial', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to initiate call');
         }
+        
+        const responseData = await response.json();
+        currentCallSid = responseData.call_sid;
+        console.log('TwilioVOIP: CallSid captured:', currentCallSid);
+        
+        // Update UI
+        if (elements.callStatus) {
+            elements.callStatus.classList.remove('hidden');
+        }
+        if (elements.dialButton) {
+            elements.dialButton.classList.add('hidden');
+        }
+        if (elements.disconnectButton) {
+            elements.disconnectButton.classList.remove('hidden');
+        }
+        
+        updateDeviceStatus('Calling ' + phoneType + '...', 'warning');
+        
+    } catch (error) {
+        console.error('TwilioVOIP: Error initiating call:', error);
+        alert('Failed to initiate call: ' + error.message);
+        
+        // Re-enable dial buttons
+        dialButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+    }
+}
     };
 })();
 

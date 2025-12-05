@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.9] - 2025-12-05
+
+### 🚨 HOTFIX: Phone Extraction and Multi-Phone Support
+
+**Priority:** P0 - Agents could not dial leads due to phone field extraction failure
+
+#### Root Cause Analysis
+
+- Lead item_id=3211762753 had phones in Podio (`7578748884`, `3037317402`) but not displaying in workspace
+- Podio phone fields have special nested structure not handled by field extraction
+
+#### Fixed
+
+**BUG 1: Phone field extraction fails (CRITICAL)**
+
+- Added "phone" field type support to [`extract_field_value_by_id()`](services/podio/field_extraction.py:146)
+- Phone fields return `[{'type': 'home', 'value': '7578748884'}]` structure
+- Now properly extracts nested `value` property
+
+**BUG 2: Workspace uses wrong field labels**
+
+- Corrected field label from "Best Contact Number" to "Owner Phone Primary" in [`app.py`](app.py:111)
+- Corrected field label from "Owner Phone" to "Owner Phone Primary" in [`app.py`](app.py:117)
+- Added `owner_phone_secondary`, `owner_name_secondary`, `owner_email_secondary` extraction
+
+**BUG 3: Secondary contact not displayed in workspace**
+
+- Added Secondary Contact section to [`workspace.html`](templates/workspace.html:759) Contact Information panel
+- Shows Owner Name Secondary, Phone Secondary, Email Secondary when available
+- Visual distinction: Primary (yellow highlight), Secondary (blue highlight)
+
+**BUG 4: Single-phone dialer (dual VOIP dial needed)**
+
+- Added `dialPhone(phoneType)` function to [`twilio-voip.js`](static/js/workspace/twilio-voip.js:313)
+- Individual "📞 Dial Primary" and "📞 Dial Secondary" buttons
+- Buttons call VOIP module with selected phone number
+
+#### Files Modified
+
+- `services/podio/field_extraction.py` - Add "phone" field type handler
+- `app.py` - Fix field labels and add secondary contact fields
+- `templates/workspace.html` - Add secondary contact display and dual dial buttons
+- `static/js/workspace/twilio-voip.js` - Support phone selection for dialing
+
+#### Test Case
+
+- item_id=3211762753
+- Expected Primary Phone: 7578748884
+- Expected Secondary Phone: 3037317402
+
+---
+
 ## [3.6.0] - 2025-11-29
 
 ### Phase 0 - V3.6 Schema Updates (V4.0+ Multi-Source Integration)

@@ -108,16 +108,20 @@ def workspace():
         lead_data = {
             'item_id': item_id,
             'name': extract_field_value(lead_item, 'Owner Name'),
-            'phone': extract_field_value(lead_item, 'Best Contact Number'),
+            'phone': extract_field_value(lead_item, 'Owner Phone Primary'),  # V4.0.9 FIX: Corrected field label
             'address': extract_field_value_by_id(lead_item, OWNER_MAILING_ADDRESS_FIELD_ID),  # Owner Mailing Address (ID: 274909277)
             'source': 'Podio Master Lead',
             # Contract v1.1.3 fields
             'lead_type': extract_field_value(lead_item, 'Lead Type'),
             'owner_name': extract_field_value(lead_item, 'Owner Name'),
-            'owner_phone': extract_field_value(lead_item, 'Owner Phone'),
+            'owner_phone': extract_field_value(lead_item, 'Owner Phone Primary'),  # V4.0.9 FIX: Corrected field label
             'owner_email': extract_field_value(lead_item, 'Owner Email'),
             'owner_mailing_address': extract_field_value(lead_item, 'Owner Mailing Address'),
-            'owner_occupied': extract_field_value(lead_item, 'Owner Occupied')
+            'owner_occupied': extract_field_value(lead_item, 'Owner Occupied'),
+            # V4.0.9: Secondary contact fields for multi-phone support
+            'owner_phone_secondary': extract_field_value(lead_item, 'Owner Phone (Secondary)'),
+            'owner_name_secondary': extract_field_value(lead_item, 'Owner Name Secondary'),
+            'owner_email_secondary': extract_field_value(lead_item, 'Owner Email Secondary')
         }
         
         # V4.0.5: Extract enriched intelligence data from Data Pipeline

@@ -142,6 +142,12 @@ def extract_field_value_by_id(item, field_id, field_type=None):
             elif field_type == 'date':
                 # Date fields return dict with 'start' key (YYYY-MM-DD format)
                 return value.get('start') if isinstance(value, dict) else str(value)
+            elif field_type == 'phone':
+                # Phone fields: [{'type': 'home', 'value': '7578748884'}]
+                # V4.0.9 FIX: Handle phone field extraction properly
+                if isinstance(value, dict) and 'value' in value:
+                    return value.get('value', '')
+                return str(value) if value else None
             elif field_type == 'text':
                 # Text fields: [{'value': '<p>R0090271</p>'}]
                 # Extract nested 'value' first
