@@ -68,6 +68,12 @@ from config import (
     ACTIVE_DISTRESS_SIGNALS_FIELD_ID,
     DISTRESS_SIGNAL_COUNT_FIELD_ID,
     MULTI_SIGNAL_LEAD_FIELD_ID,
+    # V4.0 Phase 3 Fields (Contract v2.0 - Absentee Owner Bundle)
+    PORTFOLIO_COUNT_FIELD_ID,
+    OWNERSHIP_TENURE_YEARS_FIELD_ID,
+    OUT_OF_STATE_OWNER_FIELD_ID,
+    LAST_SALE_DATE_FIELD_ID,
+    VACANCY_DURATION_MONTHS_FIELD_ID,
 )
 
 # ============================================================================
@@ -116,8 +122,22 @@ FIELD_BUNDLES = {
         "distress_signal_count",      # Number of active distress signals (1, 2, 3+)
         "multi_signal_lead"           # Yes/No indicator for multi-signal prioritization
     ],
-    # Code Violation - Phase 2 (future)
-    # Absentee Owner, Tired Landlord - Phase 3
+    # V4.0 Phase 3 - Absentee Owner Bundle (5 fields - Contract v2.0 Fields 25-29)
+    "Absentee Owner": [
+        "portfolio_count",            # Number of properties owned (>5 = max burnout)
+        "ownership_tenure_years",     # Years of ownership (>20yr = Senior Transition)
+        "out_of_state_owner",         # Yes/No - 40% more likely to sell quickly
+        "last_sale_date",             # Date of last property sale
+        "vacancy_duration_months"     # Months vacant (>6mo = max stress)
+    ],
+    # V4.0 Phase 3 - Tired Landlord Bundle (4 fields - shares with Absentee Owner)
+    "Tired Landlord": [
+        "portfolio_count",            # Number of properties owned
+        "ownership_tenure_years",     # Years of ownership
+        "last_sale_date",             # Date of last property sale
+        "vacancy_duration_months"     # Months vacant - CRITICAL for tired landlord
+    ],
+    # Code Violation - Phase 4 (future)
 }
 
 # ============================================================================
@@ -250,10 +270,31 @@ def get_lead_intelligence(item_id):
         })
         print(f"V4.0 Phase 2b/2c: Extracted Tax Lien bundle (6 fields) for item {item_id}")
         
+    elif lead_type == "Absentee Owner":
+        # V4.0 Phase 3 - Absentee Owner Bundle (5 fields)
+        intelligence.update({
+            'portfolio_count': extract_field_value_by_id(item, PORTFOLIO_COUNT_FIELD_ID),
+            'ownership_tenure_years': extract_field_value_by_id(item, OWNERSHIP_TENURE_YEARS_FIELD_ID),
+            'out_of_state_owner': extract_field_value_by_id(item, OUT_OF_STATE_OWNER_FIELD_ID),
+            'last_sale_date': extract_field_value_by_id(item, LAST_SALE_DATE_FIELD_ID),
+            'vacancy_duration_months': extract_field_value_by_id(item, VACANCY_DURATION_MONTHS_FIELD_ID),
+        })
+        print(f"V4.0 Phase 3: Extracted Absentee Owner bundle (5 fields) for item {item_id}")
+        
+    elif lead_type == "Tired Landlord":
+        # V4.0 Phase 3 - Tired Landlord Bundle (4 fields - shares with Absentee Owner)
+        intelligence.update({
+            'portfolio_count': extract_field_value_by_id(item, PORTFOLIO_COUNT_FIELD_ID),
+            'ownership_tenure_years': extract_field_value_by_id(item, OWNERSHIP_TENURE_YEARS_FIELD_ID),
+            'last_sale_date': extract_field_value_by_id(item, LAST_SALE_DATE_FIELD_ID),
+            'vacancy_duration_months': extract_field_value_by_id(item, VACANCY_DURATION_MONTHS_FIELD_ID),
+        })
+        print(f"V4.0 Phase 3: Extracted Tired Landlord bundle (4 fields) for item {item_id}")
+        
     else:
-        # Unknown or unsupported lead type - log for Phase 2/3 development
+        # Unknown or unsupported lead type - log for Phase 4 development
         if lead_type:
-            print(f"V4.0: Lead type '{lead_type}' not yet supported - Phase 2/3 bundle")
+            print(f"V4.0: Lead type '{lead_type}' not yet supported - Phase 4 bundle")
         else:
             print(f"V4.0: No lead_type set for item {item_id}")
     

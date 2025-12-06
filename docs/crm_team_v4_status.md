@@ -1,21 +1,21 @@
 # **CRM Team - V4.0+ Multi-Source Integration Status**
 
 **Document Type:** Living Project Status (CRM Team Perspective)
-**Last Updated:** 2025-12-04
+**Last Updated:** 2025-12-06
 **Document Owner:** CRM PM Mode
-**Current Phase:** Phase 3 Planning (Absentee Owner - Code Violation MVP handled by Data Team)
+**Current Phase:** Phase 3b Planning (Code Violation Workspace Enhancements)
 
 ---
 
 ## **📊 Executive Summary**
 
-| Metric                 | Status                                                                      |
-| ---------------------- | --------------------------------------------------------------------------- |
-| **Current Phase**      | Phase 3 Planning (Absentee Owner - Code Violation MVP handled by Data Team) |
-| **Last Milestone**     | v2.2 Amendment Complete (Stacked Distress Signals) - 2025-12-04             |
-| **Fields Implemented** | 27/52                                                                       |
-| **Compliance Gates**   | 3 operational (Owner Occupied, Fiduciary, Deadline)                         |
-| **Production URL**     | https://compliant-real-estate-lead-dialer.vercel.app                        |
+| Metric                 | Status                                                    |
+| ---------------------- | --------------------------------------------------------- |
+| **Current Phase**      | Phase 3b Planning (Code Violation Workspace Enhancements) |
+| **Last Milestone**     | Phase 3 Absentee Owner Bundle Complete - 2025-12-06       |
+| **Fields Implemented** | 32/52                                                     |
+| **Compliance Gates**   | 3 operational (Owner Occupied, Fiduciary, Deadline)       |
+| **Production URL**     | https://compliant-real-estate-lead-dialer.vercel.app      |
 
 ### **Completed Phases (Archived)**
 
@@ -29,6 +29,7 @@ For detailed implementation records, test matrices, and authorization records, s
 | Phase 2  | Probate + Tax Lien             | 10     | 2025-12-01      |
 | Phase 2c | Contract v2.1 Multi-Year Tax   | 2      | 2025-12-03      |
 | Phase 2d | Contract v2.2 Stacked Distress | 3      | 2025-12-04      |
+| Phase 3  | Absentee Owner Bundle          | 5      | 2025-12-06      |
 
 **Note:** Code Violation MVP (2025-12-01) - Handled by Data Team via PR #5. No new CRM fields required for MVP. Post-launch workspace enhancements tracked as Phase 3b.
 
@@ -197,34 +198,46 @@ from services.podio import *  # Re-export all public functions
 
 ---
 
-## **📋 Phase 3: Absentee Owner** ⏸️ PENDING
+## **📋 Phase 3: Absentee Owner Bundle** ✅ COMPLETE
 
-### **Status:** Awaiting Data Team confirmation (Absentee Owner scrapers only - Code Violation MVP complete)
+### **Status:** Complete (2025-12-06)
 
-### **Scope**
+### **Scope:** Property Owner Intelligence Bundle (Contract v2.0 Fields 25-29)
 
-| Bundle         | Fields                                                                                 | Priority |
-| -------------- | -------------------------------------------------------------------------------------- | -------- |
-| Absentee Owner | Portfolio Count, Ownership Tenure, Out-of-State Flag, Last Sale Date, Vacancy Duration | HIGH     |
-| Tired Landlord | (Shares Absentee fields)                                                               | HIGH     |
+| Field # | Name                      | Type     | Podio Field ID |
+| ------- | ------------------------- | -------- | -------------- |
+| 53      | Portfolio Count           | number   | 275027118      |
+| 54      | Ownership Tenure (Years)  | number   | 275027119      |
+| 55      | Out-of-State Owner        | category | 275027120      |
+| 56      | Last Sale Date            | date     | 275027121      |
+| 57      | Vacancy Duration (Months) | number   | 275027122      |
 
-**Estimated Total:** ~9 new Podio fields (Absentee bundle only)
+### **Lead Types Enabled:**
 
-### **Dependencies**
+| Lead Type      | Fields | Notes                                      |
+| -------------- | ------ | ------------------------------------------ |
+| Absentee Owner | 5      | All fields applicable                      |
+| Tired Landlord | 4      | Excludes Out-of-State Owner (not relevant) |
 
-- [x] Code Violation MVP handled by Data Team (PR #5 acknowledged)
-- [ ] Data Team confirms Absentee Owner scrapers operational
-- [ ] Bilateral sync meeting (Monday 10 AM MT)
+### **Implementation Completed:**
 
-### **Pre-Implementation Tasks**
+- [x] Podio field creation script created and executed
+- [x] 5 Podio fields created in Master Lead App (ID: 30549135)
+- [x] `config.py` updated with field ID constants
+- [x] `services/podio/intelligence.py` FIELD_BUNDLES updated
+- [x] `intelligence-panel.js` display sections added
+- [x] CHANGELOG.md V4.0.11 release notes
+- [x] Field IDs saved to `scripts/archive/v4_phase3_absentee_field_ids.json`
 
-| Task | Description                                 | Assignee   | Status     |
-| ---- | ------------------------------------------- | ---------- | ---------- |
-| 3.0  | Coordinate with Data Team on scraper status | CRM PM     | ⏸️ PENDING |
-| 3.1  | Create Podio fields (Absentee bundle)       | Code Mode  | ⏸️ BLOCKED |
-| 3.2  | Update `FIELD_BUNDLES` in intelligence.py   | Code Mode  | ⏸️ BLOCKED |
-| 3.3  | Add `FIELD_DISPLAY_CONFIG` entries          | Code Mode  | ⏸️ BLOCKED |
-| 3.4  | Integration testing with test leads         | Debug Mode | ⏸️ BLOCKED |
+### **Display Features:**
+
+| Field              | Visual Indicator                               |
+| ------------------ | ---------------------------------------------- |
+| Portfolio Count    | >5 = 🏠 Orange "Large Portfolio - Max Burnout" |
+| Ownership Tenure   | >20yr = 👴 Green "Senior Transition Profile"   |
+| Out-of-State Owner | Yes = 🔵 Blue "40% Higher Sell Likelihood"     |
+| Last Sale Date     | >15yr = Green equity, <3yr = Yellow recent     |
+| Vacancy Duration   | >6mo = 🔴 Red "Extended Vacancy - Max Stress"  |
 
 ---
 

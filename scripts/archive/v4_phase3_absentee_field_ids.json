@@ -1,0 +1,27 @@
+{
+  "created_date": "2025-12-06T10:33:56Z",
+  "contract_version": "2.0.0",
+  "phase": "3-ABSENTEE-OWNER",
+  "description": "Property Owner Intelligence Bundle (Fields 53-57)",
+  "app_id": "30549135",
+  "success_count": 5,
+  "failure_count": 0,
+  "fields": {
+    "portfolio_count": 275027118,
+    "ownership_tenure_years": 275027119,
+    "out_of_state_owner": 275027120,
+    "last_sale_date": 275027121,
+    "vacancy_duration_months": 275027122
+  },
+  "field_numbering": {
+    "portfolio_count": "Field 53 (Contract v2.0 Field 25)",
+    "ownership_tenure_years": "Field 54 (Contract v2.0 Field 26)",
+    "out_of_state_owner": "Field 55 (Contract v2.0 Field 27)",
+    "last_sale_date": "Field 56 (Contract v2.0 Field 28)",
+    "vacancy_duration_months": "Field 57 (Contract v2.0 Field 29)"
+  },
+  "lead_types_enabled": [
+    "Absentee Owner",
+    "Tired Landlord"
+  ]
+}

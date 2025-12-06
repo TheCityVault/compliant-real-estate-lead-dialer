@@ -59,6 +59,16 @@ var IntelligencePanel = (function() {
             "Tax Lien Details": ["lien_type", "tax_debt_amount"],
             "Multi-Year Breakdown": ["tax_delinquency_summary", "delinquent_years_count"],
             "Timeline & Urgency": ["delinquency_start_date", "redemption_deadline"]
+        },
+        // V4.0 Phase 3 - Absentee Owner Bundle (5 fields - Contract v2.0 Fields 25-29)
+        "Absentee Owner": {
+            "Property Owner Intelligence": ["portfolio_count", "ownership_tenure_years", "out_of_state_owner"],
+            "Ownership History": ["last_sale_date", "vacancy_duration_months"]
+        },
+        // V4.0 Phase 3 - Tired Landlord Bundle (4 fields - shares with Absentee Owner)
+        "Tired Landlord": {
+            "Property Owner Intelligence": ["portfolio_count", "ownership_tenure_years"],
+            "Ownership History": ["last_sale_date", "vacancy_duration_months"]
         }
     };
 
@@ -114,7 +124,13 @@ var IntelligencePanel = (function() {
         // V4.0 Phase 2d - Stacked Distress Signals Fields (Contract v2.2)
         "active_distress_signals": { label: "Active Distress Signals", type: "distress_signals" },
         "distress_signal_count": { label: "Distress Signal Count", type: "signal_count" },
-        "multi_signal_lead": { label: "Multi-Signal Lead", type: "multi_signal" }
+        "multi_signal_lead": { label: "Multi-Signal Lead", type: "multi_signal" },
+        // V4.0 Phase 3 - Absentee Owner / Tired Landlord Fields (Contract v2.0 Fields 25-29)
+        "portfolio_count": { label: "Portfolio Count", type: "portfolio_count" },
+        "ownership_tenure_years": { label: "Ownership Tenure", type: "tenure_years" },
+        "out_of_state_owner": { label: "Out-of-State Owner", type: "out_of_state" },
+        "last_sale_date": { label: "Last Sale Date", type: "date_with_age" },
+        "vacancy_duration_months": { label: "Vacancy Duration", type: "vacancy_months" }
     };
 
     // ==========================================
@@ -349,6 +365,117 @@ var IntelligencePanel = (function() {
                 } else {
                     valueClass = "text-base font-semibold text-gray-500";
                     displayValue = "No";
+                }
+            } else if (meta.type === 'portfolio_count') {
+                // V4.0 Phase 3: Portfolio count with burnout indicator
+                const count = parseInt(value);
+                if (count > 5) {
+                    valueClass = "text-base font-bold text-orange-600";
+                    displayValue = count + " properties";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 ml-2">
+                            🏠 Large Portfolio - Max Burnout Potential
+                        </span>
+                    `;
+                } else if (count > 2) {
+                    valueClass = "text-base font-semibold text-blue-600";
+                    displayValue = count + " properties";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                            Multi-Property Owner
+                        </span>
+                    `;
+                } else {
+                    displayValue = count + " propert" + (count !== 1 ? "ies" : "y");
+                }
+            } else if (meta.type === 'tenure_years') {
+                // V4.0 Phase 3: Ownership tenure with senior transition indicator
+                const years = parseInt(value);
+                if (years > 20) {
+                    valueClass = "text-base font-semibold text-green-700";
+                    displayValue = years + " years";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
+                            👴 Senior Transition Profile
+                        </span>
+                        <p class="text-xs text-green-600 mt-1 w-full">
+                            ℹ️ Long ownership = lower price sensitivity
+                        </p>
+                    `;
+                } else if (years > 10) {
+                    valueClass = "text-base font-semibold text-blue-600";
+                    displayValue = years + " years";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                            Established Owner
+                        </span>
+                    `;
+                } else {
+                    displayValue = years + " year" + (years !== 1 ? "s" : "");
+                }
+            } else if (meta.type === 'out_of_state') {
+                // V4.0 Phase 3: Out-of-state owner indicator
+                if (value === "Yes" || value === "yes") {
+                    valueClass = "text-base font-semibold text-blue-700";
+                    displayValue = "🔵 Yes - Out of State";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                            40% Higher Sell Likelihood
+                        </span>
+                    `;
+                } else {
+                    valueClass = "text-base font-semibold text-gray-500";
+                    displayValue = "In-State";
+                }
+            } else if (meta.type === 'date_with_age') {
+                // V4.0 Phase 3: Date with age calculation
+                displayValue = formatDate(value);
+                if (value) {
+                    try {
+                        const saleDate = new Date(value);
+                        const now = new Date();
+                        const yearsSince = Math.floor((now - saleDate) / (365.25 * 24 * 60 * 60 * 1000));
+                        if (yearsSince > 15) {
+                            extraHtml = `
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
+                                    ${yearsSince}yr equity buildup
+                                </span>
+                            `;
+                        } else if (yearsSince < 3) {
+                            extraHtml = `
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">
+                                    ${yearsSince}yr - Recent purchase
+                                </span>
+                            `;
+                        }
+                    } catch (e) {
+                        // Ignore date parsing errors
+                    }
+                }
+            } else if (meta.type === 'vacancy_months') {
+                // V4.0 Phase 3: Vacancy duration with stress indicator
+                const months = parseInt(value);
+                if (months > 6) {
+                    valueClass = "text-base font-bold text-red-700";
+                    displayValue = months + " months";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
+                            🔴 Extended Vacancy - Max Stress
+                        </span>
+                        <p class="text-xs text-red-600 mt-1 w-full">
+                            ⚠️ Carrying costs with zero income
+                        </p>
+                    `;
+                } else if (months > 3) {
+                    valueClass = "text-base font-semibold text-orange-600";
+                    displayValue = months + " months";
+                    extraHtml = `
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 ml-2">
+                            🟠 Moderate Vacancy
+                        </span>
+                    `;
+                } else {
+                    displayValue = months + " month" + (months !== 1 ? "s" : "");
                 }
             }
         }

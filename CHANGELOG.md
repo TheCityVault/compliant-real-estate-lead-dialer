@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.11] - 2025-12-06
+
+### ✨ Phase 3: Absentee Owner Bundle Implementation
+
+**Contract:** v2.0 Fields 25-29
+**Lead Types:** Absentee Owner, Tired Landlord
+
+#### Added
+
+- **5 New Podio Fields Created (Fields 53-57):**
+  - Portfolio Count (ID: 275027118) - Number of properties owned
+  - Ownership Tenure (Years) (ID: 275027119) - Years of ownership
+  - Out-of-State Owner (ID: 275027120) - Yes/No category
+  - Last Sale Date (ID: 275027121) - Date field
+  - Vacancy Duration (Months) (ID: 275027122) - Number field
+
+#### Changed
+
+- **config.py:** Added 5 new field ID constants for Phase 3 Absentee Owner bundle
+- **services/podio/intelligence.py:**
+  - Added imports for 5 new field IDs
+  - Added `Absentee Owner` bundle to `FIELD_BUNDLES` (5 fields)
+  - Added `Tired Landlord` bundle to `FIELD_BUNDLES` (4 fields - shares with Absentee Owner)
+  - Added extraction logic for both lead types in `get_lead_intelligence()`
+- **static/js/workspace/intelligence-panel.js:**
+  - Added `Absentee Owner` and `Tired Landlord` to `FIELD_DISPLAY_CONFIG`
+  - Added "Property Owner Intelligence" and "Ownership History" sections
+  - Added new field types: `portfolio_count`, `tenure_years`, `out_of_state`, `date_with_age`, `vacancy_months`
+  - Color-coded badges for key indicators:
+    - Portfolio Count: >5 properties = 🏠 Orange "Large Portfolio - Max Burnout Potential"
+    - Ownership Tenure: >20 years = 👴 Green "Senior Transition Profile"
+    - Out-of-State: Yes = 🔵 Blue badge "40% Higher Sell Likelihood"
+    - Vacancy Duration: >6 months = 🔴 Red "Extended Vacancy - Max Stress"
+
+#### Display Features
+
+| Field              | Format                       | Visual Indicator             |
+| ------------------ | ---------------------------- | ---------------------------- |
+| Portfolio Count    | X properties + badge         | >5 = Orange warning badge    |
+| Ownership Tenure   | X years                      | >20yr = Green senior badge   |
+| Out-of-State Owner | Yes (blue) / In-State (gray) | Blue badge for out-of-state  |
+| Last Sale Date     | MM/DD/YYYY + equity buildup  | >15yr = Green, <3yr = Yellow |
+| Vacancy Duration   | X months + stress indicator  | >6mo = Red, 3-6mo = Orange   |
+
+#### Technical Details
+
+- **Total Podio Fields:** 48 (27 → 32 implemented + 16 existing)
+- **Field Validation:** Updated to validate all 48 fields at startup
+- **Script Created:** `scripts/add_v4_phase3_absentee_fields.py`
+- **Field IDs Saved:** `scripts/archive/v4_phase3_absentee_field_ids.json`
+
+#### Business Value (Pillar #2 Conversion)
+
+- Portfolio >5 properties = maximum landlord burnout potential
+- Ownership >20 years = Senior Transition profile (lower price sensitivity)
+- Out-of-state owners = 40% more likely to sell quickly
+- Vacancy >6 months = carrying costs with zero income (max stress)
+
+---
+
 ## [4.0.10] - 2025-12-05
 
 ### 🔧 HOTFIX: Secondary Owner Name + Estimated Equity Display
